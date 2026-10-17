@@ -1,0 +1,13 @@
+{
+  "name": "hood-scanner",
+  "version": "1.0.0",
+  "description": "Robinhood Chain memecoin scanner: junk filter, community + holder checks, survivor-rebound scoring, phone alerts and a $30 paper-trading test.",
+  "type": "module",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "scan": "node src/index.js",
+    "scan:dry": "DRY_RUN=1 node src/index.js",
+    "test": "node test/run-tests.js"
+  }
+}
