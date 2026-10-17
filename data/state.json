@@ -78,6 +78,10 @@
    [
     1792255474805,
     906988
+   ],
+   [
+    1792262734603,
+    906989
    ]
   ],
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": [
@@ -108,10 +112,10 @@
   }
  ],
  "lastDigest": "2026-10-17",
- "runs": 7,
+ "runs": 8,
  "lastRun": {
-  "at": "2026-10-17T18:30:34.823Z",
-  "scanned": 419,
+  "at": "2026-10-17T18:45:34.603Z",
+  "scanned": 417,
   "quickPass": 6,
   "deepPass": 5,
   "buy": 0,
@@ -123,23 +127,23 @@
   "topCuts": {
    "younger than 21d": 236,
    "too few buyers 24h": 197,
-   "mcap under min (dead)": 160,
-   "liquidity too thin": 146,
-   "mcap over max": 140,
+   "mcap under min (dead)": 159,
+   "liquidity too thin": 145,
+   "mcap over max": 141,
    "almost no sellers (honeypot risk)": 109,
-   "already pumping": 70,
+   "already pumping": 72,
    "flagged suspicious on GeckoTerminal": 4
   },
   "holderData": {
-   "blockscout": 0,
-   "cached": 6,
+   "blockscout": 4,
+   "cached": 2,
    "estimate": 0,
    "none": 0
   },
   "httpErrors": {},
   "blockscout": {
    "key": true,
-   "calls": 0
+   "calls": 8
   },
   "wallets": {
    "tracked": 490,
@@ -174,32 +178,32 @@
   "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
    "pool": "0x91e9823a895a2d05a2c853fbd1619da089b36054f0a342039a0e8046608bbece",
    "symbol": "ROO",
-   "at": 1792261834823
+   "at": 1792262734603
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "symbol": "CANNACAT",
-   "at": 1792261834823
+   "at": 1792262734603
   },
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
    "pool": "0x8449bc525b02fb251bc7e281da91bdec6ef184a0e99f4a40bfa9a5fc7ebb4fcf",
    "symbol": "hpe",
-   "at": 1792261834823
+   "at": 1792262734603
   },
   "0xb0711574537f61298d43be9cebc05d8c5e6101e9": {
    "pool": "0x4d182c29116399b1b65db74df4025788ca0c4246",
    "symbol": "DOG",
-   "at": 1792261834823
+   "at": 1792262734603
   },
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
    "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
    "symbol": "GENESIS",
-   "at": 1792261834823
+   "at": 1792262734603
   },
   "0x63ffd4aa844f4befcee1b4606e467d1d209a926b": {
    "pool": "0x2a4e49b6f4026be2d9c4cc273f389d986256e27b18950a8967d1daa095b27978",
    "symbol": "AD",
-   "at": 1792261834823
+   "at": 1792262734603
   }
  },
  "tgCache": {
@@ -329,6 +333,24 @@
     "already pumping": 70,
     "flagged suspicious on GeckoTerminal": 4,
     "mcap under min (dead)": 160,
+    "no socials linked": 1,
+    "top wallet too big": 1
+   }
+  },
+  {
+   "t": 1792262734603,
+   "scanned": 417,
+   "quickPass": 6,
+   "deepPass": 5,
+   "reasons": {
+    "mcap over max": 141,
+    "younger than 21d": 236,
+    "too few buyers 24h": 197,
+    "liquidity too thin": 145,
+    "almost no sellers (honeypot risk)": 109,
+    "already pumping": 72,
+    "flagged suspicious on GeckoTerminal": 4,
+    "mcap under min (dead)": 159,
     "no socials linked": 1,
     "top wallet too big": 1
    }
@@ -1415,7 +1437,7 @@
  "lastSnapshotAt": 1792260814927,
  "holderCache": {
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
-   "at": 1792255474805,
+   "at": 1792262734603,
    "conc": {
     "top1Pct": 3.829,
     "top10Pct": 7.0393,
@@ -1423,40 +1445,40 @@
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "holdersCount": 500
+   "holdersCount": 501
   },
   "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
-   "at": 1792255474805,
+   "at": 1792262734603,
    "conc": {
     "top1Pct": 1.7285,
     "top10Pct": 15.5319,
-    "largestContractPct": 12.5476,
+    "largestContractPct": 12.7455,
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "holdersCount": 24197
+   "holdersCount": 24209
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
-   "at": 1792255474805,
+   "at": 1792262734603,
    "conc": {
-    "top1Pct": 4.5174,
-    "top10Pct": 26.1658,
-    "largestContractPct": 16.4566,
+    "top1Pct": 4.5219,
+    "top10Pct": 26.1704,
+    "largestContractPct": 15.977,
     "burnedPct": 0,
-    "devPctOnchain": 4.5174
+    "devPctOnchain": 4.5219
    },
-   "holdersCount": 524
+   "holdersCount": 529
   },
   "0xb0711574537f61298d43be9cebc05d8c5e6101e9": {
-   "at": 1792255474805,
+   "at": 1792262734603,
    "conc": {
-    "top1Pct": 9.9416,
+    "top1Pct": 9.9417,
     "top10Pct": 19.4437,
     "largestContractPct": 4.1203,
     "burnedPct": 3.5382,
     "devPctOnchain": null
    },
-   "holdersCount": 906988
+   "holdersCount": 906989
   },
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
    "at": 1792260814927,
