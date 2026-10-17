@@ -14,7 +14,7 @@ import { communitySignals } from './community.js';
 import { openPosition, updatePositions, equity, stats, planFor } from './paper.js';
 import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS, DATA_DIR } from './store.js';
 import { notify } from './notify.js';
-import { httpErrors } from './http.js';
+import { httpErrors, resetBreakers } from './http.js';
 import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
 import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage, ignitionMessage } from './messages.js';
 
@@ -336,6 +336,7 @@ function shouldAlert(store, token, score, cooldownH, now) {
 }
 
 export async function main() {
+  resetBreakers();
   const now = Date.now();
   const state = loadState();
   // Two clocks trigger scans (Cloudflare cron + GitHub's own schedule). If GitHub's
@@ -653,6 +654,7 @@ function deepRow(r) {
 // /check <CA> from Telegram: full analysis of one coin, even if it fails the filters.
 // Read-only — no paper trades, no state saved.
 export async function checkCoin(ca, now = Date.now()) {
+  resetBreakers();
   const addr = String(ca || '').trim().toLowerCase();
   if (!/^0x[0-9a-f]{40}$/.test(addr)) {
     await notify(`🔍 CHECK — "${ca}" isn't a valid contract address. Send it like:\n/check 0x1234…abcd`);

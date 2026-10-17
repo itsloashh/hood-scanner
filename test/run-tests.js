@@ -132,7 +132,9 @@ const { concentration } = await import('../src/blockscout.js');
 const paperMod = await import('../src/paper.js');
 
 let failures = 0;
+const { resetBreakers } = await import('../src/http.js');
 const test = async (name, fn) => {
+  resetBreakers();
   try { await fn(); origLog(`✓ ${name}`); } catch (e) { failures++; origLog(`✗ ${name}\n   ${e.message}`); }
 };
 
@@ -374,6 +376,22 @@ await test('research: pre-run buyers drop bundles; overlap finds smart wallets, 
     { symbol: 'D2', setup: { label: 'DUD' }, buyers: b4 },
   ]);
   assert.deepEqual(smart.map((s) => s.addr), ['0xsmart']);
+});
+
+await test('slow API: a host that keeps failing is skipped for the rest of the run', async () => {
+  const { getJson } = await import('../src/http.js');
+  const prevFetch = globalThis.fetch;
+  let hits = 0;
+  globalThis.fetch = async () => { hits++; return new Response('timeout', { status: 524 }); };
+  try {
+    for (let i = 0; i < 3; i++) await getJson('https://slow.example/x', { retries: 3 }).catch(() => null);
+    const before = hits;
+    await assert.rejects(getJson('https://slow.example/y'), /skipped for the rest of this run/);
+    assert.equal(hits, before); // no more calls once the breaker trips
+    assert.ok(hits <= 4, `hits ${hits}`); // 524s retry at most once each
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
 });
 
 await test('API keys never appear in error messages (public logs)', async () => {

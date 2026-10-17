@@ -2,6 +2,15 @@
 // Errors are recorded per host so each run can save a health report to state.json.
 const lastCall = new Map();
 export const httpErrors = {}; // host → { count, last }
+// Circuit breaker: after 3 failures in a row (timeouts / 5xx) a host is skipped for the rest of the run,
+// so one slow API can't eat the whole 12-minute GitHub run.
+const strikes = new Map();
+const BREAKER = 3;
+const TIMEOUT_MS = 20_000;
+export function resetBreakers() {
+  strikes.clear();
+}
+const strike = (host) => strikes.set(host, (strikes.get(host) || 0) + 1);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -16,6 +25,7 @@ function recordError(host, msg) {
 
 export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
   const host = new URL(url).host;
+  if ((strikes.get(host) || 0) >= BREAKER) throw new Error(`${host} skipped for the rest of this run (kept failing)`);
   for (let attempt = 0; attempt <= retries; attempt++) {
     const wait = (lastCall.get(host) || 0) + minIntervalMs - Date.now();
     if (wait > 0) await sleep(wait);
@@ -25,9 +35,11 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
     try {
       res = await globalThis.fetch(url, {
         headers: { accept: 'application/json', 'user-agent': 'hood-scanner/2.1 (+github.com/itsloashh/hood-scanner)' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
       });
     } catch (err) {
-      if (attempt === retries) {
+      strike(host);
+      if (attempt === retries || (strikes.get(host) || 0) >= BREAKER) {
         recordError(host, redact(`network: ${err.message}`));
         throw new Error(redact(`network error for ${url}: ${err.message}`));
       }
@@ -35,14 +47,18 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
       continue;
     }
     if (res.status === 404) return null;
+    if (res.status >= 500) strike(host);
     if (res.status === 429 || res.status >= 500) {
-      if (attempt === retries) {
+      // gateway timeouts (524/504) already cost us the wait — retry once at most
+      const maxTries = res.status === 524 || res.status === 504 ? Math.min(1, retries) : retries;
+      if (attempt >= maxTries || (strikes.get(host) || 0) >= BREAKER) {
         recordError(host, `HTTP ${res.status}`);
         throw new Error(redact(`HTTP ${res.status} for ${url}`));
       }
       await sleep(Math.max(minIntervalMs, 5000) * (attempt + 1));
       continue;
     }
+    if (res.ok) strikes.set(host, 0);
     if (!res.ok) {
       recordError(host, `HTTP ${res.status}`);
       throw new Error(redact(`HTTP ${res.status} for ${url}`));
