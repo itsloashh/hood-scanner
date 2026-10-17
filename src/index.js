@@ -4,6 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { CONFIG } from '../config.js';
 import * as gecko from './gecko.js';
 import * as bs from './blockscout.js';
+import * as dp from './dexpaprika.js';
 import { quickFilter, deepFilter, pumpFilter, ageDays, tally, laneOf, laneChartCheck, copycatOf, buildKnownTickers, normSymbol } from './filters.js';
 import { pumpPlan, loadPullbacks } from './pump.js';
 import fs from 'node:fs';
@@ -14,7 +15,7 @@ import { communitySignals } from './community.js';
 import { openPosition, updatePositions, equity, stats, planFor } from './paper.js';
 import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS, DATA_DIR } from './store.js';
 import { notify } from './notify.js';
-import { httpErrors, resetBreakers } from './http.js';
+import { httpErrors, httpStats, resetBreakers } from './http.js';
 import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
 import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage, ignitionMessage } from './messages.js';
 
@@ -197,7 +198,7 @@ async function tradeFlow(pool, w, state, now) {
 async function deepCheck(pool, state, leaders, now, w, { force = false, catalysts = {}, lane: laneOverride = null } = {}) {
   const token = pool.baseToken.address;
   const lane = laneOverride || laneOf(pool.marketCap);
-  const info = await gecko.tokenInfo(token).catch(() => null);
+  const info = await cachedInfo(token, state, now);
   const hd = await holderData(pool, info, state, now);
   let conc = hd.conc;
   if (!conc) conc = bs.estimateConcentration(info, pool); // backup: GeckoTerminal holder split
@@ -220,7 +221,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false, catalyst
   let burns = null;
   if (filt.ok || force) {
     try {
-      candles = await gecko.ohlcvDaily(pool.poolAddress, 90);
+      candles = await cachedDaily(pool.poolAddress, state, now);
       chart = chartFeatures(candles, pool.priceUsd);
       const laneMiss = laneChartCheck(lane, chart);
       if (laneMiss) {
@@ -258,6 +259,32 @@ async function deepCheck(pool, state, leaders, now, w, { force = false, catalyst
   return { pool, info, conc, holdersCount, holderChangePct, filt, chart, candles, age, narratives: tags, stockPaired, rotation, score, community, flow, burns, lane };
 }
 
+// Token info (socials, holder count, GT score) barely changes — re-use it for 2h
+async function cachedInfo(token, state, now) {
+  state.infoCache ||= {};
+  const hit = state.infoCache[token];
+  if (hit && now - hit.at < CONFIG.infoCacheMin * MIN) {
+    if (state.health?.cacheHits) state.health.cacheHits.info += 1;
+    return hit.info;
+  }
+  const info = await gecko.tokenInfo(token).catch(() => null);
+  if (info) state.infoCache[token] = { at: now, info };
+  return info;
+}
+
+// Daily candles re-used for 1h (stored compactly); today's move comes from the live pool price
+async function cachedDaily(poolAddress, state, now) {
+  state.chartCache ||= {};
+  const hit = state.chartCache[poolAddress];
+  if (hit && now - hit.at < CONFIG.chartCacheMin * MIN) {
+    if (state.health?.cacheHits) state.health.cacheHits.chart += 1;
+    return hit.c.map(([t, o, h, l, c, v]) => ({ t, o, h, l, c, v }));
+  }
+  const candles = await gecko.ohlcvDaily(poolAddress, 90);
+  if (candles?.length) state.chartCache[poolAddress] = { at: now, c: candles.map((k) => [k.t, k.o, k.h, k.l, k.c, k.v]) };
+  return candles;
+}
+
 // data/catalysts.json — coins you tagged from Telegram (/catalyst 0x… note). Active for N days.
 export function loadCatalysts(now = Date.now()) {
   try {
@@ -279,18 +306,32 @@ function rememberQuietBase(state, r, now) {
   };
 }
 
-// Pure check on hourly candles (exported for tests)
-export function ignitionSignal(base, hourly, priceNow) {
+// Pure check on hourly candles (exported for tests).
+// Volume: last N hours vs the coin's own normal hour (median of the earlier candles in the same
+// series, so DexPaprika and GeckoTerminal units are never mixed). Price: from the live USD pool
+// price when given (movePct/priceNow), else from the candles.
+export function ignitionSignal(base, hourly, { priceNow = null, movePct = null } = {}) {
   const g = CONFIG.ignition;
-  if (!hourly?.length || !base?.baseHourVol) return null;
+  if (!hourly?.length || hourly.length <= g.hours) return null;
   const win = hourly.slice(-g.hours);
+  const earlier = hourly.slice(0, -g.hours).map((c) => c.v);
   const vol = win.reduce((s, c) => s + c.v, 0) / win.length;
-  const mult = vol / base.baseHourVol;
+  let normal = null;
+  if (earlier.length >= 6) {
+    const sorted = [...earlier].sort((a, b) => a - b);
+    const mean = earlier.reduce((s, v) => s + v, 0) / earlier.length;
+    normal = Math.max(sorted[Math.floor(sorted.length / 2)], mean * 0.5); // a few dead hours can't fake a huge multiple
+  } else {
+    normal = base?.baseHourVol ?? null;
+  }
+  if (!normal) return null;
+  const mult = vol / normal;
   const px = priceNow ?? win.at(-1).c;
   const startPx = win[0].o || win[0].c;
-  const aboveBasePct = base.baseHigh ? (px / base.baseHigh - 1) * 100 : null;
-  const fired = mult >= g.minVolMultiple && px >= startPx * 1.05 && (aboveBasePct == null || aboveBasePct <= g.maxPriceAboveBasePct);
-  return { fired, mult, aboveBasePct, movePct: (px / startPx - 1) * 100, price: px };
+  const move = movePct ?? (px / startPx - 1) * 100;
+  const aboveBasePct = base?.baseHigh ? (px / base.baseHigh - 1) * 100 : null;
+  const fired = mult >= g.minVolMultiple && move >= 5 && (aboveBasePct == null || aboveBasePct <= g.maxPriceAboveBasePct);
+  return { fired, mult, aboveBasePct, movePct: move, price: px };
 }
 
 async function checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime = () => false) {
@@ -304,14 +345,28 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
   for (const [token, base] of list) {
     if (outOfTime()) break;
     const pool = poolByToken.get(token);
-    let hourly;
-    try {
-      hourly = await gecko.ohlcv(base.pool, 'hour', { limit: 6 });
-    } catch (e) {
-      log(`ignition ${base.symbol} candles failed: ${e.message}`);
-      continue;
+    if (pool && (pool.volume24h || 0) < g.minVolume24hUsd) continue;
+    // DexPaprika first (own rate limit), GeckoTerminal as backup
+    let sig = null;
+    if (pool?.priceUsd) {
+      try {
+        const hourly = await dp.hourly(base.pool, 24);
+        sig = ignitionSignal(base, hourly, { priceNow: pool.priceUsd, movePct: pool.change.h6 ?? pool.change.h1 });
+        if (sig) state.health.ignitionSource.dexpaprika += 1;
+      } catch (e) {
+        log(`ignition ${base.symbol} (DexPaprika) failed: ${e.message}`);
+      }
     }
-    const sig = ignitionSignal(base, hourly, pool?.priceUsd);
+    if (!sig) {
+      try {
+        const hourly = await gecko.ohlcv(base.pool, 'hour', { limit: 24 });
+        sig = ignitionSignal(base, hourly, { priceNow: pool?.priceUsd ?? null });
+        if (sig) state.health.ignitionSource.gecko += 1;
+      } catch (e) {
+        log(`ignition ${base.symbol} candles failed: ${e.message}`);
+        continue;
+      }
+    }
     if (!sig?.fired) continue;
     log(`🔥 ignition ${base.symbol}: ${sig.mult.toFixed(1)}× hourly volume`);
     const mcap = pool?.marketCap ?? null;
@@ -363,7 +418,7 @@ export async function main() {
 
   try {
     // 1. Discover + scan
-    state.health = { concSource: { blockscout: 0, cached: 0, estimate: 0, none: 0 }, tradePulls: 0 };
+    state.health = { concSource: { blockscout: 0, cached: 0, estimate: 0, none: 0 }, tradePulls: 0, ignitionSource: { dexpaprika: 0, gecko: 0 }, cacheHits: { info: 0, chart: 0 } };
     await discover(state, now);
     const pools = await scanPools(state);
     runStats.scanned = pools.length;
@@ -542,7 +597,9 @@ export async function main() {
       at: new Date(now).toISOString(), ...runStats, regime: reg.state,
       universe: Object.keys(state.universe).length, watchlist: Object.keys(state.watchlist).length,
       topCuts: Object.fromEntries(Object.entries(reasons).sort((a, b) => b[1] - a[1]).slice(0, 8)),
-      holderData: state.health.concSource, httpErrors, outOfTime: Boolean(state.health.outOfTime), seconds: Math.round((Date.now() - now) / 1000),
+      holderData: state.health.concSource, cacheHits: state.health.cacheHits, ignitionSource: state.health.ignitionSource,
+      http: Object.fromEntries(Object.entries(httpStats).map(([h, v]) => [h.split('.').slice(-2, -1)[0] || h, { calls: v.calls, sec: Math.round(v.ms / 1000), waitSec: Math.round(v.waitMs / 1000) }])),
+      httpErrors, outOfTime: Boolean(state.health.outOfTime), seconds: Math.round((Date.now() - now) / 1000),
       blockscout: { key: bs.hasKey(), calls: bs.usage.calls },
       quietBases: Object.keys(state.quietBases).length,
       knownTickers: Object.keys(state.knownTickers || {}).length,
@@ -560,6 +617,8 @@ export async function main() {
     // holder cache: drop stale entries
     for (const [t, v] of Object.entries(state.holderCache)) if (now - v.at > 6 * HOUR) delete state.holderCache[t];
     for (const [t, v] of Object.entries(state.burnCache)) if (now - v.at > 24 * HOUR) delete state.burnCache[t];
+    for (const [t, v] of Object.entries(state.infoCache || {})) if (now - v.at > CONFIG.infoCacheMin * MIN) delete state.infoCache[t];
+    for (const [t, v] of Object.entries(state.chartCache || {})) if (now - v.at > CONFIG.chartCacheMin * MIN) delete state.chartCache[t];
     saveWallets(w, now);
     saveCandidates(candidates, now);
     for (const [t, v] of Object.entries(state.pumpAlerts)) if (now - v.at > 3 * DAY) delete state.pumpAlerts[t];

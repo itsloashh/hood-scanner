@@ -11,6 +11,9 @@ export const CONFIG = {
   blockscoutProBase: 'https://api.blockscout.com', // PRO API (used when BLOCKSCOUT_API_KEY is set)
   chainId: 4663, // Robinhood Chain
   holderCacheMin: 120, // re-use a coin's holder data for 2h — keeps Blockscout well inside the free 100k credits/day
+  dexpaprika: { base: 'https://api.dexpaprika.com', network: 'robinhood', minIntervalMs: 4200 }, // keyless ≈ 15 calls/min
+  infoCacheMin: 120, // token info (socials, holder count, GT score) re-used for 2h
+  chartCacheMin: 60, // daily candles re-used for 1h (today's candle comes from the live pool price)
   geckoMinIntervalMs: 2200, // keyless GeckoTerminal ≈ 30 calls/min — stay under it
   blockscoutMinIntervalMs: 300,
 
@@ -70,6 +73,7 @@ export const CONFIG = {
     hours: 3, // look at the last 3 hourly candles…
     minVolMultiple: 5, // …trading at ≥5× the base's normal hourly volume
     maxPriceAboveBasePct: 40, // still early: price no more than 40% above the base's top
+    minVolume24hUsd: 5_000, // ignore 'ignition' from a handful of tiny trades
     cooldownHours: 24,
     keepDays: 7, // forget a quiet base not re-confirmed for a week
   },

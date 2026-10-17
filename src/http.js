@@ -9,7 +9,11 @@ const BREAKER = 3;
 const TIMEOUT_MS = 20_000;
 export function resetBreakers() {
   strikes.clear();
+  for (const k of Object.keys(httpStats)) delete httpStats[k];
 }
+// Per-host timing for the run's health report: where the minutes go
+export const httpStats = {}; // host → { calls, ms, waitMs }
+const stat = (host) => (httpStats[host] ||= { calls: 0, ms: 0, waitMs: 0 });
 const strike = (host) => strikes.set(host, (strikes.get(host) || 0) + 1);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -28,8 +32,13 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
   if ((strikes.get(host) || 0) >= BREAKER) throw new Error(`${host} skipped for the rest of this run (kept failing)`);
   for (let attempt = 0; attempt <= retries; attempt++) {
     const wait = (lastCall.get(host) || 0) + minIntervalMs - Date.now();
-    if (wait > 0) await sleep(wait);
+    if (wait > 0) {
+      stat(host).waitMs += wait;
+      await sleep(wait);
+    }
     lastCall.set(host, Date.now());
+    const t0 = Date.now();
+    stat(host).calls += 1;
 
     let res;
     try {
@@ -38,6 +47,7 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
         signal: AbortSignal.timeout(TIMEOUT_MS),
       });
     } catch (err) {
+      stat(host).ms += Date.now() - t0;
       strike(host);
       if (attempt === retries || (strikes.get(host) || 0) >= BREAKER) {
         recordError(host, redact(`network: ${err.message}`));
@@ -46,6 +56,7 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
       await sleep(2000 * (attempt + 1));
       continue;
     }
+    stat(host).ms += Date.now() - t0;
     if (res.status === 404) return null;
     if (res.status >= 500) strike(host);
     if (res.status === 429 || res.status >= 500) {

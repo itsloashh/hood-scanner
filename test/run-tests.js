@@ -938,23 +938,51 @@ await test('copycats: same ticker, different contract is rejected; the real one 
   assert.equal(copycatOf(mk('NEWCOIN', '0xccc'), known), null);
 });
 
-await test('ignition: hourly volume 5×+ out of a quiet base fires; a dump or an already-run coin does not', async () => {
+await test('ignition: hourly volume 5×+ out of a quiet base fires; a dump, an already-run coin or dead hours do not', async () => {
   const { ignitionSignal } = await import('../src/index.js');
   const base = { baseHourVol: 100, baseHigh: 1.0 };
   const h = (o, c, v) => ({ o, h: Math.max(o, c), l: Math.min(o, c), c, v });
-  const quiet = [h(0.9, 0.9, 90), h(0.9, 0.9, 110), h(0.9, 0.9, 100)];
+  const quiet = Array.from({ length: 21 }, (_, i) => h(0.9, 0.9, 90 + (i % 3) * 10));
   const fire = [...quiet, h(0.9, 0.95, 600), h(0.95, 1.05, 900), h(1.05, 1.1, 700)];
   assert.equal(ignitionSignal(base, fire).fired, true);
   assert.ok(ignitionSignal(base, fire).mult > 5);
   assert.equal(ignitionSignal(base, quiet).fired, false);
   const dump = [...quiet, h(0.9, 0.8, 600), h(0.8, 0.7, 900), h(0.7, 0.6, 700)];
   assert.equal(ignitionSignal(base, dump).fired, false); // volume on a sell-off isn't ignition
-  const late = [...quiet, h(1.3, 1.5, 600), h(1.5, 1.7, 900), h(1.7, 1.9, 700)];
-  assert.equal(ignitionSignal(base, late).fired, false); // already 90% above the base
+  assert.equal(ignitionSignal(base, fire, { priceNow: 1.9, movePct: 90 }).fired, false); // already 90% above the base
+  // DexPaprika candles: units differ from GeckoTerminal, so only the series' own normal hour is used,
+  // and price comes from the live USD pool price
+  const dpUnits = fire.map((k) => ({ ...k, v: k.v * 1000, o: 1 / k.o, c: 1 / k.c }));
+  assert.equal(ignitionSignal(base, dpUnits, { priceNow: 0.98, movePct: 12 }).fired, true);
+  // mostly dead hours + one normal trade can't fake a huge multiple
+  const dead = [...Array.from({ length: 18 }, () => h(0.9, 0.9, 0)), h(0.9, 0.9, 400), h(0.9, 0.9, 400), h(0.9, 0.9, 400), h(0.9, 0.95, 120), h(0.95, 1, 120), h(1, 1, 120)];
+  assert.equal(ignitionSignal(base, dead).fired, false);
   const { ignitionMessage } = await import('../src/messages.js');
   const msg = ignitionMessage({ token: '0x6245e67affa44a23077f0ea7f981a8dc743a0c47', base: { ...base, symbol: 'FRONG', pool: '0xp', lane: 'quality', drawdownPct: 79, volTrend: 0.51 }, sig: ignitionSignal(base, fire), pool: { marketCap: 3_600_000, liquidityUsd: 400_000 } });
   assert.match(msg, /IGNITION · \$FRONG/);
   assert.match(msg, /Quality lane/);
+});
+
+await test('dexpaprika: hourly candles parsed oldest → newest', async () => {
+  const dpm = await import('../src/dexpaprika.js');
+  const prevFetch = globalThis.fetch;
+  let seen = '';
+  globalThis.fetch = async (url) => {
+    seen = String(url);
+    return new Response(JSON.stringify([
+      { time_open: '2026-10-17T02:00:00Z', time_close: '2026-10-17T03:00:00Z', open: 2, high: 3, low: 1, close: 2.5, volume: 50 },
+      { time_open: '2026-10-17T01:00:00Z', time_close: '2026-10-17T02:00:00Z', open: 1, high: 2, low: 1, close: 2, volume: 10 },
+    ]));
+  };
+  try {
+    const k = await dpm.hourly('0xpool', 24);
+    assert.match(seen, /api\.dexpaprika\.com\/networks\/robinhood\/pools\/0xpool\/ohlcv\?start=-24h&interval=1h/);
+    assert.equal(k.length, 2);
+    assert.ok(k[0].t < k[1].t);
+    assert.equal(k[1].v, 50);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
 });
 
 await test('paper sizes are % of the wallet, and the starting amount can be changed', async () => {
