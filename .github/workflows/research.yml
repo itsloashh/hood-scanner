@@ -3,6 +3,9 @@ name: research
 on:
   schedule:
     - cron: '23 14 * * *' # every day ~10:23 AM Toronto
+  push:
+    branches: [main]
+    paths: ['triggers/research.txt'] # editing this file starts research
   workflow_dispatch: # "Run workflow" button
 
 permissions:

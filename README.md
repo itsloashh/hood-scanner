@@ -151,3 +151,6 @@ After every scan, `data/state.json → lastRun` records coins scanned, the funne
 Text your bot `/scan`, `/check 0x…` (or just paste an address), `/research` or `/status`.
 Free Cloudflare Worker relay — setup in **[worker/SETUP.md](worker/SETUP.md)**.
 Without it you can still run anything from **Actions → (workflow) → Run workflow**, including a single-coin check: open **hood-scanner → Run workflow** and paste an address in the box.
+
+## Starting runs without the Run button
+Editing `triggers/scan.txt` or `triggers/research.txt` (any change, committed to main) starts that job. That's how Claude can start runs remotely. You can also do it from the GitHub app: open the file, tap ✏️, change the date, and commit.

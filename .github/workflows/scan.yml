@@ -2,7 +2,12 @@ name: hood-scanner
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # every 15 min, around the clock (free + unlimited on a public repo)
+    # every 15 min, around the clock. Off-peak minutes on purpose: GitHub drops
+    # scheduled runs at busy times like :00/:15/:30/:45.
+    - cron: '4,19,34,49 * * * *'
+  push:
+    branches: [main]
+    paths: ['triggers/scan.txt'] # editing this file starts a scan (lets Claude run it remotely)
   workflow_dispatch: # "Run workflow" button, or /scan and /check from Telegram
     inputs:
       ca:
