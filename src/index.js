@@ -38,12 +38,16 @@ async function discover(state, now) {
   if (state.lastDiscoverAt && now - state.lastDiscoverAt < CONFIG.scan.discoverEveryMin * MIN) return;
   state.lastDiscoverAt = now;
   let tokens;
+  state.lastDiscovery = { at: new Date(now).toISOString() };
   try {
     tokens = await bs.listTokensByHolders(CONFIG.scan.discoverPages);
   } catch (e) {
     log('discovery (Blockscout token list) failed:', e.message);
+    state.lastDiscovery.error = e.message.slice(0, 200);
     return;
   }
+  state.lastDiscovery.listed = tokens.length;
+  state.lastDiscovery.sample = tokens.slice(0, 5).map((t) => `${t.symbol}:${t.holders}`);
   const fresh = tokens.filter(
     (t) =>
       t.holders >= CONFIG.community.minHolders &&
@@ -58,6 +62,8 @@ async function discover(state, now) {
     log('discovery (pool lookup) failed:', e.message);
   }
   for (const t of fresh) if (pools[t.address]) state.universe[t.address] = { pool: pools[t.address], symbol: t.symbol, at: now };
+  state.lastDiscovery.fresh = fresh.length;
+  state.lastDiscovery.withPools = Object.keys(pools).length;
   const u = Object.entries(state.universe).sort((a, b) => b[1].at - a[1].at).slice(0, CONFIG.scan.universeMax);
   state.universe = Object.fromEntries(u);
   log(`discovery: ${tokens.length} tokens by holders → ${Object.keys(pools).length} new pools · universe ${u.length}`);
