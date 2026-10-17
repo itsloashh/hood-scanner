@@ -144,7 +144,7 @@ export function flowFeatures(trades, w) {
   const repeatShare = buyers.size ? [...buyers.values()].filter((n) => n >= 2).length / buyers.size : 0;
   const balanced = Math.max(buyers.size, sellers.size) > 0 && Math.abs(buyers.size - sellers.size) / Math.max(buyers.size, sellers.size) <= 0.1;
   const washSignals = [
-    overlap >= 0.6 ? `${Math.round(overlap * 100)}% of wallets both bought and sold` : null,
+    overlap >= 0.45 ? `${Math.round(overlap * 100)}% of wallets both bought and sold` : null,
     tradesPerWallet >= 4 ? `${tradesPerWallet.toFixed(1)} trades per wallet` : null,
     balanced && repeatShare >= 0.6 ? 'buyers and sellers almost exactly equal, mostly repeat buyers' : null,
   ].filter(Boolean);

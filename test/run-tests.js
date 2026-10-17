@@ -403,6 +403,17 @@ await test('wash trading: ROO-style churn is flagged and blocked from the buy zo
   assert.equal(sc.buyBlocked, true);
   assert.equal(sc.parts.washPenalty, -15);
   assert.equal(sc.parts.inflatedHoldersPenalty, -6);
+  // ROO on its second look (17 Oct, 16:44): 47 buyers / 40 sellers, 50% on both sides, 5.2 trades each
+  const roo2 = [];
+  for (let i = 0; i < 300; i++) {
+    const k = i % 57; // 57 wallets in total
+    const both = k < 30; // 30 trade both sides
+    const kind = both ? (i % 2 ? 'buy' : 'sell') : k < 47 ? 'buy' : 'sell';
+    roo2.push({ wallet: `0xr${k}`, kind, usd: 13, ts: i * 36_000, block: i });
+  }
+  const f2 = wm.flowFeatures(roo2, { wallets: {}, seeded: {} });
+  assert.ok(f2.overlap >= 0.45 && f2.overlap < 0.6, `overlap ${f2.overlap}`);
+  assert.equal(f2.washLikely, true, JSON.stringify(f2.washSignals));
   // organic flow: many different wallets, few on both sides
   const org = [];
   for (let i = 0; i < 120; i++) org.push({ wallet: `0xo${i}`, kind: i % 4 ? 'buy' : 'sell', usd: 40, ts: i * 60_000, block: 1000 + i });
