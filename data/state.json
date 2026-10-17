@@ -35,8 +35,23 @@
    "score": 70,
    "symbol": "GENESIS"
   },
+  "0xb9972ca7188e511174947e3936a5315ac7073277": {
+   "at": 1792281143398,
+   "score": 65,
+   "symbol": "PROLOGUE"
+  },
+  "0x88ad8ddf1e3898412146a534538d418c6f8a9062": {
+   "at": 1792281143398,
+   "score": 70,
+   "symbol": "STANDARD"
+  },
+  "0xe934e36a439c94017b64a3fece66af12099abf50": {
+   "at": 1792281143398,
+   "score": 68,
+   "symbol": "STONKBROKER"
+  },
   "0xf8bc08092c06db6148114dcf82af881f1085f92b": {
-   "at": 1792280734248,
+   "at": 1792281143398,
    "score": 68,
    "symbol": "WOOD"
   }
@@ -166,12 +181,20 @@
    [
     1792273539991,
     70551
+   ],
+   [
+    1792281143398,
+    70604
    ]
   ],
   "0x3ba500f1ababbcf0f0247d06d1c56fd7e6c4c09d": [
    [
     1792273539991,
     9069
+   ],
+   [
+    1792281143398,
+    9068
    ]
   ],
   "0xdee52f2ab639b6942b0d0f0565400b93b7a0fbe5": [
@@ -184,12 +207,20 @@
    [
     1792273539991,
     27504
+   ],
+   [
+    1792281143398,
+    27657
    ]
   ],
   "0xb9972ca7188e511174947e3936a5315ac7073277": [
    [
     1792273539991,
     8127
+   ],
+   [
+    1792281143398,
+    8388
    ]
   ],
   "0xfce34d21a92069100e3226638140706cf03a266e": [
@@ -296,12 +327,12 @@
  "lastDigest": "2026-10-17",
  "runs": 24,
  "lastRun": {
-  "at": "2026-10-17T23:45:34.248Z",
-  "scanned": 357,
+  "at": "2026-10-17T23:52:23.398Z",
+  "scanned": 328,
   "quickPass": 22,
   "deepPass": 12,
-  "buy": 1,
-  "watch": 2,
+  "buy": 4,
+  "watch": 0,
   "pump": 0,
   "ignition": 0,
   "quality": 8,
@@ -311,13 +342,13 @@
   "watchlist": 26,
   "topCuts": {
    "too few buyers 24h": 202,
-   "younger than 21d": 178,
-   "liquidity too thin": 126,
+   "younger than 21d": 152,
+   "liquidity too thin": 114,
    "almost no sellers (honeypot risk)": 114,
-   "mcap under min (dead)": 109,
-   "already pumping": 55,
-   "mcap over max": 25,
-   "copycat ticker": 24
+   "mcap under min (dead)": 95,
+   "already pumping": 47,
+   "mcap over max": 24,
+   "copycat ticker": 22
   },
   "holderData": {
    "blockscout": 0,
@@ -331,16 +362,16 @@
    "chart": 11
   },
   "ignitionSource": {
-   "dexpaprika": 1,
+   "dexpaprika": 4,
    "gecko": 0
   },
   "http": {
    "geckoterminal": {
-    "calls": 40,
+    "calls": 42,
     "sec": 19,
-    "waitSec": 215,
-    "backoffSec": 86,
-    "r429": 9
+    "waitSec": 237,
+    "backoffSec": 78,
+    "r429": 10
    },
    "blockscout": {
     "calls": 3,
@@ -350,62 +381,56 @@
     "r429": 0
    },
    "dexpaprika": {
-    "calls": 4,
-    "sec": 2,
-    "waitSec": 7,
+    "calls": 8,
+    "sec": 4,
+    "waitSec": 18,
     "backoffSec": 0,
     "r429": 0
    }
   },
   "phases": {
-   "discover+lists": 193,
+   "discover+lists": 179,
    "paper+wallets": 0,
-   "deepChecks": 200,
+   "deepChecks": 228,
    "pumps": 0,
-   "ignition": 4
+   "ignition": 17
   },
   "scorecard": {
-   "watch/quality": {
-    "n": 2,
-    "win": 0,
-    "stopped": 0,
-    "expired": 0,
-    "open": 2,
-    "hit2x": 0,
-    "winRate": null,
-    "avgPeakX": 1
-   },
    "buy/quality": {
-    "n": 1,
+    "n": 4,
     "win": 0,
     "stopped": 0,
     "expired": 0,
-    "open": 1,
+    "open": 4,
     "hit2x": 0,
     "winRate": null,
     "avgPeakX": 1
    }
   },
   "httpErrors": {
+   "api.geckoterminal.com": {
+    "count": 1,
+    "last": "HTTP 429"
+   },
    "api.blockscout.com": {
     "count": 1,
     "last": "network: The operation was aborted due to timeout"
    }
   },
   "outOfTime": false,
-  "seconds": 396,
+  "seconds": 423,
   "blockscout": {
    "key": true,
    "calls": 14
   },
-  "quietBases": 2,
+  "quietBases": 5,
   "knownTickers": 220,
   "catalysts": 0,
   "wallets": {
-   "tracked": 2089,
+   "tracked": 2110,
    "smart": 0,
    "seeded": 0,
-   "tradePulls": 6
+   "tradePulls": 9
   }
  },
  "watchAlerts": {
@@ -450,8 +475,8 @@
    "symbol": "BONER"
   },
   "0x88ad8ddf1e3898412146a534538d418c6f8a9062": {
-   "at": 1792280734248,
-   "score": 64,
+   "at": 1792274433359,
+   "score": 53,
    "symbol": "STANDARD"
   },
   "0x7fe995a80075df3dc8ae11a9b82c7fe4202cd87f": {
@@ -463,123 +488,118 @@
    "at": 1792275439048,
    "score": 57,
    "symbol": "WOOD"
-  },
-  "0xe934e36a439c94017b64a3fece66af12099abf50": {
-   "at": 1792280734248,
-   "score": 62,
-   "symbol": "STONKBROKER"
   }
  },
  "watchlist": {
   "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
    "pool": "0x91e9823a895a2d05a2c853fbd1619da089b36054f0a342039a0e8046608bbece",
    "symbol": "ROO",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
    "pool": "0x8449bc525b02fb251bc7e281da91bdec6ef184a0e99f4a40bfa9a5fc7ebb4fcf",
    "symbol": "hpe",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xb0711574537f61298d43be9cebc05d8c5e6101e9": {
    "pool": "0x4d182c29116399b1b65db74df4025788ca0c4246",
    "symbol": "DOG",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
    "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
    "symbol": "GENESIS",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": {
    "pool": "0x2b3211e96d15212086e8333b447fbb35dc08348a",
    "symbol": "DIH",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x3ba500f1ababbcf0f0247d06d1c56fd7e6c4c09d": {
    "pool": "0xf49ee5b66c4e7163026e5d25e6a1f93cff46dca4d3752f712d181d9392c1d567",
    "symbol": "WORM",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xfce34d21a92069100e3226638140706cf03a266e": {
    "pool": "0x7ffd58d9ab075007d3ff9a2fa31ed8993aa918680154d87eeed1861d1683b34e",
    "symbol": "GLDSTN",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xb8fa8010833463aac5595b55b9045479239eff79": {
    "pool": "0x79723a75c401d5c3ad66b0d0837739e502f08799ebf6a503e6e4d0827b3eb7e5",
    "symbol": "WTH",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xb9972ca7188e511174947e3936a5315ac7073277": {
    "pool": "0x8651e656738064177752a395dbde2b2a9e3fc469edc2a9212e6060c0990bb7eb",
    "symbol": "PROLOGUE",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xc0d6457c16cc70d6790dd43521c899c87ce02f35": {
    "pool": "0x960f79d8dfec7f2f0c1b24cdac6bb9df1371c6e2",
    "symbol": "META",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xaf3d76f1834a1d425780943c99ea8a608f8a93f9": {
    "pool": "0x8bb3514e2204e1cdf3ac149efee7ff04d91b719f",
    "symbol": "AAPL",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x98096d17e191b3da1d5f99a6d7b3584351b11e18": {
    "pool": "0x9c89b04303dfa76f3f6fb02c2b77be0e8a00ab8fa00d507119acd54ab3e8640d",
    "symbol": "BONER",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x7fe995a80075df3dc8ae11a9b82c7fe4202cd87f": {
    "pool": "0x2b0d0183d017c58b924401ca8ac362f6e01f0e9e",
    "symbol": "HMM",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xf8bc08092c06db6148114dcf82af881f1085f92b": {
    "pool": "0xbf3bb81de6285b8310a028d1c2cd38f9419d54c1",
    "symbol": "WOOD",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xe934e36a439c94017b64a3fece66af12099abf50": {
    "pool": "0xd33c8fd38b06e989cdbd4dffdefab71c4bdd415b24964c8d69e38ff35b068f92",
    "symbol": "STONKBROKER",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x32ac8c1d7672667d5ebdea22935f7b06fc8d496f": {
    "pool": "0x7fb39eb653999feb9f0d3b1410848911383dfc681f3585229df4aa5b560bf0ba",
    "symbol": "HOOD",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x56910d4409f3a0c78c64dd8d0545ff0705389870": {
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "symbol": "Index",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xa30fa36db767ad9ed3f7a60fc79526fb4d56d344": {
    "pool": "0x02175608f1b5e6b5ed221ccfdc7be197d111d915",
    "symbol": "USO",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x88ad8ddf1e3898412146a534538d418c6f8a9062": {
    "pool": "0xc73f3cd3fb68288e63f008e08ef69caa0437224e420963c6aeb4526178e87ad9",
    "symbol": "STANDARD",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3": {
    "pool": "0x34d0dc122cf9a8eb296fc5e0d3a233625d7d19b7",
    "symbol": "GOOGL",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xedbf91223639800bcd5756815caf908df3b890be": {
    "pool": "0x9be7ab27227e115085b0949a819a73f6963ddc6da0c6204d37757c24297706e8",
    "symbol": "PRIORS",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0x18e674231a58c239dc7daedcffe15ec3a24cff5c": {
    "pool": "0x590dcb6a87828bf688b48089a62239b693378f1fb64d2286e6a399ed8c005fdf",
    "symbol": "HOOKR",
-   "at": 1792280734248
+   "at": 1792281143398
   },
   "0xdee52f2ab639b6942b0d0f0565400b93b7a0fbe5": {
    "pool": "0x77ea11bbfb8f1259c702cb0ebc2105b7c007db89cf30c2f1a8776886a4467c07",
@@ -1123,20 +1143,20 @@
    }
   },
   {
-   "t": 1792280734248,
-   "scanned": 357,
+   "t": 1792281143398,
+   "scanned": 328,
    "quickPass": 22,
    "deepPass": 12,
    "reasons": {
-    "mcap over max": 25,
-    "younger than 21d": 178,
+    "mcap over max": 24,
+    "younger than 21d": 152,
     "too few buyers 24h": 202,
-    "copycat ticker": 24,
-    "liquidity too thin": 126,
+    "copycat ticker": 22,
+    "liquidity too thin": 114,
     "almost no sellers (honeypot risk)": 114,
-    "mcap under min (dead)": 109,
-    "already pumping": 55,
-    "flagged suspicious on GeckoTerminal": 4,
+    "mcap under min (dead)": 95,
+    "already pumping": 47,
+    "flagged suspicious on GeckoTerminal": 3,
     "quality lane: liquidity under $100k": 11,
     "quality lane: only 33% off its high (want 50–90%)": 1,
     "quality lane: only 5% off its high (want 50–90%)": 1,
@@ -2237,7 +2257,7 @@
   }
  },
  "lastDiscoverAt": 1792275439048,
- "lastSnapshotAt": 1792280734248,
+ "lastSnapshotAt": 1792281143398,
  "holderCache": {
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
    "at": 1792272119736,
@@ -2402,23 +2422,61 @@
    "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
    "symbol": "GENESIS",
    "lane": "micro",
-   "at": 1792280734248,
+   "at": 1792281143398,
    "baseHigh": 0.0000379520143824914,
    "baseHourVol": 5.0970255344708635,
    "drawdownPct": 85.72227951935861,
    "volTrend": 0.3837961090905083,
-   "score": 70
+   "score": 70,
+   "type": "quiet"
   },
   "0xf8bc08092c06db6148114dcf82af881f1085f92b": {
    "pool": "0xbf3bb81de6285b8310a028d1c2cd38f9419d54c1",
    "symbol": "WOOD",
    "lane": "quality",
-   "at": 1792280734248,
+   "at": 1792281143398,
    "baseHigh": 0.0045185940605026,
    "baseHourVol": 3190.509676784825,
    "drawdownPct": 89.08036114859851,
    "volTrend": 0.1264766849332837,
-   "score": 68
+   "score": 68,
+   "type": "quiet"
+  },
+  "0xb9972ca7188e511174947e3936a5315ac7073277": {
+   "pool": "0x8651e656738064177752a395dbde2b2a9e3fc469edc2a9212e6060c0990bb7eb",
+   "symbol": "PROLOGUE",
+   "lane": "quality",
+   "at": 1792281143398,
+   "baseHigh": 0.00621872815730463,
+   "baseHourVol": 10106.425289972723,
+   "drawdownPct": 80.22504116670147,
+   "volTrend": 1.417660921808907,
+   "score": 65,
+   "type": "absorption"
+  },
+  "0x88ad8ddf1e3898412146a534538d418c6f8a9062": {
+   "pool": "0xc73f3cd3fb68288e63f008e08ef69caa0437224e420963c6aeb4526178e87ad9",
+   "symbol": "STANDARD",
+   "lane": "quality",
+   "at": 1792281143398,
+   "baseHigh": 0.340038072180713,
+   "baseHourVol": 63414.85445402076,
+   "drawdownPct": 51.3455323659882,
+   "volTrend": 1.5092419247966422,
+   "score": 70,
+   "type": "absorption"
+  },
+  "0xe934e36a439c94017b64a3fece66af12099abf50": {
+   "pool": "0xd33c8fd38b06e989cdbd4dffdefab71c4bdd415b24964c8d69e38ff35b068f92",
+   "symbol": "STONKBROKER",
+   "lane": "quality",
+   "at": 1792281143398,
+   "baseHigh": 0.00670329539250282,
+   "baseHourVol": 7277.661470890579,
+   "drawdownPct": 85.80194815071467,
+   "volTrend": 1.788723558168742,
+   "score": 68,
+   "type": "absorption"
   }
  },
  "ignitionAlerts": {},
@@ -9541,7 +9599,7 @@
    ]
   },
   "0x8bb3514e2204e1cdf3ac149efee7ff04d91b719f": {
-   "at": 1792280734248,
+   "at": 1792281143398,
    "c": [
     [
      1783641600000,
@@ -10204,13 +10262,13 @@
      342.969030769376,
      345.834474331443,
      340.182014063171,
-     343.146922780987,
-     420503.50275187154
+     342.858677295804,
+     422989.80313309806
     ]
    ]
   },
   "0x34d0dc122cf9a8eb296fc5e0d3a233625d7d19b7": {
-   "at": 1792280734248,
+   "at": 1792281143398,
    "c": [
     [
      1783641600000,
@@ -10841,13 +10899,13 @@
      339.047992067356,
      346.698152142376,
      332.234626634693,
-     338.223456141118,
-     214282.973301072
+     338.685081590166,
+     216211.97592946547
     ]
    ]
   },
   "0x960f79d8dfec7f2f0c1b24cdac6bb9df1371c6e2": {
-   "at": 1792280734248,
+   "at": 1792281143398,
    "c": [
     [
      1786406400000,
@@ -11326,13 +11384,13 @@
      706.025363086058,
      713.639683839947,
      692.547826276608,
-     704.206866815496,
-     45076.79458651157
+     704.061429724342,
+     45351.78012440608
     ]
    ]
   },
   "0x8449bc525b02fb251bc7e281da91bdec6ef184a0e99f4a40bfa9a5fc7ebb4fcf": {
-   "at": 1792280734248,
+   "at": 1792281143398,
    "c": [
     [
      1788307200000,
@@ -11673,7 +11731,7 @@
    ]
   },
   "0x02904260fb5698e0f3b16ffc127bd1a089df44de": {
-   "at": 1792280734248,
+   "at": 1792281143398,
    "c": [
     [
      1784505600000,
@@ -12398,7 +12456,7 @@
    ]
   },
   "0xd33c8fd38b06e989cdbd4dffdefab71c4bdd415b24964c8d69e38ff35b068f92": {
-   "at": 1792280734248,
+   "at": 1792281143398,
    "c": [
     [
      1784505600000,
@@ -13125,12 +13183,25 @@
  },
  "scorecard": [
   {
+   "token": "0xb9972ca7188e511174947e3936a5315ac7073277",
+   "symbol": "PROLOGUE",
+   "tier": "buy",
+   "lane": "quality",
+   "score": 65,
+   "at": 1792281143398,
+   "price": 0.0039570355136293,
+   "peakX": 1,
+   "lowX": 1,
+   "lastX": 1,
+   "outcome": null
+  },
+  {
    "token": "0x88ad8ddf1e3898412146a534538d418c6f8a9062",
    "symbol": "STANDARD",
-   "tier": "watch",
+   "tier": "buy",
    "lane": "quality",
-   "score": 64,
-   "at": 1792280734248,
+   "score": 70,
+   "at": 1792281143398,
    "price": 0.234901915006728,
    "peakX": 1,
    "lowX": 1,
@@ -13140,10 +13211,10 @@
   {
    "token": "0xe934e36a439c94017b64a3fece66af12099abf50",
    "symbol": "STONKBROKER",
-   "tier": "watch",
+   "tier": "buy",
    "lane": "quality",
-   "score": 62,
-   "at": 1792280734248,
+   "score": 68,
+   "at": 1792281143398,
    "price": 0.00558346837127279,
    "peakX": 1,
    "lowX": 1,
@@ -13156,7 +13227,7 @@
    "tier": "buy",
    "lane": "quality",
    "score": 68,
-   "at": 1792280734248,
+   "at": 1792281143398,
    "price": 0.00338035714317793,
    "peakX": 1,
    "lowX": 1,
