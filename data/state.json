@@ -1,11 +1,36 @@
 {
  "paper": {
-  "cash": 30,
-  "positions": [],
+  "cash": 20,
+  "positions": [
+   {
+    "token": "0x3458e003f6ed93df0f537b8acac6fbe08e41247f",
+    "symbol": "ROO",
+    "pool": "0x91e9823a895a2d05a2c853fbd1619da089b36054f0a342039a0e8046608bbece",
+    "score": 67,
+    "entryPrice": 0.00010563785251935042,
+    "sizeUsd": 10,
+    "remaining": 1,
+    "peak": 0.00010563785251935042,
+    "lastPrice": 0.000102561021863447,
+    "tpHit": [
+     false,
+     false
+    ],
+    "realized": 0,
+    "openedAt": 1792245082484,
+    "misses": 0
+   }
+  ],
   "closed": [],
   "startedAt": 1792242005200
  },
- "alerts": {},
+ "alerts": {
+  "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
+   "at": 1792245082484,
+   "score": 67,
+   "symbol": "ROO"
+  }
+ },
  "holders": {
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": [
    [
@@ -33,41 +58,43 @@
   }
  ],
  "lastDigest": "2026-10-17",
- "runs": 2,
+ "runs": 3,
  "lastRun": {
-  "at": "2026-10-17T13:31:18.731Z",
-  "scanned": 163,
+  "at": "2026-10-17T13:51:22.484Z",
+  "scanned": 189,
   "quickPass": 3,
-  "deepPass": 2,
-  "buy": 0,
-  "watch": 2,
+  "deepPass": 3,
+  "buy": 1,
+  "watch": 1,
   "regime": "neutral",
   "universe": 0,
   "watchlist": 3,
   "topCuts": {
-   "younger than 21d": 138,
-   "mcap over max": 59,
-   "liquidity too thin": 56,
-   "already pumping": 48,
-   "mcap under min (dead)": 44,
+   "younger than 21d": 160,
+   "mcap over max": 69,
+   "liquidity too thin": 67,
+   "already pumping": 55,
+   "mcap under min (dead)": 55,
    "almost no sellers (honeypot risk)": 6,
    "too few buyers 24h": 5,
    "flagged suspicious on GeckoTerminal": 4
   },
   "holderData": {
-   "blockscout": 0,
-   "estimate": 3,
+   "blockscout": 3,
+   "cached": 0,
+   "estimate": 0,
    "none": 0
   },
-  "httpErrors": {
-   "robinhoodchain.blockscout.com": {
-    "count": 7,
-    "last": "HTTP 403"
-   },
-   "api.geckoterminal.com": {
-    "count": 1,
-    "last": "HTTP 429"
-   }
+  "httpErrors": {},
+  "blockscout": {
+   "key": true,
+   "calls": 6
+  },
+  "wallets": {
+   "tracked": 212,
+   "smart": 0,
+   "seeded": 0,
+   "tradePulls": 3
   }
  },
  "watchAlerts": {
@@ -80,23 +107,28 @@
    "at": 1792243878731,
    "score": 53,
    "symbol": "CANNACAT"
+  },
+  "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
+   "at": 1792245082484,
+   "score": 58,
+   "symbol": "hpe"
   }
  },
  "watchlist": {
   "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
    "pool": "0x91e9823a895a2d05a2c853fbd1619da089b36054f0a342039a0e8046608bbece",
    "symbol": "ROO",
-   "at": 1792243878731
+   "at": 1792245082484
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "symbol": "CANNACAT",
-   "at": 1792243878731
+   "at": 1792245082484
   },
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
    "pool": "0x8449bc525b02fb251bc7e281da91bdec6ef184a0e99f4a40bfa9a5fc7ebb4fcf",
    "symbol": "hpe",
-   "at": 1792243878731
+   "at": 1792245082484
   }
  },
  "tgCache": {
@@ -137,9 +169,60 @@
     "flagged suspicious on GeckoTerminal": 4,
     "top 10 wallets too concentrated": 1
    }
+  },
+  {
+   "t": 1792245082484,
+   "scanned": 189,
+   "quickPass": 3,
+   "deepPass": 3,
+   "reasons": {
+    "mcap over max": 69,
+    "liquidity too thin": 67,
+    "younger than 21d": 160,
+    "too few buyers 24h": 5,
+    "almost no sellers (honeypot risk)": 6,
+    "already pumping": 55,
+    "mcap under min (dead)": 55,
+    "flagged suspicious on GeckoTerminal": 4
+   }
   }
  ],
  "universe": {},
  "lastDiscoverAt": 1792243878731,
- "lastSnapshotAt": 1792243878731
+ "lastSnapshotAt": 1792243878731,
+ "holderCache": {
+  "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
+   "at": 1792245082484,
+   "conc": {
+    "top1Pct": 3.829,
+    "top10Pct": 6.9987,
+    "largestContractPct": 69.1262,
+    "burnedPct": 0,
+    "devPctOnchain": null
+   },
+   "holdersCount": 500
+  },
+  "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
+   "at": 1792245082484,
+   "conc": {
+    "top1Pct": 1.7285,
+    "top10Pct": 15.5319,
+    "largestContractPct": 12.2119,
+    "burnedPct": 0,
+    "devPctOnchain": null
+   },
+   "holdersCount": 24206
+  },
+  "0x1139d423c1706bdead91f03507f521635591ed92": {
+   "at": 1792245082484,
+   "conc": {
+    "top1Pct": 4.5174,
+    "top10Pct": 26.1326,
+    "largestContractPct": 16.7774,
+    "burnedPct": 0,
+    "devPctOnchain": 4.5174
+   },
+   "holdersCount": 527
+  }
+ }
 }
