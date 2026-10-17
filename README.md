@@ -1,8 +1,8 @@
 # HOOD SCANNER
 
-A standalone bot that scans Robinhood Chain memecoins every 2 hours, throws out the junk, scores what's left on the "survivor rebound" thesis, and sends the best finds to your phone. Each alert comes with a trade plan and opens a **paper** position, so the $30 strategy gets tested on real prices before any real money goes in.
+A standalone bot that scans Robinhood Chain memecoins every 15 minutes, around the clock, throws out the junk, scores what's left on the "survivor rebound" thesis, and sends the best finds to your phone. Each alert comes with a trade plan and opens a **paper** position, so the $30 strategy gets tested on real prices before any real money goes in.
 
-**Cost: $0.** It runs on GitHub Actions and uses free, keyless data (GeckoTerminal + Blockscout). Alerts go through Telegram or Discord.
+**Cost: $0.** It runs on GitHub Actions (unlimited on a public repo) and uses free, keyless data (GeckoTerminal + Blockscout + Telegram). Alerts go out any hour, the moment a coin qualifies.
 
 ---
 
@@ -11,10 +11,10 @@ A standalone bot that scans Robinhood Chain memecoins every 2 hours, throws out 
 | Rule | Setting |
 |---|---|
 | Age | over **21 days** (3 weeks) |
-| Market cap | **$15k – $333k** |
-| Liquidity | at least $5k |
-| Established community | 250+ holders, 15+ unique buyers in 24h, at least one social linked |
-| Not locked up in a majority wallet | top wallet ≤ 8%, top 10 wallets ≤ 35%, dev ≤ 5% (LP pools, launchpad contracts and burn addresses excluded so they don't skew it) |
+| Market cap | **$10k – $333k** |
+| Liquidity | at least $3k |
+| Established community | 150+ holders, 8+ unique buyers in 24h, at least one social linked, ≤ 2 GeckoTerminal "suspicious" reports |
+| Not locked up in a majority wallet | top wallet ≤ 8%, top 10 wallets ≤ 40%, dev ≤ 5% (LP pools, launchpad contracts and burn addresses excluded so they don't skew it) |
 | Junk filter | honeypot flag, almost no sellers, already up 100%+ in 24h, dead market cap |
 | Targets | conservative 3x–10x |
 | Bankroll | $30, split into $10 slices, max 3 open |
@@ -25,7 +25,7 @@ The thesis: a 3+ week old coin that already crashed, whose community held on, wh
 
 | Part | Points | What it rewards |
 |---|---|---|
-| Community | 25 | holder count, unique buyers, socials |
+| Community | 25 | holders, unique buyers, socials, Telegram group size, GeckoTerminal trust score + votes; penalties for a recycled X handle or suspicious reports |
 | Conviction | 10 | holders flat or rising while price fell |
 | Distribution | 15 | supply spread across real wallets |
 | Structure | 25 | 65–92% off its high, tight 7-day base, lows holding |
@@ -33,7 +33,19 @@ The thesis: a 3+ week old coin that already crashed, whose community held on, wh
 | Liquidity | 5 | pool depth vs market cap |
 | Narrative | 5 | its narrative leader (cat, dog, hood, AI…) is moving while it's still basing; stock-paired coins |
 
-Alerts fire at **65+**. When chain-wide volume is falling the bar rises to 75; when it's surging it drops to 60. The same coin won't re-alert for 72 hours unless its score jumps 10+.
+Two alert tiers:
+- **🟢 BUY ZONE (65+)** — full trade plan, opens a paper position.
+- **👀 WATCH (50–64)** — heads-up that a coin passed every junk check and is close. No paper position.
+
+When chain-wide volume is falling both bars rise 10 points; when it's surging they drop 5. A coin won't re-alert for 72h (buy) / 24h (watch) unless its score jumps 10+.
+
+## Community & X signals (free)
+
+X's API has no free tier any more (reading posts costs $0.005 each), so the bot measures community without it:
+- **Telegram group size** of the coin's linked group, via your own bot (free).
+- **Recycled X handle** — if the same @handle is linked to more than one token, that's flagged as a likely copycat or recycled scam.
+- **GeckoTerminal** community sentiment votes, "suspicious" reports and trust score.
+- Every alert links the coin's X account so you can eyeball it yourself in one tap.
 
 ## The trade plan (paper)
 
@@ -45,7 +57,7 @@ Alerts fire at **65+**. When chain-wide volume is falling the bar rises to 75; w
 - **Time stop:** 30 days
 - Rugs (liquidity pulled) and vanished pools count as near-total losses
 
-You get a phone message on every alert, every paper sell, and a daily summary at 9 AM Toronto time with the bankroll, open positions and win rate.
+You get a phone message on every alert (any hour), every paper sell, and a daily summary at 9 AM Toronto time with the bankroll, win rate, and a **funnel** showing how many coins passed each stage and the top reasons coins got cut — that's how to tell if a filter is too tight.
 
 ---
 
@@ -71,13 +83,13 @@ Repo → **Settings → Secrets and variables → Actions → New repository sec
 ### 4. Turn it on
 Repo → **Actions** tab → enable workflows → open **hood-scanner** → **Run workflow**. After that it runs on its own every 2 hours.
 
-**Free-tier math:** private repos get 2,000 Action minutes a month. Each run takes about 3–4 minutes, so 12 runs a day uses roughly 1,100–1,500. Don't go faster than every 2 hours on a private repo. A public repo has no limit and can run every 30 minutes, but your data and settings would be public.
+**Keep the repo public.** Public repos get unlimited free Action minutes, which is what allows a scan every 15 minutes. Your Telegram secrets stay hidden; the code, settings and dataset are visible. (Private repos are capped at 2,000 min/month — you'd have to slow the schedule to every ~90 min.) GitHub may delay scheduled runs by a few minutes when it's busy.
 
 ---
 
 ## What it saves (in `data/`)
 
-- `snapshots/YYYY-MM.csv` — every coin under $1M market cap, every run: price, market cap, liquidity, holders, concentration, drawdown, score, and why it passed or failed. **This is the research dataset.** Holder history can't be rebuilt later, so it gets more valuable every week it runs.
+- `snapshots/v2-YYYY-MM.csv` — every coin under $1M market cap, hourly: price, market cap, liquidity, holders, concentration, drawdown, score, and why it passed or failed. **This is the research dataset.** Holder history can't be rebuilt later, so it gets more valuable every week it runs.
 - `trades.csv` — every closed paper trade.
 - `state.json` — open paper positions, bankroll, alert history.
 

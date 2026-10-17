@@ -14,29 +14,47 @@ export const CONFIG = {
   // How wide each scan casts the net
   scan: {
     sorts: ['h24_volume_usd_desc', 'h24_tx_count_desc'],
-    pagesPerSort: 10, // 20 pools per page
+    pagesPerSort: 10, // 20 pools per page (10 is the free max)
+    includeTrending: true,
     maxDeepChecks: 25, // candidates that get the full holder/chart check per run
+    watchlistMax: 120, // coins that once passed the quick filter get re-checked every run, even if they drop off the top lists
+    // Discovery by holder count (Blockscout) — finds established coins too quiet for the volume lists
+    discoverEveryMin: 120,
+    discoverPages: 6, // 50 tokens per page
+    universeMax: 240,
+  },
+
+  // Not memecoins: Robinhood Stock Tokens and other wrapped/real-world assets
+  excludeNamePattern: /stock token|tokenized|xstock|\betf\b|\binc\.?$|corporation|holdings|treasury|wrapped|bridged|usd coin|tether/i,
+
+  // Runs every 15 min. These keep the dataset and history at sensible spacing.
+  cadence: {
+    snapshotEveryMin: 60, // research CSV row per coin
+    holderSampleEveryMin: 120, // holder-count history (conviction signal)
+    regimeSampleEveryMin: 120, // chain-wide volume history (market regime)
   },
 
   // ── Logan's core parameters ──────────────────────────────
   minAgeDays: 21, // "coins over 3 weeks old"
   maxMarketCap: 333_000, // "under $333,000 market cap"
-  minMarketCap: 15_000, // below this it's usually dead, not early
-  minLiquidityUsd: 5_000, // need enough depth to get in and out
+  minMarketCap: 10_000, // below this it's usually dead, not early
+  minLiquidityUsd: 3_000, // need enough depth to get in and out of a $10 position
 
   // "Established community"
   community: {
-    minHolders: 250,
-    minBuyers24h: 15, // unique buyers, so one wallet can't fake activity
-    minSellers24h: 3, // people CAN sell → honeypot proxy
-    requireSocial: true, // at least one of X / Telegram / website
+    minHolders: 150,
+    minBuyers24h: 8, // unique buyers, so one wallet can't fake activity
+    minSellers24h: 2, // people CAN sell → honeypot proxy
+    requireSocial: true, // at least one of X / Telegram / website / Discord
+    maxSusReports: 2, // GeckoTerminal community "suspicious" reports; more than this = reject
+    maxSharedXHandle: 1, // same X handle linked to another token = copycat warning
   },
 
   // "Not locked up in a majority's wallet"
   // Measured on real wallets only: LP pools, launchpad contracts and burn addresses are excluded.
   distribution: {
     maxTop1Pct: 8,
-    maxTop10Pct: 35,
+    maxTop10Pct: 40,
     maxDevPct: 5,
   },
 
@@ -44,10 +62,12 @@ export const CONFIG = {
   maxChange24hPct: 100,
 
   // ── Scoring / alerting ───────────────────────────────────
-  alertScore: 65, // 0–100; raised automatically in a cold market
+  alertScore: 65, // 🟢 BUY ZONE — opens a paper position
+  watchScore: 50, // 👀 WATCH — heads-up only, no paper position
   regimeAdjust: { riskOn: -5, riskOff: +10 },
-  realertCooldownHours: 72, // don't re-alert the same coin unless the score jumps
+  realertCooldownHours: 72, // don't re-alert the same coin unless the score jumps…
   realertScoreJump: 10,
+  watchCooldownHours: 24,
 
   // ── Paper trading: the $30 test ──────────────────────────
   paper: {
@@ -67,11 +87,11 @@ export const CONFIG = {
     slippagePct: 3, // per side, assumed
   },
 
-  // Daily summary message (Toronto time)
+  // Daily summary message (Toronto time). Alerts themselves go out any hour.
   digestHourLocal: 9,
   timezone: 'America/Toronto',
 
-  // Snapshot logger — builds the research dataset every run
+  // Snapshot logger — builds the research dataset
   snapshotMaxMarketCap: 1_000_000,
 
   // Base tokens that are never memecoins

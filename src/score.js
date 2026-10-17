@@ -3,7 +3,7 @@
 // community held, whose price stopped making new lows, and where buyers are
 // starting to come back.
 //
-//   Community      25  holders, unique buyers, socials
+//   Community      25  holders, unique buyers, socials, Telegram size, GT trust/votes
 //   Conviction     10  holders flat/rising while price fell
 //   Distribution   15  spread across real wallets
 //   Structure      25  deep drawdown, sideways base, lows holding
@@ -48,11 +48,22 @@ export function holderTrend(history, holdersNow, now = Date.now()) {
   return ((holdersNow - ref[1]) / ref[1]) * 100;
 }
 
-export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired }) {
+export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community }) {
   const parts = {};
 
-  parts.community =
-    lerp(holdersCount, 250, 2000, 12) + lerp(pool.buyers24h, 15, 150, 7) + Math.min(socials, 3) * 2;
+  // Community (25): on-chain crowd + off-chain crowd
+  let comm =
+    lerp(holdersCount, 150, 1500, 9) + // holders
+    lerp(pool.buyers24h, 8, 100, 5) + // real unique buyers today
+    Math.min(socials, 3); // linked X / TG / site (max 3)
+  comm += lerp(community?.tgMembers, 100, 2000, 4); // Telegram group size
+  const gt = community?.gtScore;
+  comm += lerp(gt, 30, 80, 2); // GeckoTerminal trust score
+  const sp = community?.sentimentPos;
+  if (sp != null) comm += sp >= 70 ? 2 : sp >= 50 ? 1 : 0; // community votes
+  if (community?.xShared > 0) comm -= 3; // recycled X handle
+  comm -= Math.min(3, (community?.susReports || 0) * 1.5);
+  parts.community = clamp(comm, 0, 25);
 
   // Conviction: holders held through the drawdown
   if (holderChangePct == null) parts.conviction = 5;

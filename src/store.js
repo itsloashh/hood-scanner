@@ -14,9 +14,18 @@ export function loadState() {
     s.alerts ||= {};
     s.holders ||= {};
     s.volumeHistory ||= [];
+    s.watchAlerts ||= {};
+    s.watchlist ||= {};
+    s.tgCache ||= {};
+    s.xIndex ||= {};
+    s.funnel24h ||= [];
+    s.universe ||= {};
     return s;
   } catch {
-    return { paper: newPaperState(), alerts: {}, holders: {}, volumeHistory: [], lastDigest: null, runs: 0 };
+    return {
+      paper: newPaperState(), alerts: {}, watchAlerts: {}, holders: {}, volumeHistory: [],
+      watchlist: {}, universe: {}, tgCache: {}, xIndex: {}, funnel24h: [], lastDigest: null, runs: 0,
+    };
   }
 }
 
@@ -28,7 +37,15 @@ export function saveState(state) {
     state.holders[k] = arr.filter((s) => s[0] >= cutoff).slice(-60);
     if (!state.holders[k].length) delete state.holders[k];
   }
-  state.volumeHistory = state.volumeHistory.slice(-84); // ~7 days of 2-hourly runs
+  state.volumeHistory = state.volumeHistory.slice(-84); // ~7 days of 2-hourly samples
+  state.funnel24h = state.funnel24h.filter((f) => f.t >= Date.now() - 86_400_000);
+  for (const [h, v] of Object.entries(state.tgCache)) if (Date.now() - v.at > 3 * 86_400_000) delete state.tgCache[h];
+  const xKeys = Object.keys(state.xIndex);
+  if (xKeys.length > 2000) for (const k of xKeys.slice(0, xKeys.length - 2000)) delete state.xIndex[k];
+  for (const k of ['alerts', 'watchAlerts']) {
+    for (const [t, a] of Object.entries(state[k])) if (Date.now() - a.at > 30 * 86_400_000) delete state[k][t];
+  }
+  delete state.health;
   fs.writeFileSync(STATE_FILE(), JSON.stringify(state, null, 1));
 }
 
@@ -50,7 +67,9 @@ export function appendCsv(relPath, columns, rows) {
 export const SNAPSHOT_COLUMNS = [
   'ts', 'token', 'symbol', 'pool', 'quote', 'priceUsd', 'marketCap', 'liquidityUsd', 'ageDays',
   'volume24h', 'buyers24h', 'sellers24h', 'change24h', 'holders', 'top1Pct', 'top10Pct', 'devPct',
-  'drawdownPct', 'baseRange', 'volRatio', 'holderChange3d', 'narratives', 'score', 'decision', 'reasons',
+  'drawdownPct', 'baseRange', 'volRatio', 'holderChange3d', 'narratives',
+  'xHandle', 'xShared', 'tgMembers', 'sentimentPos', 'susReports', 'gtScore',
+  'score', 'decision', 'reasons',
 ];
 
 export const TRADE_COLUMNS = [

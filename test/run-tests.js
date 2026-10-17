@@ -7,6 +7,7 @@ import path from 'node:path';
 
 process.env.DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'hood-test-'));
 process.env.DRY_RUN = '1';
+process.env.TELEGRAM_BOT_TOKEN = 'test-token';
 
 const { CONFIG } = await import('../config.js');
 CONFIG.geckoMinIntervalMs = 0;
@@ -92,9 +93,10 @@ globalThis.fetch = async (url) => {
   if (url.includes('/pools?page=')) return ok(poolJson(all));
   if (url.includes('/pools/multi/')) return ok(poolJson(all.filter((c) => url.includes(c.pool))));
   if (url.includes('/ohlcv/')) return ok(candles());
+  if (url.includes('api.telegram.org') && url.includes('getChatMemberCount')) return ok({ ok: true, result: 1200 });
   if (url.includes('/info')) {
     const c = find(url);
-    return ok({ data: { attributes: { holders: { count: 900 }, twitter_handle: c.sym.toLowerCase(), telegram_handle: null, websites: ['https://x.example'], is_honeypot: 'no', developer_holding_percentage: '1.5', developer_address: addr(5001) } } });
+    return ok({ data: { attributes: { holders: { count: 900 }, gt_score: 62, twitter_handle: c.sym.toLowerCase(), telegram_handle: c.sym.toLowerCase() + 'portal', websites: ['https://x.example'], is_honeypot: 'no', developer_holding_percentage: '1.5', developer_address: addr(5001) } } });
   }
   if (url.includes('blockscout') && url.endsWith('/holders')) return ok(holdersFor(find(url)));
   if (url.includes('blockscout')) return ok({ holders_count: '900', total_supply: supply.toString() });
@@ -125,8 +127,8 @@ await test('quick filter enforces Logan parameters (age ≥21d, mcap ≤ $333k)'
   });
   assert.equal(quickFilter(mk(coins.good), now).ok, true);
   assert.match(quickFilter(mk(coins.young), now).reasons.join(), /younger than 21d/);
-  assert.match(quickFilter(mk(coins.big), now).reasons.join(), /mcap >/);
-  assert.match(quickFilter(mk({ ...coins.good, mcap: 334_000 }), now).reasons.join(), /mcap >/);
+  assert.match(quickFilter(mk(coins.big), now).reasons.join(), /mcap over max/);
+  assert.match(quickFilter(mk({ ...coins.good, mcap: 334_000 }), now).reasons.join(), /mcap over max/);
   assert.equal(quickFilter(mk({ ...coins.good, mcap: 333_000 }), now).ok, true);
 });
 
@@ -143,11 +145,12 @@ let stats1;
 await test('full scan alerts on the good coin only and opens a $10 paper position', async () => {
   stats1 = await main();
   const out = printed.join('\n');
-  assert.equal(stats1.alerts, 1, `alerts ${stats1.alerts}\n${out.slice(-3000)}`);
-  assert.match(out, /HOOD SCANNER — \$GOODCAT/);
+  assert.equal(stats1.buy, 1, `buy alerts ${stats1.buy}\n${out.slice(-3000)}`);
+  assert.match(out, /BUY ZONE — \$GOODCAT/);
+  assert.match(out, /TG @goodcatportal \(1\.2k members\)/);
   if (process.env.SHOW_ALERT) origLog(out.slice(out.indexOf('──── ALERT')));
-  assert.doesNotMatch(out, /HOOD SCANNER — \$WHALEINU/);
-  assert.doesNotMatch(out, /HOOD SCANNER — \$NEWDOG/);
+  assert.doesNotMatch(out, /— \$WHALEINU/);
+  assert.doesNotMatch(out, /— \$NEWDOG/);
   const state = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'));
   assert.equal(state.paper.positions.length, 1);
   assert.ok(Math.abs(state.paper.positions[0].sizeUsd - 10) < 0.01);
@@ -156,17 +159,45 @@ await test('full scan alerts on the good coin only and opens a $10 paper positio
 
 await test('snapshot logger wrote the research dataset', () => {
   const month = new Date(now).toISOString().slice(0, 7);
-  const csv = fs.readFileSync(path.join(process.env.DATA_DIR, 'snapshots', `${month}.csv`), 'utf8');
+  const csv = fs.readFileSync(path.join(process.env.DATA_DIR, 'snapshots', `v2-${month}.csv`), 'utf8');
   const rows = csv.trim().split('\n');
   assert.ok(rows.length >= 4, `rows ${rows.length}`);
-  assert.match(csv, /GOODCAT.*ALERT/);
-  assert.match(csv, /WHALEINU.*top wallet/);
+  assert.match(csv, /GOODCAT.*BUY-ALERT/);
+  assert.match(csv, /WHALEINU.*top wallet too big/);
 });
 
 await test('second run does not re-alert the same coin (cooldown)', async () => {
   printed.length = 0;
   const s = await main();
-  assert.equal(s.alerts, 0);
+  assert.equal(s.buy + s.watch, 0);
+});
+
+await test('WATCH tier fires below the buy bar, with no paper position', async () => {
+  fs.rmSync(path.join(process.env.DATA_DIR, 'state.json'));
+  const saved = CONFIG.alertScore;
+  CONFIG.alertScore = 99;
+  printed.length = 0;
+  const s = await main();
+  CONFIG.alertScore = saved;
+  assert.equal(s.watch, 1);
+  assert.equal(s.buy, 0);
+  assert.match(printed.join('\n'), /👀 WATCH — \$GOODCAT/);
+  const state = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'));
+  assert.equal(state.paper.positions.length, 0);
+});
+
+await test('digest shows the funnel and why coins got cut', () => {
+  const out = printed.join('\n');
+  assert.match(out, /Funnel \(24h avg per scan\)/);
+  assert.match(out, /younger than 21d: 1/);
+});
+
+await test('X handle reused on another token gets flagged', async () => {
+  const { recordXHandle, cleanHandle } = await import('../src/community.js');
+  const idx = {};
+  assert.equal(recordXHandle(idx, '@SomeCoin', '0xa'), 0);
+  assert.equal(recordXHandle(idx, 'https://x.com/somecoin', '0xb'), 1);
+  assert.equal(cleanHandle('https://t.me/HoodCats?start=1'), 'hoodcats');
 });
 
 // ── Paper trading rules ──────────────────────────────────
@@ -191,6 +222,47 @@ await test('paper: stop loss at −50% and rug detection', () => {
   assert.equal(p.positions.length, 0);
   assert.ok(p.closed.every((t) => t.pnl < 0));
   assert.ok(p.cash < 30 && p.cash > 10, `cash ${p.cash}`);
+});
+
+await test('holder backup: GeckoTerminal split used when Blockscout holders fail', async () => {
+  const bsMod = await import('../src/blockscout.js');
+  const est = bsMod.estimateConcentration({ top10PctRaw: 55 }, { marketCap: 100_000, liquidityUsd: 40_000 });
+  assert.equal(est.source, 'estimate');
+  assert.ok(Math.abs(est.top10Pct - 35) < 0.01, `top10 ${est.top10Pct}`); // 55% − ~20% pool share
+  assert.equal(est.top1Pct, null);
+  const { deepFilter } = await import('../src/filters.js');
+  const r = deepFilter({ info: { twitter: 'x', devPct: 1 }, holdersCount: 500, conc: est, community: { flags: [] } });
+  assert.equal(r.ok, true, r.reasons.join());
+  assert.match(r.warnings.join(), /estimated/);
+});
+
+await test('discovery finds quiet established coins; stock tokens excluded', async () => {
+  fs.rmSync(path.join(process.env.DATA_DIR, 'state.json'));
+  const quiet = { sym: 'QUIETFROG', token: addr(7), pool: addr(107), mcap: 90_000, liq: 12_000, age: 50, buyers: 20, sellers: 12, ch24: 1, vol: 3_000 };
+  const stock = { sym: 'TSLA', name: 'Tesla Stock Token', token: addr(8), pool: addr(108), mcap: 200_000, liq: 50_000, age: 90, buyers: 50, sellers: 40, ch24: 0, vol: 20_000 };
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    url = String(url);
+    if (url.includes('blockscout') && url.includes('/tokens?')) {
+      return ok({ items: [
+        { address_hash: quiet.token, symbol: quiet.sym, name: 'Quiet Frog', holders_count: '640' },
+        { address_hash: stock.token, symbol: 'TSLA', name: 'Tesla Stock Token', holders_count: '9000' },
+      ], next_page_params: null });
+    }
+    if (url.includes('/tokens/multi/')) {
+      return ok({ data: [{ attributes: { address: quiet.token }, relationships: { top_pools: { data: [{ id: `robinhood_${quiet.pool}` }] } } }] });
+    }
+    if (url.includes('/pools/multi/') && url.includes(quiet.pool)) return ok(poolJson([quiet]));
+    return prevFetch(url);
+  };
+  printed.length = 0;
+  await main();
+  globalThis.fetch = prevFetch;
+  const state = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'));
+  assert.ok(state.universe[quiet.token], 'quiet coin not in universe');
+  assert.ok(!state.universe[stock.token], 'stock token leaked into universe');
+  assert.ok(state.lastRun.holderData, 'health report missing');
+  assert.match(printed.join('\n'), /QUIETFROG/);
 });
 
 console.log = origLog;

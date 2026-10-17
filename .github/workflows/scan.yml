@@ -2,11 +2,11 @@ name: hood-scanner
 
 on:
   schedule:
-    - cron: '7 */2 * * *'
-  workflow_dispatch:
+    - cron: '*/15 * * * *' # every 15 min, around the clock (free + unlimited on a public repo)
+  workflow_dispatch: # "Run workflow" button for a manual scan
 
 permissions:
-  contents: write
+  contents: write # lets the bot commit its data folder back
 
 concurrency:
   group: hood-scanner
@@ -15,11 +15,11 @@ concurrency:
 jobs:
   scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 

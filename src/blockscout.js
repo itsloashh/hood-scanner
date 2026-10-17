@@ -10,6 +10,27 @@ export const BURN_ADDRESSES = new Set([
   '0x000000000000000000000000000000000000dead',
 ]);
 
+// Discovery: ERC-20 tokens on the chain ordered by holder count. This catches
+// established coins whose volume is too quiet for GeckoTerminal's top lists.
+export async function listTokensByHolders(maxPages = 4) {
+  const out = [];
+  let params = 'type=ERC-20&sort=holders_count&order=desc';
+  for (let page = 0; page < maxPages && params; page++) {
+    const d = await getJson(`${CONFIG.blockscoutBase}/tokens?${params}`, opts());
+    for (const t of d?.items || []) {
+      out.push({
+        address: (t.address_hash || t.address)?.toLowerCase(),
+        symbol: t.symbol,
+        name: t.name,
+        holders: Number(t.holders_count ?? t.holders ?? 0),
+      });
+    }
+    const next = d?.next_page_params;
+    params = next ? `type=ERC-20&sort=holders_count&order=desc&${new URLSearchParams(next)}` : null;
+  }
+  return out.filter((t) => t.address);
+}
+
 export async function tokenMeta(address) {
   const d = await getJson(`${CONFIG.blockscoutBase}/tokens/${address}`, opts());
   if (!d) return null;
@@ -29,6 +50,22 @@ export async function topHolders(address) {
 }
 
 const pctOf = (part, whole) => (whole > 0n ? Number((part * 1_000_000n) / whole) / 10_000 : 0);
+
+// Backup when Blockscout can't give holder lists: GeckoTerminal's top-10 share
+// includes the LP pool, so subtract an estimate of the pool's share
+// (≈ half the pool's USD reserve, as a share of market cap). Top-1 is unknown.
+export function estimateConcentration(info, pool) {
+  if (info?.top10PctRaw == null) return null;
+  const lpPct = pool.marketCap ? Math.min(60, ((pool.liquidityUsd || 0) / 2 / pool.marketCap) * 100) : 0;
+  return {
+    top1Pct: null,
+    top10Pct: Math.max(0, info.top10PctRaw - lpPct),
+    largestContractPct: 0,
+    burnedPct: null,
+    devPctOnchain: null,
+    source: 'estimate',
+  };
+}
 
 // Concentration across REAL wallets: excludes burn addresses, the trading pool(s)
 // and any contract (bonding curves, lockers, LP). Contract holdings are reported
