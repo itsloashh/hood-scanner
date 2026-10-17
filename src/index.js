@@ -195,6 +195,7 @@ async function deepCheck(pool, state, leaders, now, w) {
     flow = await tradeFlow(pool, w, state, now);
     if (flow?.bundledShare >= 0.3) filt.warnings.push(`${Math.round(flow.bundledShare * 100)}% of buys were bundled (several wallets in one block — likely bots)`);
     if (flow?.botBuyers) filt.warnings.push(`${flow.botBuyers} known bot wallet(s) buying`);
+    if (flow?.washLikely) filt.warnings.push(`Looks like a volume bot / wash trading (${flow.washSignals.join('; ')}) — activity is likely fake, kept out of the buy zone`);
   }
 
   // True age = older of pool creation and first candle
@@ -210,8 +211,13 @@ async function deepCheck(pool, state, leaders, now, w) {
       })
     : null;
 
+  if (score?.parts.inflatedHoldersPenalty) {
+    filt.warnings.push(`Holder count looks padded — only ${usdOf(score.usdPerHolder)} of market cap per holder (airdropped dust wallets?)`);
+  }
   return { pool, info, conc, holdersCount, holderChangePct, filt, chart, age, narratives: tags, stockPaired, rotation, score, community, flow };
 }
+
+const usdOf = (v) => (v == null ? '—' : `$${v.toFixed(2)}`);
 
 function shouldAlert(store, token, score, cooldownH, now) {
   const prev = store[token];
@@ -316,7 +322,7 @@ export async function main() {
       log(`✓ ${pool.baseToken.symbol}: score ${s}`);
       const token = pool.baseToken.address;
 
-      if (s >= buyBar && shouldAlert(state.alerts, token, s, CONFIG.realertCooldownHours, now)) {
+      if (s >= buyBar && !r.score.buyBlocked && shouldAlert(state.alerts, token, s, CONFIG.realertCooldownHours, now)) {
         const paperOpened = openPosition(state.paper, {
           token, symbol: pool.baseToken.symbol, pool: pool.poolAddress, price: pool.priceUsd, score: s,
         }, now);
@@ -324,7 +330,7 @@ export async function main() {
         state.alerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.buy += 1;
         if (row) row.decision = 'BUY-ALERT';
-      } else if (s >= watchBar && s < buyBar && shouldAlert(state.watchAlerts, token, s, CONFIG.watchCooldownHours, now)) {
+      } else if (s >= watchBar && (s < buyBar || r.score.buyBlocked) && shouldAlert(state.watchAlerts, token, s, CONFIG.watchCooldownHours, now)) {
         await notify(alertMessage({ ...r, tier: 'watch', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings }));
         state.watchAlerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.watch += 1;

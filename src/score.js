@@ -93,7 +93,9 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   const volRatio = chart?.avgVol7 ? pool.volume24h / chart.avgVol7 : null;
   awakening += lerp(volRatio, 1, 3, 7);
   const bs = pool.sellers24h > 0 ? pool.buyers24h / pool.sellers24h : null;
-  if (flow) {
+  if (flow?.washLikely) {
+    // churn from a volume bot isn't buyers returning — no credit
+  } else if (flow) {
     // real money flow from the trade feed: net $ bought vs pool depth
     const liq = pool.liquidityUsd || 1;
     awakening += lerp(flow.netFlowUsd / liq, 0, 0.25, 4);
@@ -115,6 +117,10 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   parts.smartMoney = Math.min(smartBonus.max, smartN * smartBonus.per);
   // Bundled buying (several wallets in the same block) is usually bots dressing up demand
   parts.bundlePenalty = flow && flow.bundledShare >= 0.3 ? -5 : 0;
+  // Fake activity: wash trading, and holder counts padded with airdropped dust wallets
+  parts.washPenalty = flow?.washLikely ? -15 : 0;
+  const usdPerHolder = holdersCount ? (pool.marketCap || 0) / holdersCount : null;
+  parts.inflatedHoldersPenalty = usdPerHolder != null && usdPerHolder < 10 && holdersCount > 2000 ? -6 : 0;
 
   const total = Math.round(Object.values(parts).reduce((s, v) => s + v, 0));
   return {
@@ -123,6 +129,9 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
     volRatio,
     buySellRatio: bs,
     liqRatio,
+    usdPerHolder,
+    // fake-activity coins can be watched but never reach the buy zone
+    buyBlocked: Boolean(flow?.washLikely),
   };
 }
 

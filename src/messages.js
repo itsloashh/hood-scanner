@@ -82,7 +82,9 @@ export function alertMessage(c) {
     L.push(`Passed every safety check and scored above ${CONFIG.alertScore}. Trade plan below.`);
   } else {
     L.push(`👀 WATCH · $${sym} — ${score.total}/100`);
-    L.push(`Passed every safety check. ${Math.max(0, CONFIG.alertScore - score.total)} points short of the buy zone (${CONFIG.alertScore}).`);
+    L.push(score.buyBlocked
+      ? 'Passed the safety checks, but its trading looks bot-driven — watch only, no trade.'
+      : `Passed every safety check. ${Math.max(0, CONFIG.alertScore - score.total)} points short of the buy zone (${CONFIG.alertScore}).`);
   }
   if (regime.state !== 'neutral') L.push(regime.state === 'risk-on' ? 'Market is heating up — bar lowered a little.' : 'Market is cooling — bar raised a little.');
 
@@ -101,7 +103,7 @@ export function alertMessage(c) {
   if (community?.x) L.push(bullet(`X @${community.x}${community.xShared ? ' — ⚠️ this handle is also linked to another token' : ''}`));
   const gtBits = [];
   if (community?.gtScore != null) gtBits.push(`trust score ${Math.round(community.gtScore)}/100`);
-  if (community?.sentimentPos != null) gtBits.push(`${Math.round(community.sentimentPos)}% of voters positive`);
+  if (community?.sentimentPos != null) gtBits.push(community.sentimentPos < 30 ? `⚠️ only ${Math.round(community.sentimentPos)}% of voters positive` : `${Math.round(community.sentimentPos)}% of voters positive`);
   if (gtBits.length) L.push(bullet(`GeckoTerminal: ${gtBits.join(', ')}`));
   L.push(bullet(holderTrendNote(holderChangePct)));
 
@@ -116,6 +118,11 @@ export function alertMessage(c) {
     L.push('', `🔎 WHO'S BUYING (last ${flow.windowHours}h of trades)`);
     L.push(bullet(`${flow.uniqueBuyers} different wallets bought, ${flow.uniqueSellers} sold — ${net >= 0 ? `${usd(net)} more bought than sold` : `${usd(-net)} more sold than bought`}`));
     L.push(bullet(`Typical buy ${usd(flow.medianBuyUsd)}${flow.whaleBuys ? ` · ${flow.whaleBuys} big buy(s) over ${usd(CONFIG.wallets.whaleBuyUsd)}` : ''}${flow.repeatBuyers ? ` · ${flow.repeatBuyers} wallet(s) buying more than once` : ''}`));
+    if (flow.overlap != null) {
+      L.push(bullet(flow.washLikely
+        ? `🚩 ${Math.round(flow.overlap * 100)}% of wallets are on both sides, ~${flow.tradesPerWallet} trades each — this is churn, not new buyers`
+        : `${Math.round(flow.overlap * 100)}% of wallets traded both sides · ~${flow.tradesPerWallet} trades per wallet — looks organic`));
+    }
     if (flow.smartBuyers.length) {
       L.push(bullet(`🧠 ${flow.smartBuyers.length} proven wallet(s) bought — wallets with a track record of catching 3x+ runs (+${p.smartMoney} pts)`));
     }
@@ -139,6 +146,8 @@ export function alertMessage(c) {
   const extras = [];
   if (p.smartMoney) extras.push(`Smart money +${p.smartMoney}`);
   if (p.bundlePenalty) extras.push(`Bundled buys ${p.bundlePenalty}`);
+  if (p.washPenalty) extras.push(`Wash trading ${p.washPenalty}`);
+  if (p.inflatedHoldersPenalty) extras.push(`Padded holder count ${p.inflatedHoldersPenalty}`);
   if (extras.length) L.push(extras.join(' · '));
 
   // Risks

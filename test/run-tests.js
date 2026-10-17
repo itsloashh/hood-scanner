@@ -386,6 +386,25 @@ await test('research job runs end-to-end and writes a report', async () => {
   assert.match(printed.join('\n'), /WEEKLY RESEARCH/);
 });
 
+await test('wash trading: ROO-style churn is flagged and blocked from the buy zone', async () => {
+  const wm = await import('../src/wallets.js');
+  const { scoreCoin } = await import('../src/score.js');
+  // 37 wallets, each buying and selling repeatedly in small sizes (ROO, 17 Oct)
+  const tr = [];
+  for (let i = 0; i < 300; i++) tr.push({ wallet: `0xw${i % 37}`, kind: i % 2 ? 'buy' : 'sell', usd: 6 + (i % 18), ts: i * 36_000, block: i });
+  const f = wm.flowFeatures(tr, { wallets: {}, seeded: {} });
+  assert.equal(f.washLikely, true, JSON.stringify(f));
+  const pool = { marketCap: 102_000, liquidityUsd: 23_000, volume24h: 2_000, buyers24h: 116, sellers24h: 116, change: { h24: 8 } };
+  const sc = scoreCoin({ pool, holdersCount: 24_206, conc: { top10Pct: 15.5, top1Pct: 1.7 }, socials: 2, chart: null, holderChangePct: null, rotation: {}, stockPaired: false, community: {}, flow: f });
+  assert.equal(sc.buyBlocked, true);
+  assert.equal(sc.parts.washPenalty, -15);
+  assert.equal(sc.parts.inflatedHoldersPenalty, -6);
+  // organic flow: many different wallets, few on both sides
+  const org = [];
+  for (let i = 0; i < 120; i++) org.push({ wallet: `0xo${i}`, kind: i % 4 ? 'buy' : 'sell', usd: 40, ts: i * 60_000, block: 1000 + i });
+  assert.equal(wm.flowFeatures(org, { wallets: {}, seeded: {} }).washLikely, false);
+});
+
 console.log = origLog;
 console.log(`\n${failures ? `${failures} test(s) failed` : 'all tests passed'} · ${calls.length} mocked API calls`);
 process.exit(failures ? 1 : 0);

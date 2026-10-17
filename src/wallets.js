@@ -123,6 +123,19 @@ export function flowFeatures(trades, w) {
   let bundledBuys = 0;
   for (const b of buys) if (b.block != null && byBlock.get(b.block).size >= c.bundleMinWallets) bundledBuys += 1;
 
+  // Wash trading / volume bots: the same small group buying AND selling over and over.
+  const traders = new Set([...buyers.keys(), ...sellers]);
+  const both = [...buyers.keys()].filter((a) => sellers.has(a)).length;
+  const overlap = traders.size ? both / traders.size : 0; // share of wallets doing both sides
+  const tradesPerWallet = traders.size ? trades.length / traders.size : 0;
+  const repeatShare = buyers.size ? [...buyers.values()].filter((n) => n >= 2).length / buyers.size : 0;
+  const balanced = Math.max(buyers.size, sellers.size) > 0 && Math.abs(buyers.size - sellers.size) / Math.max(buyers.size, sellers.size) <= 0.1;
+  const washSignals = [
+    overlap >= 0.6 ? `${Math.round(overlap * 100)}% of wallets both bought and sold` : null,
+    tradesPerWallet >= 4 ? `${tradesPerWallet.toFixed(1)} trades per wallet` : null,
+    balanced && repeatShare >= 0.6 ? 'buyers and sellers almost exactly equal, mostly repeat buyers' : null,
+  ].filter(Boolean);
+
   const sizes = buys.map((b) => b.usd).sort((a, b) => a - b);
   const buyUsd = buys.reduce((s, b) => s + b.usd, 0);
   const sellUsd = sells.reduce((s, b) => s + b.usd, 0);
@@ -144,5 +157,10 @@ export function flowFeatures(trades, w) {
     bundledShare: buys.length ? bundledBuys / buys.length : 0,
     botBuyers: bots.length,
     smartBuyers: smart,
+    overlap: Math.round(overlap * 100) / 100,
+    tradesPerWallet: Math.round(tradesPerWallet * 10) / 10,
+    // likely wash/volume bot when 2+ signals agree (or overlap+churn are extreme)
+    washLikely: washSignals.length >= 2 || (overlap >= 0.8 && tradesPerWallet >= 3),
+    washSignals,
   };
 }
