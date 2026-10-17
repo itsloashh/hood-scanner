@@ -32,6 +32,12 @@ Telegram → a free Cloudflare Worker → GitHub Actions.
    - `*/15 * * * *` (scan + paper TP/SL check every 15 min)
    - `23 14 * * *` (daily research)
 
+## Phone-friendly alternative to pasting code (recommended)
+The repo includes `wrangler.jsonc`, so Cloudflare can build the bot straight from GitHub:
+Worker → **Settings → Builds → Connect** → GitHub → **itsloashh/hood-scanner** → branch **main** → Save.
+Set **Build watch paths → Include** to `worker/*` and `wrangler.jsonc`, so the bot's 15-minute data commits don't trigger rebuilds.
+This also sets the cron triggers, the PAPER storage binding, and GITHUB_REPO automatically. You only add the 4 secrets.
+
 ## 3. Connect Telegram
 Open this in your browser (your Worker's address is shown on its page):
 
