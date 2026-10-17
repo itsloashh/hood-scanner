@@ -68,10 +68,43 @@ export async function topHolders(address) {
   }));
 }
 
+// Block number at a moment in time (Etherscan-style RPC endpoint).
+export async function blockAt(ms) {
+  const key = process.env.BLOCKSCOUT_API_KEY;
+  const ts = Math.floor(ms / 1000);
+  const q = `module=block&action=getblocknobytime&timestamp=${ts}&closest=before`;
+  const url = key
+    ? `${CONFIG.blockscoutProBase}/v2/api?chain_id=${CONFIG.chainId}&${q}&apikey=${key}`
+    : `${CONFIG.blockscoutBase.replace('/api/v2', '')}/api?${q}`;
+  usage.calls += 1;
+  const d = await getJson(url, opts());
+  const n = Number(d?.result?.blockNumber ?? d?.result);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 // Token transfers, newest first, paging back until `sinceMs` (or maxPages).
-export async function tokenTransfers(address, { sinceMs = 0, maxPages = 20 } = {}) {
+// With `untilMs`, first jumps straight to that point in history (skipping everything
+// newer) so busy coins' older history is reachable. diag.jumped says if the jump worked.
+export async function tokenTransfers(address, { sinceMs = 0, untilMs = null, maxPages = 20, diag = {} } = {}) {
   const out = [];
   let params = {};
+  diag.jumped = false;
+  if (untilMs) {
+    try {
+      const block = await blockAt(untilMs);
+      if (block) {
+        const d = await bsGet(`/tokens/${address}/transfers`, { block_number: block, index: 2147483647, items_count: 50 });
+        const first = d?.items?.[0]?.timestamp ? Date.parse(d.items[0].timestamp) : null;
+        // only trust the jump if it really landed at (or before) the requested time
+        if (first && first <= untilMs + 2 * 86_400_000) {
+          diag.jumped = true;
+          params = { block_number: block, index: 2147483647, items_count: 50 };
+        }
+      }
+    } catch {
+      /* fall back to paging from the newest transfer */
+    }
+  }
   for (let page = 0; page < maxPages && params; page++) {
     const d = await bsGet(`/tokens/${address}/transfers`, params);
     const items = d?.items || [];

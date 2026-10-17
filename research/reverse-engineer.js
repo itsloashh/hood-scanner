@@ -336,18 +336,23 @@ export async function main() {
   // step 4: transfers → community, burns, early wallets (needs Blockscout)
   const notes = [];
   const burnCache = new Map();
+  const jumps = { ok: 0, no: 0 };
   const ranked = [...byLabel('WIN'), ...byLabel('MOON'), ...byLabel('DUD')];
   let blocked = false;
   for (const s of ranked.slice(0, R.maxWalletSetups)) {
     if (blocked) break;
     try {
+      const diag = {};
       const transfers = await bs.tokenTransfers(s.token, {
         sinceMs: s.setup.t - 2 * R.preRunDays * DAY,
+        untilMs: s.setup.t + (R.windowDays + 1) * DAY, // jump straight to the end of the run window
         maxPages: R.maxTransferPages,
+        diag,
       });
+      jumps[diag.jumped ? 'ok' : 'no'] += 1;
       const tx = analyzeTransfers(transfers, s.setup.t);
       if (!tx.covered) {
-        notes.push(`$${s.symbol}: too much trading since the setup to reach back that far — wallet data skipped`);
+        notes.push(`$${s.symbol}: couldn't reach far enough back in its trading history (${diag.jumped ? 'even after jumping' : 'history jump unavailable'}) — wallet data skipped`);
         continue;
       }
       s.tx = tx;
@@ -377,8 +382,9 @@ export async function main() {
   const smart = findSmartWallets(viable.map((s) => ({ symbol: s.symbol, setup: s.setup, buyers: s.tx })));
   const smartSet = new Set(smart.map((x) => x.addr));
 
-  // learning set: wallet-checked setups if we have them, otherwise every setup
-  const pool = analysed.length ? viable : setups;
+  // learning set: every setup except those the community check threw out
+  // (setups we couldn't wallet-check stay in — unknown isn't the same as fake)
+  const pool = setups.filter((s) => !s.tx || isViable(s.tx));
   for (const s of setups) {
     s.smartBuyers = s.tx ? [...s.tx.wallets.keys()].filter((a) => smartSet.has(a)).length : 0;
     s.catalysts = catalysts(s.setup, s.tx, { smartBuyers: s.smartBuyers, burnedPctNow: s.burnedPctNow, stockPaired: s.stockPaired, themes: s.themes });
@@ -465,6 +471,8 @@ export async function main() {
         : 'Wallet history wasn’t available this run.',
     ...smart.slice(0, 15).map((x) => `- \`${x.addr}\` — early in ${x.wins} winner(s) (${x.coins.join(', ')}), ${x.duds} dud(s)`),
     ...(notes.length ? ['', '## Notes', ...[...new Set(notes)].slice(0, 12).map((n) => `- ${n}`)] : []),
+    '',
+    `_Wallet history: ${analysed.length} setup(s) checked · history jump worked ${jumps.ok}× / failed ${jumps.no}×._`,
   ];
   fs.writeFileSync(path.join(outDir, 'report.md'), lines.filter((l) => l !== null).join('\n') + '\n');
 
@@ -496,7 +504,7 @@ export async function main() {
   tg.push('', 'Full report: data/research/report.md in the repo');
   await notify(tg.join('\n'));
   log('research done');
-  return { coins: coins.length, setups: setups.length, wins: wins.length, moons: moons.length, smart: smart.length, analysed: analysed.length, viable: viable.length };
+  return { coins: coins.length, setups: setups.length, wins: wins.length, moons: moons.length, smart: smart.length, analysed: analysed.length, viable: viable.length, jumps };
 }
 
 const CAT_LABEL = {
