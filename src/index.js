@@ -84,7 +84,8 @@ async function discover(state, now) {
 async function scanPools(state) {
   const byToken = new Map();
   for (const sort of CONFIG.scan.sorts) {
-    for (let page = 1; page <= CONFIG.scan.pagesPerSort; page++) {
+    const pages = Math.min(CONFIG.scan.pagesPerSort, CONFIG.scan.pagesBySort?.[sort] ?? CONFIG.scan.pagesPerSort);
+    for (let page = 1; page <= pages; page++) {
       let pools;
       try {
         pools = await gecko.listPools(sort, page);

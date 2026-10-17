@@ -21,6 +21,9 @@ export const CONFIG = {
   scan: {
     sorts: ['h24_volume_usd_desc', 'h24_tx_count_desc'],
     pagesPerSort: 10, // 20 pools per page (10 is the free max)
+    // The two sorts overlap heavily, and established coins are also re-checked via the
+    // watchlist + holder-count universe — so fewer pages, fewer GeckoTerminal 429s
+    pagesBySort: { h24_volume_usd_desc: 7, h24_tx_count_desc: 3 },
     includeTrending: true,
     maxDeepChecks: 25, // candidates that get the full holder/chart check per run
     maxPumpChecks: 6, // pumping coins analysed for a pullback entry per run

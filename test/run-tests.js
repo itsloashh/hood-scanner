@@ -394,6 +394,23 @@ await test('slow API: a host that keeps failing is skipped for the rest of the r
   }
 });
 
+await test('rate limits: a 429 slows that host down instead of hammering it', async () => {
+  const { getJson, httpStats } = await import('../src/http.js');
+  const prevFetch = globalThis.fetch;
+  let n = 0;
+  globalThis.fetch = async () => (++n % 2 ? new Response('slow down', { status: 429, headers: { 'retry-after': '0' } }) : new Response('{"ok":1}'));
+  try {
+    const t0 = Date.now();
+    assert.deepEqual(await getJson('https://busy.example/a', { minIntervalMs: 0 }), { ok: 1 });
+    assert.equal(httpStats['busy.example'].r429, 1);
+    // next call waits for the slowed pace (≥3s after a 429), not hammering immediately
+    await getJson('https://busy.example/b', { minIntervalMs: 0 }).catch(() => null);
+    assert.ok(Date.now() - t0 >= 2900, `only ${Date.now() - t0}ms`);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
 await test('API keys never appear in error messages (public logs)', async () => {
   const { redact } = await import('../src/http.js');
   assert.equal(redact('HTTP 403 for https://api.blockscout.com/4663/api/v2/tokens?x=1&apikey=proapi_SECRET123'), 'HTTP 403 for https://api.blockscout.com/4663/api/v2/tokens?x=1&apikey=***');
