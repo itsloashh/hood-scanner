@@ -1,5 +1,5 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-10-17 17:02 UTC from 220 coins._
+_Generated 2026-10-17 17:36 UTC from 220 coins._
 
 ## The base rate
 6 times a coin matched our rules (21+ days old, $10k–$333k, 50%+ off its high, tight base with lows holding).
@@ -38,7 +38,7 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 
 ## After a pump: pullback odds (from 31 past pumps)
 - **+50–100% day** (13 examples): 77% pulled back 30%+ within a week · typically gave back 91% of the move (middle half: 56–108%) · low came after ~6 day(s) · 31% made a new high within 2 weeks · 46% gave back the whole move
-- **+100–200% day** (7 examples): 86% pulled back 30%+ within a week · typically gave back 110% of the move (middle half: 77–114%) · low came after ~5 day(s) · 14% made a new high within 2 weeks · 71% gave back the whole move
+- **+100–200% day** (7 examples): 86% pulled back 30%+ within a week · typically gave back 111% of the move (middle half: 77–119%) · low came after ~5 day(s) · 14% made a new high within 2 weeks · 71% gave back the whole move
 - **+200+% day** (11 examples): 82% pulled back 30%+ within a week · typically gave back 92% of the move (middle half: 70–95%) · low came after ~6 day(s) · 18% made a new high within 2 weeks · 0% gave back the whole move
 
 ## Smart wallets
