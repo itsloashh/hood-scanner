@@ -95,6 +95,27 @@ export async function tokenTransfers(address, { sinceMs = 0, maxPages = 20 } = {
   return out;
 }
 
+// Burn activity: transfers of this token INTO the burn addresses since `sinceMs`.
+export async function recentBurns(token, sinceMs) {
+  let count = 0;
+  let units = 0;
+  let lastTs = null;
+  for (const burnAddr of BURN_ADDRESSES) {
+    const d = await bsGet(`/addresses/${burnAddr}/token-transfers`, { type: 'ERC-20', filter: 'to', token });
+    for (const it of d?.items || []) {
+      if ((it.token?.address_hash || it.token?.address || '').toLowerCase() !== token.toLowerCase()) continue;
+      const ts = it.timestamp ? Date.parse(it.timestamp) : 0;
+      if (ts < sinceMs) continue;
+      if (BURN_ADDRESSES.has(it.from?.hash?.toLowerCase())) continue;
+      count += 1;
+      const dec = Number(it.total?.decimals ?? 18);
+      units += Number(BigInt(it.total?.value ?? '0') / 10n ** BigInt(Math.max(0, dec - 4))) / 1e4;
+      lastTs = Math.max(lastTs || 0, ts);
+    }
+  }
+  return { count, units, lastTs };
+}
+
 const pctOf = (part, whole) => (whole > 0n ? Number((part * 1_000_000n) / whole) / 10_000 : 0);
 
 // Backup when Blockscout can't give holder lists: GeckoTerminal's top-10 share

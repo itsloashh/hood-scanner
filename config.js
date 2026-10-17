@@ -92,6 +92,11 @@ export const CONFIG = {
     slippagePct: 3, // per side, assumed
   },
 
+  // ── Burns / deflation ────────────────────────────────────
+  // Supply sent to burn addresses (0x…dead / 0x0). Bonus up to +5:
+  //   +2 if ≥20% of supply is burned (+3 if ≥50%) · +2 if burns happened in the last 7 days
+  burns: { cacheHours: 6, recentDays: 7, bigBurnPct: 20, hugeBurnPct: 50 },
+
   // ── Wallet intelligence ───────────────────────────────────
   // Every run pulls the last 24h of trades (free, GeckoTerminal) for coins that pass
   // the junk filter, records who bought, and later checks whether those buys won.

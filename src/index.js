@@ -146,6 +146,18 @@ async function holderData(pool, info, state, now) {
   return { conc, holdersCount, cached: false };
 }
 
+async function burnData(token, state, now) {
+  const hit = state.burnCache[token];
+  if (hit && now - hit.at < CONFIG.burns.cacheHours * HOUR) return hit;
+  try {
+    const r = await bs.recentBurns(token, now - CONFIG.burns.recentDays * DAY);
+    state.burnCache[token] = { at: now, ...r };
+    return state.burnCache[token];
+  } catch {
+    return null;
+  }
+}
+
 async function tradeFlow(pool, w, state, now) {
   const token = pool.baseToken.address;
   const t = w.tokens[token];
@@ -186,6 +198,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   const filt = deepFilter({ info, holdersCount, conc, community });
   let chart = null;
   let flow = null;
+  let burns = null;
   if (filt.ok || force) {
     try {
       chart = chartFeatures(await gecko.ohlcvDaily(pool.poolAddress, 90), pool.priceUsd);
@@ -193,6 +206,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
       filt.warnings.push('chart unavailable');
     }
     flow = await tradeFlow(pool, w, state, now);
+    burns = { burnedPct: conc?.source === 'estimate' ? null : conc?.burnedPct ?? null, recent: await burnData(token, state, now) };
     if (flow?.bundledShare >= 0.3) filt.warnings.push(`${Math.round(flow.bundledShare * 100)}% of buys were bundled (several wallets in one block — likely bots)`);
     if (flow?.botBuyers) filt.warnings.push(`${flow.botBuyers} known bot wallet(s) buying`);
     if (flow?.washLikely) filt.warnings.push(`Looks like a volume bot / wash trading (${flow.washSignals.join('; ')}) — activity is likely fake, kept out of the buy zone`);
@@ -206,7 +220,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   const rotation = rotationSignal(pool, leaders);
   const score = filt.ok || force
     ? scoreCoin({
-        pool, holdersCount, conc, socials: filt.socials, chart, holderChangePct, rotation, stockPaired, community, flow,
+        pool, holdersCount, conc, socials: filt.socials, chart, holderChangePct, rotation, stockPaired, community, flow, burns,
         smartBonus: { per: CONFIG.wallets.smartBonusPerWallet, max: CONFIG.wallets.smartBonusMax },
       })
     : null;
@@ -214,7 +228,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   if (score?.parts.inflatedHoldersPenalty) {
     filt.warnings.push(`Holder count looks padded — only ${usdOf(score.usdPerHolder)} of market cap per holder (airdropped dust wallets?)`);
   }
-  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, age, narratives: tags, stockPaired, rotation, score, community, flow };
+  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, age, narratives: tags, stockPaired, rotation, score, community, flow, burns };
 }
 
 const usdOf = (v) => (v == null ? '—' : `$${v.toFixed(2)}`);
@@ -237,6 +251,7 @@ export async function main() {
     return { skipped: true };
   }
   state.holderCache ||= {};
+  state.burnCache ||= {};
   const w = loadWallets();
   state.runs = (state.runs || 0) + 1;
   const snapshots = [];
@@ -387,6 +402,7 @@ export async function main() {
     }
     // holder cache: drop stale entries
     for (const [t, v] of Object.entries(state.holderCache)) if (now - v.at > 6 * HOUR) delete state.holderCache[t];
+    for (const [t, v] of Object.entries(state.burnCache)) if (now - v.at > 24 * HOUR) delete state.burnCache[t];
     saveWallets(w, now);
     saveState(state);
   }
@@ -458,6 +474,7 @@ export async function checkCoin(ca, now = Date.now()) {
   }
   const state = loadState();
   state.holderCache ||= {};
+  state.burnCache ||= {};
   state.health = { concSource: { blockscout: 0, cached: 0, estimate: 0, none: 0 }, tradePulls: 0 };
   const w = loadWallets();
   const poolMap = await gecko.topPoolsFor([addr]).catch(() => ({}));

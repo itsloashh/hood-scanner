@@ -134,6 +134,17 @@ export function alertMessage(c) {
     }
   }
 
+  // Burns
+  const b = c.burns;
+  if (b && (b.burnedPct != null || b.recent)) {
+    const burnedTxt = b.burnedPct != null ? `${b.burnedPct.toFixed(1)}% of supply burned` : 'burned share unknown';
+    const recentTxt = b.recent ? (b.recent.count ? `${b.recent.count} burn(s) in the last ${CONFIG.burns.recentDays} days — supply is actively shrinking` : `no burns in the last ${CONFIG.burns.recentDays} days`) : null;
+    const strong = (b.burnedPct ?? 0) >= CONFIG.burns.bigBurnPct || b.recent?.count > 0;
+    L.push('', `🔥 BURNS — ${strong ? 'deflationary' : 'none to speak of'}`);
+    L.push(bullet(burnedTxt));
+    L.push(bullet(recentTxt));
+  }
+
   // Chart
   L.push('', `📈 CHART — ${grade(p.structure, 25)} setup`);
   if (chart) {
@@ -151,6 +162,7 @@ export function alertMessage(c) {
   L.push(PART_LABELS.map(([k, label, max]) => `${label} ${Math.round(p[k])}/${max}`).join(' · '));
   const extras = [];
   if (p.smartMoney) extras.push(`Smart money +${p.smartMoney}`);
+  if (p.burn) extras.push(`Burns +${p.burn}`);
   if (p.bundlePenalty) extras.push(`Bundled buys ${p.bundlePenalty}`);
   if (p.washPenalty) extras.push(`Wash trading ${p.washPenalty}`);
   if (p.inflatedHoldersPenalty) extras.push(`Padded holder count ${p.inflatedHoldersPenalty}`);

@@ -524,6 +524,92 @@ await test('GitHub backup schedule skips when a scan just ran; manual runs never
   delete process.env.GITHUB_EVENT_NAME;
 });
 
+await test('research: >10x runs are MOON (not learned from); 3–10x are WIN', async () => {
+  const { findSetups } = await import('../research/reverse-engineer.js');
+  const D = 86_400_000;
+  const t0 = now - 120 * D;
+  const mk = (i, c, v = 1000) => ({ t: t0 + i * D, o: c, h: c * 1.02, l: c * 0.98, c, v });
+  const cs = [];
+  for (let i = 0; i < 20; i++) cs.push(mk(i, 1 + i * 0.2));
+  for (let i = 20; i < 35; i++) cs.push(mk(i, 4.8 - (i - 20) * 0.28));
+  for (let i = 35; i < 45; i++) cs.push(mk(i, 0.9 + (i % 2) * 0.05));
+  for (let i = 45; i < 60; i++) cs.push(mk(i, 0.9 * (1 + (i - 44) * 1.2), 9000)); // to ~17x
+  for (let i = 60; i < 120; i++) cs.push(mk(i, 10));
+  const s = findSetups(cs, { mcapNow: 2_000_000, priceNow: 10 }, now);
+  assert.equal(s[0].label, 'MOON');
+  assert.ok(s[0].runVolX >= 3, 'volume ignition not measured');
+});
+
+await test('research: transfers → real buyers, buyer surge, burns, wash detection', async () => {
+  const { analyzeTransfers, isViable } = await import('../research/reverse-engineer.js');
+  const D = 86_400_000;
+  const T = now - 40 * D;
+  const ONE = '1000000000000000000';
+  const buy = (to, ts, block) => ({ to, from: '0xpool', fromIsContract: true, toIsContract: false, ts, block, value: ONE, decimals: 18 });
+  const sell = (from, ts, block) => ({ from, to: '0xpool', fromIsContract: false, toIsContract: true, ts, block, value: ONE, decimals: 18 });
+  const burn = (ts, block) => ({ from: '0xdev', to: '0x000000000000000000000000000000000000dead', fromIsContract: false, toIsContract: false, ts, block, value: ONE, decimals: 18 });
+  const tx = [buy('0xancient', T - 20 * D, 1)];
+  for (let i = 0; i < 10; i++) tx.push(buy(`0xp${i}`, T - 10 * D, 100 + i)); // week before: 10 buyers
+  for (let i = 0; i < 20; i++) tx.push(buy(`0xb${i}`, T - 3 * D, 200 + i)); // pre-week: 20 buyers
+  tx.push(burn(T - 2 * D, 300), burn(T + 5 * D, 400), burn(T + 6 * D, 401));
+  const a = analyzeTransfers(tx, T);
+  assert.equal(a.realBuyers, 20);
+  assert.equal(a.prevBuyers, 10);
+  assert.equal(Math.round(a.buyerGrowthPct), 100);
+  assert.equal(a.burnsPre, 1);
+  assert.equal(a.burnsDuring, 2);
+  assert.equal(a.washLikely, false);
+  assert.equal(isViable(a), true);
+  // same 6 wallets churning both sides → wash
+  const wash = [buy('0xancient', T - 20 * D, 1)];
+  for (let i = 0; i < 60; i++) { const k = Math.floor(i / 2) % 6; wash.push(i % 2 ? buy(`0xw${k}`, T - 2 * D + i, 500 + i) : sell(`0xw${k}`, T - 2 * D + i, 500 + i)); }
+  const w = analyzeTransfers(wash, T);
+  assert.equal(w.washLikely, true);
+  assert.equal(isViable(w), false);
+});
+
+await test('research: catalysts and lift rank what shows up before winners', async () => {
+  const { catalysts, catalystLift } = await import('../research/reverse-engineer.js');
+  const mkS = (label, surge, burns) => ({ setup: { label, volRatio: 1, runVolX: label === 'WIN' ? 5 : 1 }, catalysts: catalysts({ volRatio: 1, runVolX: label === 'WIN' ? 5 : 1 }, { buyerGrowthPct: surge, burnsPre: burns, burnsDuring: 0 }, {}) });
+  const wins = [mkS('WIN', 80, 1), mkS('WIN', 120, 0), mkS('WIN', 10, 1)];
+  const duds = [mkS('DUD', 5, 0), mkS('DUD', 70, 0), mkS('DUD', 0, 0), mkS('DUD', 0, 0)];
+  const lift = catalystLift(wins, duds);
+  const surge = lift.find((r) => r.key === 'buyerSurge');
+  assert.equal(surge.winners, 2);
+  assert.equal(surge.duds, 1);
+  assert.ok(Math.abs(surge.lift - (2 / 3) / (1 / 4)) < 1e-9);
+  assert.equal(lift.find((r) => r.key === 'burnsBefore').lift, Infinity);
+  assert.equal(lift.find((r) => r.key === 'volumeIgnition').when, 'during');
+});
+
+await test('burns: recent burns counted per token; supply burned adds a bonus', async () => {
+  const bsm = await import('../src/blockscout.js');
+  const { scoreCoin } = await import('../src/score.js');
+  const prevFetch = globalThis.fetch;
+  const TK = '0x00000000000000000000000000000000000000aa';
+  globalThis.fetch = async (url) => {
+    url = String(url);
+    if (url.includes('/token-transfers')) {
+      const recent = new Date(now - 2 * 86_400_000).toISOString();
+      const old = new Date(now - 30 * 86_400_000).toISOString();
+      return ok({ items: [
+        { timestamp: recent, token: { address_hash: TK }, from: { hash: '0xholder' }, total: { value: '5000000000000000000', decimals: '18' } },
+        { timestamp: old, token: { address_hash: TK }, from: { hash: '0xholder' }, total: { value: '1', decimals: '18' } },
+        { timestamp: recent, token: { address_hash: '0xother' }, from: { hash: '0xholder' }, total: { value: '1', decimals: '18' } },
+      ] });
+    }
+    return prevFetch(url);
+  };
+  const r = await bsm.recentBurns(TK, now - 7 * 86_400_000);
+  globalThis.fetch = prevFetch;
+  assert.equal(r.count, 2); // one recent burn found at each of the two burn addresses (same mock)
+  assert.ok(r.units >= 5);
+  const pool = { marketCap: 100_000, liquidityUsd: 20_000, volume24h: 5_000, buyers24h: 40, sellers24h: 20, change: { h24: 2 } };
+  const base = { pool, holdersCount: 800, conc: { top10Pct: 20, top1Pct: 3 }, socials: 2, chart: null, holderChangePct: null, rotation: {}, stockPaired: false, community: {} };
+  assert.equal(scoreCoin({ ...base, burns: { burnedPct: 55, recent: r } }).parts.burn, 5);
+  assert.equal(scoreCoin({ ...base, burns: { burnedPct: 5, recent: { count: 0 } } }).parts.burn, 0);
+});
+
 console.log = origLog;
 console.log(`\n${failures ? `${failures} test(s) failed` : 'all tests passed'} · ${calls.length} mocked API calls`);
 process.exit(failures ? 1 : 0);

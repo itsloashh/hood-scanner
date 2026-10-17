@@ -48,7 +48,7 @@ export function holderTrend(history, holdersNow, now = Date.now()) {
   return ((holdersNow - ref[1]) / ref[1]) * 100;
 }
 
-export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community, flow, smartBonus = { per: 4, max: 10 } }) {
+export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community, flow, burns, smartBonus = { per: 4, max: 10 } }) {
   const parts = {};
 
   // Community (25): on-chain crowd + off-chain crowd
@@ -111,6 +111,13 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   parts.liquidity = lerp(liqRatio, 0.05, 0.2, 5);
 
   parts.narrative = (rotation?.active ? 3 : 0) + (stockPaired ? 2 : 0);
+
+  // Burn protocol bonus (outside the 100 base): shrinking supply rewards holders
+  let burn = 0;
+  const bp = burns?.burnedPct;
+  if (bp != null) burn += bp >= 50 ? 3 : bp >= 20 ? 2 : 0;
+  if (burns?.recent?.count > 0) burn += 2;
+  parts.burn = burn;
 
   // Smart money bonus (outside the 100 base): proven wallets buying in the last 24h
   const smartN = flow?.smartBuyers?.length || 0;

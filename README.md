@@ -115,6 +115,9 @@ npm run scan:dry  # live scan, prints alerts instead of sending
 - **If holder data is missing, the coin is rejected.** Missing data never counts as a pass.
 - This is a research tool, not financial advice. Most memecoins go to zero. Run paper mode for at least 2 weeks and ~20 alerts before putting real money behind it.
 
+## 🔥 Burns
+Each candidate's burned supply (% held by 0x…dead / 0x0) and its burns in the last 7 days are checked through Blockscout (cached 6h). The bonus is up to **+5**: +2 for 20%+ burned (+3 for 50%+), and +2 for burns in the last week. Alerts show a 🔥 BURNS section.
+
 ## 🧠 Wallet intelligence (v3)
 
 **Live tracker (free, no key).** Each scan pulls the last 24h of trades for coins that pass the junk filter and records which wallets bought, when, and at what price. Later scans check what happened next: a buy is a **win** if the coin hit 3x within 30 days, and a **loss** if it fell 60% first or time ran out. Wallets with 2+ wins and a 40%+ hit rate become **smart wallets**. Wallets buying 15+ different coins a day are marked as bots and never count.
@@ -126,6 +129,10 @@ Every alert now has a **Who's buying** section: how many different wallets bough
 2. It labels each one: did it go 3x within 30 days?
 3. It compares winners and duds on volume, base tightness, drawdown, age and market cap. **The hit rate is the number any signal has to beat.**
 4. It pulls the wallets that bought in the week *before* each setup, removes bundles and bots, and finds wallets that bought early into 2+ winners while mostly avoiding duds. Those wallets seed the live tracker.
+
+**Only real 3–10x runs count as wins.** Runs past 10x are listed as moonshots but not learned from, because outliers mislead. Setups with fewer than 15 real buyers the week before, or with wash trading, are thrown out as fake or thin.
+
+**Why it pumped.** For every real winner, the report lists what the on-chain data shows. *Before* the run: volume already rising, buyers up 50%+ week-over-week, token burns, smart wallets buying, 20%+ of supply burned, stock pairing, and theme. *During* the run: volume explosion and burns. It then ranks each signal by how much more often it shows up in winners than in duds (`data/research/catalysts.json`). A signal that keeps showing up before winners is a candidate for a new scanner parameter. If a winner has no on-chain reason, the cause was likely off-chain (X, a listing, news), and the report links an X search filtered to verified accounts.
 
 Results: `data/research/report.md`, `setups.csv` and `smart-wallets.json`, plus a Telegram summary. Run it any time: **Actions → research → Run workflow**.
 
