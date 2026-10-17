@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { CONFIG } from '../config.js';
 import * as gecko from './gecko.js';
 import * as bs from './blockscout.js';
-import { quickFilter, deepFilter, pumpFilter, ageDays, tally } from './filters.js';
+import { quickFilter, deepFilter, pumpFilter, ageDays, tally, laneOf, laneChartCheck, copycatOf, buildKnownTickers, normSymbol } from './filters.js';
 import { pumpPlan, loadPullbacks } from './pump.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,7 +16,7 @@ import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS, DATA_
 import { notify } from './notify.js';
 import { httpErrors } from './http.js';
 import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
-import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage } from './messages.js';
+import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage, ignitionMessage } from './messages.js';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -50,6 +50,14 @@ async function discover(state, now) {
     return;
   }
   state.lastDiscovery.listed = tokens.length;
+  // Established tickers (5k+ holders) — anything else using the same ticker is a copycat
+  const tickers = {};
+  for (const t of [...tokens].sort((a, b) => b.holders - a.holders)) {
+    if (t.holders < CONFIG.copycatMinHolders || !t.symbol) continue;
+    const k = normSymbol(t.symbol);
+    if ((tickers[k] ||= []).length < 3) tickers[k].push(t.address);
+  }
+  state.knownTickers = tickers;
   state.lastDiscovery.sample = tokens.slice(0, 5).map((t) => `${t.symbol}:${t.holders}`);
   const fresh = tokens.filter(
     (t) =>
@@ -186,8 +194,9 @@ async function tradeFlow(pool, w, state, now) {
   }
 }
 
-async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
+async function deepCheck(pool, state, leaders, now, w, { force = false, catalysts = {}, lane: laneOverride = null } = {}) {
   const token = pool.baseToken.address;
+  const lane = laneOverride || laneOf(pool.marketCap);
   const info = await gecko.tokenInfo(token).catch(() => null);
   const hd = await holderData(pool, info, state, now);
   let conc = hd.conc;
@@ -204,7 +213,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   }
 
   const community = await communitySignals({ pool, info, state, now });
-  const filt = deepFilter({ info, holdersCount, conc, community });
+  const filt = deepFilter({ info, holdersCount, conc, community, lane, marketCap: pool.marketCap });
   let chart = null;
   let candles = null;
   let flow = null;
@@ -213,6 +222,11 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
     try {
       candles = await gecko.ohlcvDaily(pool.poolAddress, 90);
       chart = chartFeatures(candles, pool.priceUsd);
+      const laneMiss = laneChartCheck(lane, chart);
+      if (laneMiss) {
+        filt.reasons.push(laneMiss);
+        filt.ok = false;
+      }
     } catch {
       filt.warnings.push('chart unavailable');
     }
@@ -232,14 +246,83 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   const score = filt.ok || force
     ? scoreCoin({
         pool, holdersCount, conc, socials: filt.socials, chart, holderChangePct, rotation, stockPaired, community, flow, burns,
+        lane, catalyst: catalysts[token] || null, info,
         smartBonus: { per: CONFIG.wallets.smartBonusPerWallet, max: CONFIG.wallets.smartBonusMax },
       })
     : null;
 
+  if (lane === 'micro' && score) filt.warnings.push('Micro lane — survivor bounce. Keep size small (≤5% of the wallet); these often fade after the bounce.');
   if (score?.parts.inflatedHoldersPenalty) {
     filt.warnings.push(`Holder count looks padded — only ${usdOf(score.usdPerHolder)} of market cap per holder (airdropped dust wallets?)`);
   }
-  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, candles, age, narratives: tags, stockPaired, rotation, score, community, flow, burns };
+  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, candles, age, narratives: tags, stockPaired, rotation, score, community, flow, burns, lane };
+}
+
+// data/catalysts.json — coins you tagged from Telegram (/catalyst 0x… note). Active for N days.
+export function loadCatalysts(now = Date.now()) {
+  try {
+    const all = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'catalysts.json'), 'utf8')).coins || {};
+    return Object.fromEntries(Object.entries(all).filter(([, v]) => now - Date.parse(v.at) < CONFIG.catalyst.manualDays * DAY));
+  } catch {
+    return {};
+  }
+}
+
+// Coins sitting in a quiet base get their hourly volume watched for ignition
+function rememberQuietBase(state, r, now) {
+  const token = r.pool.baseToken.address;
+  if (!r.score?.parts.quietBase || r.flow?.washLikely || !r.chart?.baseDailyVol) return;
+  state.quietBases[token] = {
+    pool: r.pool.poolAddress, symbol: r.pool.baseToken.symbol, lane: r.lane, at: now,
+    baseHigh: r.chart.baseHigh, baseHourVol: r.chart.baseDailyVol / 24, drawdownPct: r.chart.drawdownPct,
+    volTrend: r.chart.volTrend, score: r.score.total,
+  };
+}
+
+// Pure check on hourly candles (exported for tests)
+export function ignitionSignal(base, hourly, priceNow) {
+  const g = CONFIG.ignition;
+  if (!hourly?.length || !base?.baseHourVol) return null;
+  const win = hourly.slice(-g.hours);
+  const vol = win.reduce((s, c) => s + c.v, 0) / win.length;
+  const mult = vol / base.baseHourVol;
+  const px = priceNow ?? win.at(-1).c;
+  const startPx = win[0].o || win[0].c;
+  const aboveBasePct = base.baseHigh ? (px / base.baseHigh - 1) * 100 : null;
+  const fired = mult >= g.minVolMultiple && px >= startPx * 1.05 && (aboveBasePct == null || aboveBasePct <= g.maxPriceAboveBasePct);
+  return { fired, mult, aboveBasePct, movePct: (px / startPx - 1) * 100, price: px };
+}
+
+async function checkIgnition(state, poolByToken, candidates, runStats, now) {
+  const g = CONFIG.ignition;
+  for (const [t, b] of Object.entries(state.quietBases)) if (now - b.at > g.keepDays * DAY) delete state.quietBases[t];
+  for (const [t, v] of Object.entries(state.ignitionAlerts)) if (now - v.at > 3 * DAY) delete state.ignitionAlerts[t];
+  const list = Object.entries(state.quietBases)
+    .filter(([t]) => !(state.ignitionAlerts[t] && now - state.ignitionAlerts[t].at < g.cooldownHours * HOUR))
+    .sort((a, b) => (b[1].score || 0) - (a[1].score || 0))
+    .slice(0, g.maxChecks);
+  for (const [token, base] of list) {
+    const pool = poolByToken.get(token);
+    let hourly;
+    try {
+      hourly = await gecko.ohlcv(base.pool, 'hour', { limit: 6 });
+    } catch (e) {
+      log(`ignition ${base.symbol} candles failed: ${e.message}`);
+      continue;
+    }
+    const sig = ignitionSignal(base, hourly, pool?.priceUsd);
+    if (!sig?.fired) continue;
+    log(`🔥 ignition ${base.symbol}: ${sig.mult.toFixed(1)}× hourly volume`);
+    const mcap = pool?.marketCap ?? null;
+    await notify(ignitionMessage({ token, base, sig, pool }), { buttons: paperButtons(token) });
+    state.ignitionAlerts[token] = { at: now, symbol: base.symbol };
+    candidates.push({
+      token, symbol: base.symbol, pool: base.pool, tier: 'ignition', score: base.score ?? null, price: sig.price,
+      mcap, liquidity: pool?.liquidityUsd ?? null, change24h: pool?.change.h24 ?? null, washLikely: false, lane: base.lane,
+      at: new Date(now).toISOString(),
+    });
+    runStats.ignition += 1;
+  }
 }
 
 const usdOf = (v) => (v == null ? '—' : `$${v.toFixed(2)}`);
@@ -264,10 +347,13 @@ export async function main() {
   state.holderCache ||= {};
   state.burnCache ||= {};
   state.pumpAlerts ||= {};
+  state.quietBases ||= {};
+  state.ignitionAlerts ||= {};
+  const catalysts = loadCatalysts(now);
   const w = loadWallets();
   state.runs = (state.runs || 0) + 1;
   const snapshots = [];
-  const runStats = { scanned: 0, quickPass: 0, deepPass: 0, buy: 0, watch: 0, pump: 0 };
+  const runStats = { scanned: 0, quickPass: 0, deepPass: 0, buy: 0, watch: 0, pump: 0, ignition: 0, quality: 0, micro: 0 };
   const candidates = [];
   const reasons = {};
   let reg = { state: 'neutral', ratio: null };
@@ -310,9 +396,15 @@ export async function main() {
 
     // 4. Quick junk filter
     const leaders = clusterLeaders(pools);
+    const known = buildKnownTickers(state.knownTickers);
     const quick = [];
     for (const p of pools) {
       const q = quickFilter(p, now);
+      const copy = copycatOf(p, known);
+      if (copy) {
+        q.ok = false;
+        q.reasons.push('copycat ticker');
+      }
       const t = p.baseToken.address;
       if (q.ok) {
         quick.push(p);
@@ -339,7 +431,7 @@ export async function main() {
     for (const pool of toCheck) {
       let r;
       try {
-        r = await deepCheck(pool, state, leaders, now, w);
+        r = await deepCheck(pool, state, leaders, now, w, { catalysts });
       } catch (e) {
         log(`deep check ${pool.baseToken.symbol} failed: ${e.message}`);
         continue;
@@ -353,6 +445,8 @@ export async function main() {
         continue;
       }
       runStats.deepPass += 1;
+      runStats[r.lane] += 1;
+      rememberQuietBase(state, r, now);
       const s = r.score.total;
       candidates.push(candidateRow(r, s >= buyBar && !r.score.buyBlocked ? 'buy' : s >= watchBar ? 'watch' : 'scored', now));
       log(`✓ ${pool.baseToken.symbol}: score ${s}`);
@@ -378,7 +472,7 @@ export async function main() {
     const pullStats = loadPullbacks();
     const pumping = pools
       .map((p) => ({ p, f: pumpFilter(p, now) }))
-      .filter((x) => x.f.ok)
+      .filter((x) => x.f.ok && !copycatOf(x.p, known))
       .sort((a, b) => b.p.buyers24h - a.p.buyers24h)
       .slice(0, CONFIG.scan.maxPumpChecks);
     for (const { p, f } of pumping) {
@@ -387,7 +481,7 @@ export async function main() {
       if (prev && now - prev.at < CONFIG.pump.cooldownHours * HOUR) continue;
       let r;
       try {
-        r = await deepCheck(p, state, leaders, now, w, { force: true });
+        r = await deepCheck(p, state, leaders, now, w, { force: true, catalysts, lane: laneOf(f.baseMcap) }); // judged on its pre-pump size
       } catch (e) {
         log(`pump check ${p.baseToken.symbol} failed: ${e.message}`);
         continue;
@@ -406,6 +500,10 @@ export async function main() {
       state.pumpAlerts[token] = { at: now, symbol: p.baseToken.symbol };
       runStats.pump += 1;
     }
+
+    // 5c. 🔥 IGNITION: hourly volume exploding out of a quiet base
+    const poolByToken = new Map(pools.map((p) => [p.baseToken.address, p]));
+    await checkIgnition(state, poolByToken, candidates, runStats, now);
 
     // 6. Funnel record + daily digest
     state.funnel24h.push({ t: now, scanned: runStats.scanned, quickPass: runStats.quickPass, deepPass: runStats.deepPass, reasons });
@@ -437,6 +535,9 @@ export async function main() {
       topCuts: Object.fromEntries(Object.entries(reasons).sort((a, b) => b[1] - a[1]).slice(0, 8)),
       holderData: state.health.concSource, httpErrors,
       blockscout: { key: bs.hasKey(), calls: bs.usage.calls },
+      quietBases: Object.keys(state.quietBases).length,
+      knownTickers: Object.keys(state.knownTickers || {}).length,
+      catalysts: Object.keys(catalysts).length,
       wallets: { tracked: Object.keys(w.wallets).length, smart: smartWallets(w).length, seeded: Object.keys(w.seeded).length, tradePulls: state.health.tradePulls },
     };
     log(`done: ${runStats.buy} buy-zone, ${runStats.watch} watch alert(s)`);
@@ -466,7 +567,7 @@ function candidateRow(r, tier, now) {
   return {
     token: p.baseToken.address, symbol: p.baseToken.symbol, pool: p.poolAddress, tier,
     score: r.score?.total ?? null, price: p.priceUsd, mcap: p.marketCap, liquidity: p.liquidityUsd,
-    change24h: p.change.h24, washLikely: Boolean(r.flow?.washLikely), at: new Date(now).toISOString(),
+    change24h: p.change.h24, washLikely: Boolean(r.flow?.washLikely), lane: r.lane || laneOf(p.marketCap), at: new Date(now).toISOString(),
   };
 }
 
@@ -480,8 +581,8 @@ function saveCandidates(fresh, now) {
   } catch { /* first run */ }
   const byToken = new Map();
   for (const c of [...prev, ...fresh]) if (now - Date.parse(c.at) < DAY) byToken.set(c.token, c);
-  const order = { buy: 0, pump: 1, watch: 2, scored: 3 };
-  const coins = [...byToken.values()].sort((a, b) => order[a.tier] - order[b.tier] || (b.score ?? 0) - (a.score ?? 0));
+  const order = { ignition: 0, buy: 1, pump: 2, watch: 3, scored: 4 };
+  const coins = [...byToken.values()].sort((a, b) => (order[a.tier] ?? 9) - (order[b.tier] ?? 9) || (b.score ?? 0) - (a.score ?? 0));
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(file, JSON.stringify({ at: new Date(now).toISOString(), coins }, null, 1));
 }
@@ -563,7 +664,9 @@ export async function checkCoin(ca, now = Date.now()) {
   }
   pool.allPools = [pool.poolAddress];
   const q = quickFilter(pool, now);
-  const r = await deepCheck(pool, state, clusterLeaders([pool]), now, w, { force: true });
+  const copy = copycatOf(pool, buildKnownTickers(state.knownTickers));
+  if (copy) q.reasons.push(copy);
+  const r = await deepCheck(pool, state, clusterLeaders([pool]), now, w, { force: true, catalysts: loadCatalysts(now) });
   // the chart gives the true age; drop the age failure if the coin is actually old enough
   const quickReasons = q.reasons.filter((x) => !(x.startsWith('younger than') && r.age >= CONFIG.minAgeDays));
   const failed = [...quickReasons, ...r.filt.reasons];

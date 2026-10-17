@@ -88,6 +88,8 @@ export function alertMessage(c) {
       ? 'Passed the safety checks, but its trading looks bot-driven — watch only, no trade.'
       : `Passed every safety check. ${Math.max(0, CONFIG.alertScore - score.total)} points short of the buy zone (${CONFIG.alertScore}).`);
   }
+  if (score.lane === 'quality') L.push('🏛 QUALITY LANE — established coin with a real crowd, setting up a possible second leg.');
+  else if (score.lane === 'micro') L.push('🧪 MICRO LANE — small survivor bounce. Small size only.');
   if (regime.state !== 'neutral') L.push(regime.state === 'risk-on' ? 'Market is heating up — bar lowered a little.' : 'Market is cooling — bar raised a little.');
 
   // Size
@@ -148,6 +150,12 @@ export function alertMessage(c) {
     L.push(bullet(recentTxt));
   }
 
+  // Catalysts
+  if (score.catalystWhy?.length) {
+    L.push('', '⚡ CATALYSTS');
+    for (const why of score.catalystWhy) L.push(bullet(why));
+  }
+
   // Chart
   L.push('', `📈 CHART — ${grade(p.structure, 25)} setup`);
   if (chart) {
@@ -155,6 +163,11 @@ export function alertMessage(c) {
     L.push(bullet(rangeNote(chart.baseRange)));
     if (chart.lowsHolding != null) L.push(bullet(chart.lowsHolding ? 'Recent lows are holding — no new bottoms' : 'Still making new lows'));
     L.push(bullet(volumeNote(score.volRatio)));
+    if (chart.volTrend != null) {
+      L.push(bullet(p.quietBase
+        ? `🤫 Quiet base: volume has dried up to ${chart.volTrend.toFixed(2)}× while price goes sideways — the setup the big second legs started from. Watching hourly for ignition.`
+        : `Volume trend ${chart.volTrend.toFixed(2)}× (last 3 days vs the week before)`));
+    }
   } else {
     L.push(bullet('Chart data unavailable this scan'));
   }
@@ -166,6 +179,8 @@ export function alertMessage(c) {
   const extras = [];
   if (p.smartMoney) extras.push(`Smart money +${p.smartMoney}`);
   if (p.burn) extras.push(`Burns +${p.burn}`);
+  if (p.quietBase) extras.push(`Quiet base +${Math.round(p.quietBase)}`);
+  if (p.catalyst) extras.push(`Catalysts +${p.catalyst}`);
   if (p.bundlePenalty) extras.push(`Bundled buys ${p.bundlePenalty}`);
   if (p.washPenalty) extras.push(`Wash trading ${p.washPenalty}`);
   if (p.inflatedHoldersPenalty) extras.push(`Padded holder count ${p.inflatedHoldersPenalty}`);
@@ -327,5 +342,24 @@ export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch2
     L.push(bullet(`Watching ${num(walletStats.tracked)} wallets · ${walletStats.smart} proven "smart" wallets${walletStats.seeded ? ` (${walletStats.seeded} from research)` : ''}`));
     L.push(bullet(`Tracked buys so far: ${walletStats.wins} hit 3x, ${walletStats.losses} didn't, ${walletStats.open} still playing out`));
   }
+  return L.filter((l) => l !== null).join('\n');
+}
+
+// ── 🔥 IGNITION: volume exploding out of a quiet base ───────
+export function ignitionMessage({ token, base, sig, pool }) {
+  const L = [];
+  L.push(`🔥 IGNITION · $${base.symbol}`);
+  L.push(`Hourly volume just jumped to ${sig.mult.toFixed(1)}× its quiet-base normal, and price is up ${pctTxt(sig.movePct)} in the last ${CONFIG.ignition.hours}h.`);
+  L.push(`This is how the case-study second legs started — FRONG went 5.4× within a day of it. It's fast: decide within the hour.`);
+  L.push('', '📍 WHERE IT IS');
+  L.push(bullet(`${base.lane === 'quality' ? '🏛 Quality lane' : '🧪 Micro lane (small size only)'} · market cap ${usd(pool?.marketCap)} · liquidity ${usd(pool?.liquidityUsd)}`));
+  if (base.drawdownPct != null) L.push(bullet(`Was ${Math.round(base.drawdownPct)}% off its high, volume dried to ${base.volTrend?.toFixed(2) ?? '—'}× before this`));
+  if (sig.aboveBasePct != null) L.push(bullet(sig.aboveBasePct <= 0 ? 'Price is still inside the base — early' : `Price is ${Math.round(sig.aboveBasePct)}% above the top of the base`));
+  if (pool?.marketCap) L.push(bullet(`🎯 ${CONFIG.targetMinX}–${CONFIG.targetMaxX}x = ${usd(pool.marketCap * CONFIG.targetMinX)} to ${usd(pool.marketCap * CONFIG.targetMaxX)} market cap`));
+  L.push('', '⚠️ BEFORE YOU BUY');
+  L.push(bullet('Check X / Telegram for the reason (listing? big account? buyback?). No reason = more likely a bot pump.'));
+  L.push(bullet(`Most pumps pull back — the plan still sells half at ${CONFIG.paper.takeProfits[0].x}x. Send /check ${token.slice(0, 8)}… for the full report.`));
+  L.push('', `Chart: ${chartUrl(base.pool)}`);
+  L.push(`CA: ${token}`);
   return L.filter((l) => l !== null).join('\n');
 }

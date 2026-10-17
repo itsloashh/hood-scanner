@@ -42,9 +42,55 @@ export const CONFIG = {
 
   // ── Logan's core parameters ──────────────────────────────
   minAgeDays: 21, // "coins over 3 weeks old"
-  maxMarketCap: 333_000, // "under $333,000 market cap"
-  minMarketCap: 10_000, // below this it's usually dead, not early
-  minLiquidityUsd: 3_000, // need enough depth to get in and out of a $10 position
+  // Two lanes (from the CASHCAT / FRONG / PONS / DIH / 🪶 case study):
+  //   MICRO   $5k–$333k  — survivors bouncing off the floor. Small size only; holder counts are often padded.
+  //   QUALITY $333k–$25M — established coins with real crowds setting up a second leg (FRONG ran 5.4× from $3.6M).
+  maxMarketCap: 25_000_000, // overall ceiling (top of the quality lane)
+  minMarketCap: 5_000, // DIH's 7.3× second leg started at $8k
+  minLiquidityUsd: 3_000, // micro-lane floor
+  lanes: {
+    microMaxMarketCap: 333_000, // Logan's original ceiling = the micro lane
+    quality: {
+      minHolders: 5_000,
+      minUsdPerHolder: 10, // market cap ÷ holders — below this the holder count is padded with dust wallets
+      minLiquidityUsd: 100_000,
+      minDrawdownPct: 50, // the second legs started 73–79% off their highs
+      maxDrawdownPct: 90,
+    },
+  },
+
+  // Quiet base: price going sideways while volume dries up — every second leg in the
+  // case study started from this (volume trend 0.37–0.79×, 7-day range 1.2–2×)
+  quietBase: { maxVolTrend: 0.8, maxBaseRange: 2, minDrawdownPct: 50, maxDrawdownPct: 97 },
+
+  // 🔥 IGNITION: hourly volume explodes out of a quiet base (FRONG went 5.4× within a day of it)
+  ignition: {
+    maxChecks: 15, // quiet-base coins whose hourly candles get checked each run
+    hours: 3, // look at the last 3 hourly candles…
+    minVolMultiple: 5, // …trading at ≥5× the base's normal hourly volume
+    maxPriceAboveBasePct: 40, // still early: price no more than 40% above the base's top
+    cooldownHours: 24,
+    keepDays: 7, // forget a quiet base not re-confirmed for a week
+  },
+
+  // Catalysts: outside buyers arriving (Robinhood app listing, Binance Wallet, big follows) and buybacks
+  catalyst: {
+    manualBonus: 6, // you tag it from Telegram: /catalyst 0x… listing
+    manualDays: 14, // a tag counts for 2 weeks
+    buybackMinBurns: 3, // 3+ burns in the last week = a buyback machine, not a one-off
+    buybackBonus: 2,
+    identityBonus: 2, // coin is part of the chain's identity (launchpad token, Robinhood-themed)
+    identityPattern: /robin|hood|tenev|vlad|launchpad|\bpons\b/i,
+    max: 8,
+  },
+
+  // Copycats: a different contract using the ticker of an established coin (ticker search kept finding fake PONS/FRONG)
+  knownCoins: {
+    CASHCAT: '0x020bfc650a365f8bb26819deaabf3e21291018b4',
+    PONS: '0x39dbed3a2bd333467115de45665cc57f813c4571',
+    FRONG: '0x6245e67affa44a23077f0ea7f981a8dc743a0c47',
+  },
+  copycatMinHolders: 5_000, // any ticker held by 5k+ wallets is "established" and protected
 
   // "Established community"
   community: {
@@ -91,7 +137,7 @@ export const CONFIG = {
   paper: {
     enabled: true,
     auto: false, // paper trades are placed by you from Telegram (/paper). true = old auto-trading
-    startingBankroll: 30,
+    startingBankroll: 30, // just a test number — the real paper wallet lives in Telegram (/paper → Wallet → reset to any amount)
     positionFraction: 1 / 3, // $10 slices to start
     minPositionUsd: 2,
     maxOpen: 3,

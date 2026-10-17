@@ -12,6 +12,8 @@
 //   Narrative       5  rotation from a moving cluster leader, stock-paired
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+import { CONFIG } from '../config.js';
+
 // linear map v from [a,b] → [0,pts] (works for a > b too)
 const lerp = (v, a, b, pts) => (v == null || Number.isNaN(v) ? 0 : clamp((v - a) / (b - a), 0, 1) * pts);
 
@@ -35,7 +37,47 @@ export function chartFeatures(candles, priceNow) {
   const avgVol7 = prev7.length ? prev7.reduce((s, c) => s + c.v, 0) / prev7.length : null;
   const firstCandleAt = candles[0].t;
 
-  return { ath, drawdownPct, baseRange, lowsHolding, avgVol7, firstCandleAt };
+  // Volume trend: last 3 full days vs the 7 full days before them (<1 = drying up).
+  // Today's candle is still forming, so it's left out.
+  const avg = (xs) => (xs.length ? xs.reduce((s, c) => s + c.v, 0) / xs.length : null);
+  const last3 = candles.slice(-4, -1);
+  const before7 = candles.slice(-11, -4);
+  const volTrend = last3.length === 3 && before7.length >= 5 && avg(before7) > 0 ? avg(last3) / avg(before7) : null;
+  const baseHigh = last7.length ? Math.max(...last7.map((c) => c.h)) : null;
+  const baseDailyVol = avg(candles.slice(-8, -1));
+
+  return { ath, drawdownPct, baseRange, lowsHolding, avgVol7, firstCandleAt, volTrend, baseHigh, baseDailyVol };
+}
+
+// Quiet base (0–8): crashed, going sideways, and volume drying up — the setup every
+// case-study second leg started from. Not a dead coin: it still has to pass the community rules.
+export function quietBaseScore(chart) {
+  const q = CONFIG.quietBase;
+  if (!chart || chart.drawdownPct == null || chart.baseRange == null || chart.volTrend == null) return 0;
+  if (chart.drawdownPct < q.minDrawdownPct || chart.drawdownPct > q.maxDrawdownPct) return 0;
+  if (chart.baseRange > q.maxBaseRange || chart.volTrend > q.maxVolTrend) return 0;
+  return 4 + lerp(chart.volTrend, q.maxVolTrend, 0.4, 2) + lerp(chart.baseRange, q.maxBaseRange, 1.3, 2);
+}
+
+// Catalysts (0–8): outside buyers arriving + buyback machines + chain identity
+export function catalystScore({ manual, burns, pool, info }) {
+  const c = CONFIG.catalyst;
+  const why = [];
+  let pts = 0;
+  if (manual) {
+    pts += c.manualBonus;
+    why.push(`you tagged it: ${manual.note || 'catalyst'}`);
+  }
+  if ((burns?.recent?.count || 0) >= c.buybackMinBurns) {
+    pts += c.buybackBonus;
+    why.push(`${burns.recent.count} burns this week — looks like an ongoing buyback`);
+  }
+  const idText = `${pool.baseToken?.name || ''} ${pool.baseToken?.symbol || ''} ${(info?.categories || []).join(' ')}`;
+  if (c.identityPattern.test(idText)) {
+    pts += c.identityBonus;
+    why.push('part of the chain\'s identity (Robinhood-themed or a launchpad token)');
+  }
+  return { pts: Math.min(c.max, pts), why };
 }
 
 // Holder trend from our own history: % change over the last ~3 days of samples.
@@ -48,7 +90,7 @@ export function holderTrend(history, holdersNow, now = Date.now()) {
   return ((holdersNow - ref[1]) / ref[1]) * 100;
 }
 
-export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community, flow, burns, smartBonus = { per: 4, max: 10 } }) {
+export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community, flow, burns, lane = 'micro', catalyst = null, info = null, smartBonus = { per: 4, max: 10 } }) {
   const parts = {};
 
   // Community (25): on-chain crowd + off-chain crowd
@@ -108,7 +150,8 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   parts.awakening = clamp(awakening, 0, 15);
 
   const liqRatio = pool.marketCap ? (pool.liquidityUsd ?? 0) / pool.marketCap : 0;
-  parts.liquidity = lerp(liqRatio, 0.05, 0.2, 5);
+  // Micro coins: depth relative to size. Quality coins: absolute depth (PONS had $1.1M on a $195M cap)
+  parts.liquidity = lane === 'quality' ? lerp(pool.liquidityUsd, 100_000, 1_000_000, 5) : lerp(liqRatio, 0.05, 0.2, 5);
 
   parts.narrative = (rotation?.active ? 3 : 0) + (stockPaired ? 2 : 0);
 
@@ -118,6 +161,11 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   if (bp != null) burn += bp >= 50 ? 3 : bp >= 20 ? 2 : 0;
   if (burns?.recent?.count > 0) burn += 2;
   parts.burn = burn;
+
+  // Quiet base + catalysts (outside the 100 base)
+  parts.quietBase = quietBaseScore(chart);
+  const cat = catalystScore({ manual: catalyst, burns, pool, info });
+  parts.catalyst = cat.pts;
 
   // Smart money bonus (outside the 100 base): proven wallets buying in the last 24h
   const smartN = flow?.smartBuyers?.length || 0;
@@ -137,6 +185,8 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
     buySellRatio: bs,
     liqRatio,
     usdPerHolder,
+    lane,
+    catalystWhy: cat.why,
     // fake-activity coins can be watched but never reach the buy zone
     buyBlocked: Boolean(flow?.washLikely),
   };

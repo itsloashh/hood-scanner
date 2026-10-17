@@ -1,0 +1,38 @@
+name: catalyst
+
+on:
+  workflow_dispatch:
+    inputs:
+      ca:
+        description: 'Contract address'
+        required: true
+      note:
+        description: 'What happened (e.g. "Robinhood app listing"), or "remove"'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalyst
+  cancel-in-progress: false
+
+jobs:
+  catalyst:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Save catalyst tag
+        run: node scripts/catalyst.js
+        env:
+          CATALYST_CA: ${{ inputs.ca }}
+          CATALYST_NOTE: ${{ inputs.note }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      - name: Save
+        run: scripts/save-data.sh "catalyst tag" data/catalysts.json

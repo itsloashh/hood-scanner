@@ -52,11 +52,12 @@ You should see **"✅ Telegram is connected."** Then send `/help` to your bot.
 - `/check 0x…` — full report on one coin, even if it fails your rules. Pasting an address works too.
 - `/research` — research job now (10–30 min)
 - `/status` — what the last scan found (instant)
+- `/catalyst 0x… Robinhood app listing` — tag a coin with news for +6 score for 14 days (`/catalyst 0x… remove` to untag, `/catalyst` to list)
 - `/paper` — paper trading menu:
-  - **🛒 Place trade** — coins the scanner analysed in the last 24h → pick a size ($5/$10/$15/25%/All), or a limit buy at the pullback entry for pumping coins
+  - **🛒 Place trade** — coins the scanner analysed in the last 24h → pick a size (5% / 10% / 25% / 50% / All of your cash), or a limit buy at the pullback entry for pumping coins
   - **🎯 TP / SL** — default stop, take-profits, runner and size for new trades
   - **📂 Positions** — open trades with live price, sell 25/50/100%, move stop (incl. breakeven), change TP1, cancel limit orders
-  - **💰 Wallet** — cash, money in positions, money reserved for limit orders, total vs your $30 start (reset button)
+  - **💰 Wallet** — cash, money in positions, money reserved for limit orders, total vs your starting amount (reset to $30 / $100 / $1k / $10k)
   - **📊 P/L** — locked-in vs open profit, win rate, best/worst, last trades
   Every scanner alert also has **📝 Paper buy** / **📋 Paper menu** buttons. Pumping-coin alerts have **Paper limit buy @ entry**.
   Every 15 minutes the Worker marks positions to market and runs your TP/SL/trailing stops and limit fills, messaging you on each fill.

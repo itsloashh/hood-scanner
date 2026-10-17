@@ -145,9 +145,15 @@ await test('quick filter enforces Logan parameters (age ≥21d, mcap ≤ $333k)'
   });
   assert.equal(quickFilter(mk(coins.good), now).ok, true);
   assert.match(quickFilter(mk(coins.young), now).reasons.join(), /younger than 21d/);
-  assert.match(quickFilter(mk(coins.big), now).reasons.join(), /mcap over max/);
-  assert.match(quickFilter(mk({ ...coins.good, mcap: 334_000 }), now).reasons.join(), /mcap over max/);
-  assert.equal(quickFilter(mk({ ...coins.good, mcap: 333_000 }), now).ok, true);
+  assert.match(quickFilter(mk({ ...coins.big, mcap: 26_000_000 }), now).reasons.join(), /mcap over max/);
+  assert.equal(quickFilter(mk({ ...coins.good, mcap: 333_000 }), now).lane, 'micro');
+  // above $333k = quality lane: needs $100k+ liquidity
+  assert.match(quickFilter(mk({ ...coins.good, mcap: 334_000 }), now).reasons.join(), /quality lane: liquidity/);
+  const q = quickFilter(mk({ ...coins.good, mcap: 3_600_000, liq: 400_000 }), now);
+  assert.equal(q.ok, true);
+  assert.equal(q.lane, 'quality');
+  assert.match(quickFilter(mk({ ...coins.good, mcap: 4_000 }), now).reasons.join(), /under min/);
+  assert.equal(quickFilter(mk({ ...coins.good, mcap: 8_000, liq: 5_000 }), now).ok, true); // DIH-size survivor
 });
 
 await test('concentration ignores LP pool + burn, catches a whale wallet', () => {
@@ -836,6 +842,125 @@ await test('case studies: finds launch runs and later base-breakout runs, judges
   assert.ok(runs[1].volIgnition >= 3);
   assert.equal(wouldScannerCatch(runs[0]).caught, false); // too young
   assert.equal(wouldScannerCatch(runs[1]).caught, true); // 29d old, ~$36k mc
+});
+
+await test('lanes: quality coins need real holders and a real crash; micro coins get a size warning', async () => {
+  const { deepFilter, laneChartCheck, laneOf } = await import('../src/filters.js');
+  const base = { info: { twitter: 'x', isHoneypot: false, devPct: 0 }, conc: { top10Pct: 20, top1Pct: 3 }, community: { flags: [] } };
+  assert.equal(laneOf(200_000), 'micro');
+  assert.equal(laneOf(3_600_000), 'quality');
+  assert.equal(deepFilter({ ...base, holdersCount: 16_576, lane: 'quality', marketCap: 3_610_000 }).ok, true); // FRONG at its second leg
+  assert.match(deepFilter({ ...base, holdersCount: 900, lane: 'quality', marketCap: 3_000_000 }).reasons.join(), /under 5,000 holders/);
+  assert.match(deepFilter({ ...base, holdersCount: 1_600_000, lane: 'quality', marketCap: 2_000_000 }).reasons.join(), /padded/);
+  assert.equal(deepFilter({ ...base, holdersCount: 900, lane: 'micro', marketCap: 100_000 }).ok, true);
+  assert.equal(laneChartCheck('quality', { drawdownPct: 79 }), null);
+  assert.match(laneChartCheck('quality', { drawdownPct: 30 }), /only 30% off/);
+  assert.match(laneChartCheck('quality', { drawdownPct: 96 }), /too broken/);
+  assert.equal(laneChartCheck('micro', { drawdownPct: 99 }), null);
+});
+
+await test('quiet base: volume drying up in a sideways base scores; a dead flatline or a pump does not', async () => {
+  const { chartFeatures, quietBaseScore, scoreCoin } = await import('../src/score.js');
+  const D = 86_400_000;
+  const cs = [{ t: 0, o: 1, h: 1, l: 1, c: 1, v: 9000 }];
+  for (let i = 1; i < 20; i++) cs.push({ t: i * D, o: 0.25, h: 0.27, l: 0.23, c: 0.25 + (i % 2) * 0.01, v: 3000 });
+  for (let i = 20; i < 24; i++) cs.push({ t: i * D, o: 0.25, h: 0.26, l: 0.24, c: 0.25, v: 1500 }); // drying up (last 3 full days)
+  const ch = chartFeatures(cs, 0.25);
+  assert.ok(ch.volTrend > 0.4 && ch.volTrend < 0.6, `volTrend ${ch.volTrend}`);
+  assert.ok(quietBaseScore(ch) >= 4);
+  assert.equal(quietBaseScore({ ...ch, volTrend: 1.4 }), 0); // volume rising = not quiet
+  assert.equal(quietBaseScore({ ...ch, drawdownPct: 20 }), 0); // never crashed
+  assert.equal(quietBaseScore({ ...ch, baseRange: 3 }), 0); // choppy
+  const pool = { baseToken: { symbol: 'Q', name: 'Q' }, marketCap: 100_000, liquidityUsd: 15_000, volume24h: 1500, buyers24h: 20, sellers24h: 15, change: { h24: 1 } };
+  const sc = scoreCoin({ pool, holdersCount: 800, conc: { top10Pct: 20, top1Pct: 3 }, socials: 2, chart: ch, holderChangePct: 0, rotation: {}, stockPaired: false, community: {} });
+  assert.ok(sc.parts.quietBase >= 4);
+});
+
+await test('catalysts: manual tag, buybacks and chain identity add up to +8 max', async () => {
+  const { catalystScore } = await import('../src/score.js');
+  const pool = { baseToken: { symbol: 'HOODCAT', name: 'Hood Cat' } };
+  const c = catalystScore({ manual: { note: 'Robinhood app listing' }, burns: { recent: { count: 5 } }, pool, info: {} });
+  assert.equal(c.pts, 8);
+  assert.equal(c.why.length, 3);
+  assert.equal(catalystScore({ manual: null, burns: { recent: { count: 1 } }, pool: { baseToken: { symbol: 'ZZZ', name: 'zz' } }, info: {} }).pts, 0);
+  const { applyCatalyst } = await import('../scripts/catalyst.js');
+  const file = path.join(process.env.DATA_DIR, 'catalysts.json');
+  const CA = '0x6245e67affa44a23077f0ea7f981a8dc743a0c47';
+  applyCatalyst(file, CA.toUpperCase().replace('0X', '0x'), 'Robinhood Crypto listing');
+  const { loadCatalysts } = await import('../src/index.js');
+  assert.equal(loadCatalysts()[CA].note, 'Robinhood Crypto listing');
+  assert.deepEqual(loadCatalysts(Date.now() + 15 * 86_400_000), {}); // expires after 14 days
+  applyCatalyst(file, CA, 'remove');
+  assert.deepEqual(loadCatalysts(), {});
+  assert.throws(() => applyCatalyst(file, 'nope', 'x'));
+});
+
+await test('copycats: same ticker, different contract is rejected; the real one passes', async () => {
+  const { copycatOf, buildKnownTickers } = await import('../src/filters.js');
+  const known = buildKnownTickers({ GOODCAT: ['0xaaa'] });
+  const mk = (sym, a) => ({ baseToken: { symbol: sym, address: a } });
+  assert.match(copycatOf(mk('PONS', '0x1234567890123456789012345678901234567890'), known), /copycat of \$PONS/);
+  assert.equal(copycatOf(mk('$pons', '0x39dbed3a2bd333467115de45665cc57f813c4571'), known), null);
+  assert.match(copycatOf(mk('goodcat', '0xbbb'), known), /copycat/);
+  assert.equal(copycatOf(mk('NEWCOIN', '0xccc'), known), null);
+});
+
+await test('ignition: hourly volume 5×+ out of a quiet base fires; a dump or an already-run coin does not', async () => {
+  const { ignitionSignal } = await import('../src/index.js');
+  const base = { baseHourVol: 100, baseHigh: 1.0 };
+  const h = (o, c, v) => ({ o, h: Math.max(o, c), l: Math.min(o, c), c, v });
+  const quiet = [h(0.9, 0.9, 90), h(0.9, 0.9, 110), h(0.9, 0.9, 100)];
+  const fire = [...quiet, h(0.9, 0.95, 600), h(0.95, 1.05, 900), h(1.05, 1.1, 700)];
+  assert.equal(ignitionSignal(base, fire).fired, true);
+  assert.ok(ignitionSignal(base, fire).mult > 5);
+  assert.equal(ignitionSignal(base, quiet).fired, false);
+  const dump = [...quiet, h(0.9, 0.8, 600), h(0.8, 0.7, 900), h(0.7, 0.6, 700)];
+  assert.equal(ignitionSignal(base, dump).fired, false); // volume on a sell-off isn't ignition
+  const late = [...quiet, h(1.3, 1.5, 600), h(1.5, 1.7, 900), h(1.7, 1.9, 700)];
+  assert.equal(ignitionSignal(base, late).fired, false); // already 90% above the base
+  const { ignitionMessage } = await import('../src/messages.js');
+  const msg = ignitionMessage({ token: '0x6245e67affa44a23077f0ea7f981a8dc743a0c47', base: { ...base, symbol: 'FRONG', pool: '0xp', lane: 'quality', drawdownPct: 79, volTrend: 0.51 }, sig: ignitionSignal(base, fire), pool: { marketCap: 3_600_000, liquidityUsd: 400_000 } });
+  assert.match(msg, /IGNITION · \$FRONG/);
+  assert.match(msg, /Quality lane/);
+});
+
+await test('paper sizes are % of the wallet, and the starting amount can be changed', async () => {
+  const worker = (await import('../worker/worker.js')).default;
+  const kv = new Map();
+  const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_TOKEN: 'G', WEBHOOK_SECRET: 's', GITHUB_REPO: 'x/y',
+    PAPER: { get: async (k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null), put: async (k, v) => kv.set(k, v) } };
+  const sent = [];
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) {
+      sent.push(JSON.parse(init.body || '{}'));
+      return new Response(JSON.stringify({ ok: true, result: { message_id: 1 } }));
+    }
+    if (url.includes('/dispatches')) {
+      sent.push({ dispatched: url.split('/workflows/')[1].split('/')[0], body: JSON.parse(init.body) });
+      return new Response(null, { status: 204 });
+    }
+    return new Response('nope', { status: 404 });
+  };
+  const tap = (data) => worker.fetch(new Request('https://b/telegram', { method: 'POST', headers: { 'x-telegram-bot-api-secret-token': 's' },
+    body: JSON.stringify({ callback_query: { id: '1', data, message: { chat: { id: 111 }, message_id: 1, text: 'PAPER · x' } } }) }), env);
+  const say = (text) => worker.fetch(new Request('https://b/telegram', { method: 'POST', headers: { 'x-telegram-bot-api-secret-token': 's' },
+    body: JSON.stringify({ message: { chat: { id: 111 }, text } }) }), env);
+  try {
+    await tap('wr');
+    const kb = JSON.stringify(sent.at(-1).reply_markup);
+    assert.match(kb, /wry:1000/);
+    await tap('wry:1000');
+    const p = JSON.parse(kv.get('paper'));
+    assert.equal(p.start, 1000);
+    assert.equal(p.cash, 1000);
+    await say('/catalyst 0x6245e67affa44a23077f0ea7f981a8dc743a0c47 Robinhood app listing');
+    const d = sent.find((x) => x.dispatched === 'catalyst.yml');
+    assert.deepEqual(d.body.inputs, { ca: '0x6245e67affa44a23077f0ea7f981a8dc743a0c47', note: 'Robinhood app listing' });
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
 });
 
 console.log = origLog;

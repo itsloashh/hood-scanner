@@ -122,7 +122,8 @@ export function wouldScannerCatch(run) {
   if (run.ageDays < CONFIG.minAgeDays) misses.push(`only ${Math.floor(run.ageDays)}d old (rule: ${CONFIG.minAgeDays}d+)`);
   if (run.startMcap != null && run.startMcap > CONFIG.maxMarketCap) misses.push(`market cap ${fmtUsd(run.startMcap)} (rule: ≤ ${fmtUsd(CONFIG.maxMarketCap)})`);
   if (run.startMcap != null && run.startMcap < CONFIG.minMarketCap) misses.push(`market cap ${fmtUsd(run.startMcap)} (rule: ≥ ${fmtUsd(CONFIG.minMarketCap)})`);
-  return { caught: misses.length === 0, misses };
+  const lane = run.startMcap != null && run.startMcap > CONFIG.lanes.microMaxMarketCap ? 'quality' : 'micro';
+  return { caught: misses.length === 0, misses, lane };
 }
 
 export async function main() {
@@ -208,7 +209,7 @@ export async function main() {
     c.runs.forEach((x, k) => {
       L.push(`- **Run ${k + 1}:** ${d(x.start)} · age ${Math.floor(x.ageDays)}d · from ${fmtUsd(x.startMcap)} → peak ${x.peakX.toFixed(1)}× (${fmtUsd(x.peakMcap)}) · 3x in ${x.daysTo3x}d, peak in ${x.daysToPeak}d`);
       L.push(`  - Before it: ${x.drawdownFromAth != null ? `${x.drawdownFromAth.toFixed(0)}% off prior high` : 'launch run'} · 7d range ${x.baseRange ? `${x.baseRange.toFixed(2)}×` : '—'} · volume trend ${x.volTrend ? `${x.volTrend.toFixed(2)}×` : '—'} · ignition ${x.volIgnition ? `${x.volIgnition.toFixed(1)}×` : '—'}`);
-      L.push(`  - Our scanner: ${x.scanner.caught ? '✅ would have been eligible' : `❌ would have missed it — ${x.scanner.misses.join('; ')}`}`);
+      L.push(`  - Our scanner: ${x.scanner.caught ? `✅ would have been eligible (${x.scanner.lane} lane${x.scanner.lane === 'quality' ? ' — also needs 5k+ holders, $100k+ liquidity, 50–90% off high' : ''})` : `❌ would have missed it — ${x.scanner.misses.join('; ')}`}`);
     });
     L.push('');
   }

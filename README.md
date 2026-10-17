@@ -1,6 +1,6 @@
 # HOOD SCANNER
 
-A standalone bot that scans Robinhood Chain memecoins every 15 minutes, around the clock, throws out the junk, scores what's left on the "survivor rebound" thesis, and sends the best finds to your phone. Each alert comes with a trade plan and opens a **paper** position, so the $30 strategy gets tested on real prices before any real money goes in.
+A standalone bot that scans Robinhood Chain memecoins every 15 minutes, around the clock, throws out the junk, scores what's left on the "survivor rebound" thesis, and sends the best finds to your phone. Each alert comes with a trade plan and opens a **paper** position, so the strategy gets tested on real prices before any real money goes in.
 
 **Cost: $0.** It runs on GitHub Actions (unlimited on a public repo) and uses free, keyless data (GeckoTerminal + Blockscout + Telegram). Alerts go out any hour, the moment a coin qualifies.
 
@@ -11,17 +11,24 @@ A standalone bot that scans Robinhood Chain memecoins every 15 minutes, around t
 | Rule | Setting |
 |---|---|
 | Age | over **21 days** (3 weeks) |
-| Market cap | **$10k – $333k** |
-| Liquidity | at least $3k |
+| Market cap | two lanes: **🧪 Micro $5k – $333k** (survivor bounces, small size only) and **🏛 Quality $333k – $25M** (established coins setting up a second leg) |
+| Quality lane extras | 5,000+ holders, $10+ of market cap per holder (no padded counts), $100k+ liquidity, 50–90% off its high |
+| Liquidity | at least $3k (micro) / $100k (quality) |
+| Copycats | a coin using the ticker of an established coin (5k+ holders) from a different contract is rejected |
 | Established community | 150+ holders, 8+ unique buyers in 24h, at least one social linked, ≤ 2 GeckoTerminal "suspicious" reports |
 | Not locked up in a majority wallet | top wallet ≤ 8%, top 10 wallets ≤ 40%, dev ≤ 5% (LP pools, launchpad contracts and burn addresses excluded so they don't skew it) |
 | Junk filter | honeypot flag, almost no sellers, already up 100%+ in 24h, dead market cap |
 | Targets | conservative 3x–10x |
-| Bankroll | $30, split into $10 slices, max 3 open |
+| Paper wallet | any starting amount ($30 / $100 / $1k / $10k); trades sized as % of cash |
 
 ## How a coin gets scored (0–100)
 
 The thesis: a 3+ week old coin that already crashed, whose community held on, whose price stopped making new lows, and where buyers are coming back.
+
+**What the case study taught it (CASHCAT, PONS, FRONG, DIH, 🪶):** every one had a second leg 26–41 days after launch, starting 73–99% off its high, out of a **quiet base** (sideways price while volume dried up to 0.37–0.79× of normal), then a sudden **volume ignition** (8–24×) and 3x within 1–6 days. The quality ones had a reason to exist (chain identity, a buyback-and-burn) and a **catalyst** that brought in outside buyers (Robinhood app listing, Binance Wallet). So the scanner adds, on top of the 100 points:
+- **Quiet base** up to +8: crashed, sideways, volume drying up.
+- **Catalysts** up to +8: your `/catalyst` tag (+6 for 14 days), an ongoing buyback (3+ burns a week, +2), chain identity (Robinhood-themed or launchpad token, +2).
+- **🔥 IGNITION alert**: coins in a quiet base get their hourly candles checked every run. Last 3 hours at 5×+ normal volume, price rising and no more than 40% above the base = immediate alert.
 
 | Part | Points | What it rewards |
 |---|---|---|
@@ -148,7 +155,7 @@ Without the key, the scanner still runs: holder spread is estimated from GeckoTe
 After every scan, `data/state.json → lastRun` records coins scanned, the funnel, top cut reasons, which holder data source worked, API errors per site, Blockscout usage, and wallet-tracker counts.
 
 ## 📝 Paper trading (Telegram buttons)
-Paper trades are placed by you, not automatically (`paper.auto: false`). Send **/paper** for the menu: **Place trade · TP/SL · Positions · Wallet · P/L**. You can also tap **📝 Paper buy** on any alert. The wallet starts at $30 and lives in the Telegram Worker's KV storage. Every 15 minutes the Worker checks prices and runs your stop-losses, take-profits, trailing stops and limit-order fills. Setup: `worker/SETUP.md` steps 5–6.
+Paper trades are placed by you, not automatically (`paper.auto: false`). Send **/paper** for the menu: **Place trade · TP/SL · Positions · Wallet · P/L**. You can also tap **📝 Paper buy** on any alert. The wallet starts at $30 (reset it to $100, $1k or $10k under Wallet) and lives in the Telegram Worker's KV storage. Every 15 minutes the Worker checks prices and runs your stop-losses, take-profits, trailing stops and limit-order fills. Setup: `worker/SETUP.md` steps 5–6.
 
 ## 🚀 Coins already pumping
 A coin up 50%+ in 24h isn't chased. It's judged on its size *before* the pump (still $10k–$333k), and must pass every other rule (age, community, wallet spread, no wash trading). Then you get a **PUMPING** alert covering:
@@ -160,7 +167,7 @@ A coin up 50%+ in 24h isn't chased. It's judged on its size *before* the pump (s
 Every alert shows what 3x and 10x would mean in market cap. Research only learns from runs that peaked between 3x and 10x.
 
 ## 📱 Telegram commands
-Text your bot `/scan`, `/check 0x…` (or just paste an address), `/research` or `/status`.
+Text your bot `/scan`, `/check 0x…` (or just paste an address), `/research`, `/status`, or `/catalyst 0x… what happened` (tag news like a Robinhood listing; `/catalyst 0x… remove` to untag, `/catalyst` to list).
 Free Cloudflare Worker relay — setup in **[worker/SETUP.md](worker/SETUP.md)**.
 Without it you can still run anything from **Actions → (workflow) → Run workflow**, including a single-coin check: open **hood-scanner → Run workflow** and paste an address in the box.
 

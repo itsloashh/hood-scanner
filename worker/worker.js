@@ -35,6 +35,8 @@ const HELP = [
   '/check 0x… — full report on one coin, even if it fails your rules',
   '   (or just paste a contract address)',
   '/research — run the research job now (10–30 min)',
+  '/catalyst 0x… what happened — tag a coin with news (Robinhood listing, big follow…) for +6 score for 2 weeks',
+  '   /catalyst 0x… remove — untag · /catalyst — list tags',
   '/paper — paper trading: place trade · TP/SL · positions · wallet · P/L',
   '/status — what the last scan found, instantly',
   '/help — this list',
@@ -46,6 +48,7 @@ const COMMANDS = [
   { command: 'scan', description: 'Run a full scan now' },
   { command: 'check', description: 'Check one coin: /check 0x…' },
   { command: 'research', description: 'Run the research job now' },
+  { command: 'catalyst', description: 'Tag a coin with news: /catalyst 0x… listing' },
   { command: 'paper', description: 'Paper trading menu' },
   { command: 'status', description: 'What the last scan found' },
   { command: 'help', description: 'List commands' },
@@ -108,6 +111,20 @@ async function status(env) {
   return L.join('\n');
 }
 
+async function catalystList(env) {
+  const res = await fetch(`https://raw.githubusercontent.com/${env.GITHUB_REPO}/main/data/catalysts.json?t=${Date.now()}`, { headers: { 'cache-control': 'no-cache' } });
+  if (res.status === 404) return '⚡ No catalyst tags yet.\nTag one: /catalyst 0x… Robinhood app listing';
+  if (!res.ok) return `Couldn't read catalysts (${res.status}).`;
+  const coins = Object.entries((await res.json()).coins || {});
+  if (!coins.length) return '⚡ No catalyst tags yet.';
+  const L = ['⚡ CATALYST TAGS (count for 14 days)'];
+  for (const [a, v] of coins) {
+    const days = Math.floor((Date.now() - Date.parse(v.at)) / 86_400_000);
+    L.push(`• ${a.slice(0, 6)}…${a.slice(-4)} — ${v.note} (${days}d ago${days >= 14 ? ', expired' : ''})`);
+  }
+  return L.join('\n');
+}
+
 async function handleMessage(env, msg) {
   const chatId = msg.chat?.id;
   if (String(chatId) !== String(env.ALLOWED_CHAT_ID)) return; // ignore everyone else, silently
@@ -143,6 +160,15 @@ async function handleMessage(env, msg) {
       : `❌ Couldn't start research. ${dispatchError(r)}`);
   }
 
+  if (cmd === '/catalyst') {
+    const ca = args[0] || '';
+    if (!ca) return reply(env, chatId, await catalystList(env).catch((e) => `Couldn't read catalysts: ${e.message}`));
+    if (!ADDR.test(ca)) return reply(env, chatId, 'Send it like this:\n/catalyst 0x1234…abcd Robinhood app listing\n/catalyst 0x1234…abcd remove');
+    const note = args.slice(1).join(' ').slice(0, 120);
+    const r = await dispatch(env, 'catalyst.yml', { ca: ca.toLowerCase(), note });
+    return reply(env, chatId, r.ok ? '⚡ Saving that catalyst — confirmation in about a minute.' : `❌ Couldn't save it. ${dispatchError(r)}`);
+  }
+
   if (cmd === '/paper') return sendScreen(env, chatId, await mainScreen(env));
 
   if (cmd === '/status') return reply(env, chatId, await status(env).catch((e) => `Couldn't read status: ${e.message}`));
@@ -155,19 +181,22 @@ async function handleMessage(env, msg) {
 //  PAPER TRADING (Telegram buttons + KV)
 // ════════════════════════════════════════════════════════════
 const GT = 'https://api.geckoterminal.com/api/v2/networks/robinhood';
-const DEFAULTS = { start: 30, size: 10, sl: -50, tp1: 3, tp1Sell: 50, tp2: 5, tp2Sell: 25, runner: 10, trail: 40, slip: 3, orderHours: 48 };
+const DEFAULTS = { start: 30, sizePct: 10, sl: -50, tp1: 3, tp1Sell: 50, tp2: 5, tp2Sell: 25, runner: 10, trail: 40, slip: 3, orderHours: 48 };
 const money = (v) => {
   if (v == null || !Number.isFinite(v)) return '—';
   const a = Math.abs(v);
   const n = a >= 1e6 ? `${(a / 1e6).toFixed(2).replace(/\.?0+$/, '')}M` : a >= 1000 ? `${(a / 1000).toFixed(1)}k` : a.toFixed(2);
   return `${v < 0 ? '−' : ''}$${n}`;
 };
+const START_AMOUNTS = [30, 100, 1000, 10000];
+// trade size as a % of cash (rounded down to the cent)
+const sizeFor = (cash, pct) => Math.floor(cash * pct) / 100;
 const signed = (v) => `${v >= 0 ? '+' : '−'}${money(Math.abs(v)).replace('−', '')}`;
 const price = (v) => (v == null ? '—' : v >= 1 ? `$${v.toFixed(4)}` : `$${Number(v).toPrecision(3)}`);
 const pctS = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`;
 
-export function freshPaper(now = Date.now()) {
-  return { cash: DEFAULTS.start, start: DEFAULTS.start, settings: { ...DEFAULTS }, positions: [], orders: [], closed: [], nextId: 1, createdAt: now };
+export function freshPaper(now = Date.now(), start = DEFAULTS.start) {
+  return { cash: start, start, settings: { ...DEFAULTS }, positions: [], orders: [], closed: [], nextId: 1, createdAt: now };
 }
 
 export async function loadPaper(env) {
@@ -445,12 +474,12 @@ async function coinScreen(env, token) {
     '',
     'How much?',
   ].filter((l) => l !== null);
-  const quarter = Math.floor((p.cash / 4) * 100) / 100;
+  const part = (pct) => `${pct}% (${money(sizeFor(p.cash, pct))})`;
   const kb = [
-    [btn('$5', `pb:${token}:5`), btn('$10', `pb:${token}:10`), btn('$15', `pb:${token}:15`)],
-    [btn(`25% (${money(quarter)})`, `pb:${token}:q`), btn(`All (${money(p.cash)})`, `pb:${token}:all`)],
+    [btn(part(5), `pb:${token}:p5`), btn(part(10), `pb:${token}:p10`)],
+    [btn(part(25), `pb:${token}:q`), btn(part(50), `pb:${token}:p50`), btn(`All (${money(p.cash)})`, `pb:${token}:all`)],
   ];
-  if (c.entry?.mid) kb.push([btn(`📌 Limit buy $${st.size} @ ${price(c.entry.mid)}`, `pl:${token}`)]);
+  if (c.entry?.mid) kb.push([btn(`📌 Limit buy ${st.sizePct}% (${money(sizeFor(p.cash, st.sizePct))}) @ ${price(c.entry.mid)}`, `pl:${token}`)]);
   kb.push([btn('⬅️ Back', 'pt'), ...BACK]);
   return { text: lines.join('\n'), kb };
 }
@@ -465,7 +494,7 @@ function tpslScreen(p) {
     `Take profit 1: sell ${st.tp1Sell}% at ${st.tp1}x`,
     `Take profit 2: sell ${st.tp2Sell}% at ${st.tp2}x`,
     `Runner: rest sells at ${st.runner}x, or if it drops ${st.trail}% from its peak after TP1`,
-    `Default size for limit buys: $${st.size}`,
+    `Default size for limit buys: ${st.sizePct}% of cash`,
     '',
     'Change an open trade\'s TP/SL under 📂 Positions.',
   ].join('\n');
@@ -473,7 +502,7 @@ function tpslScreen(p) {
     [-25, -35, -50].map((v) => btn(`${mark(st.sl, v)}SL ${v}%`, `ss:${v}`)),
     [2, 3, 4].map((v) => btn(`${mark(st.tp1, v)}TP1 ${v}x`, `st:${v}`)),
     [5, 10, 20].map((v) => btn(`${mark(st.runner, v)}Runner ${v}x`, `sr:${v}`)),
-    [5, 10, 15].map((v) => btn(`${mark(st.size, v)}Size $${v}`, `sz:${v}`)),
+    [5, 10, 25].map((v) => btn(`${mark(st.sizePct, v)}Size ${v}%`, `sz:${v}`)),
     BACK,
   ];
   return { text, kb };
@@ -546,7 +575,7 @@ async function walletScreen(env) {
     '',
     `Started with ${money(p.start)} on ${new Date(p.createdAt).toISOString().slice(0, 10)} → ${pctS(((eq - p.start) / p.start) * 100)}`,
   ].join('\n');
-  return { text, kb: [[btn('🔄 Reset to $30', 'wr')], BACK] };
+  return { text, kb: [[btn('🔄 Reset / change starting amount', 'wr')], BACK] };
 }
 
 async function pnlScreen(env) {
@@ -607,7 +636,7 @@ export async function handleCallback(env, cq) {
   } else if (op === 'pb') {
     const c = await coinInfo(env, a);
     const q = c ? (await priceMap(env, [{ ...c, token: a }]))[c.pool] : null;
-    const size = b === 'all' ? Math.floor(p.cash * 100) / 100 : b === 'q' ? Math.floor((p.cash / 4) * 100) / 100 : Number(b);
+    const size = b === 'all' ? Math.floor(p.cash * 100) / 100 : b === 'q' ? sizeFor(p.cash, 25) : /^p\d+$/.test(b) ? sizeFor(p.cash, Number(b.slice(1))) : Number(b);
     const r = !c ? { error: 'Coin not found.' } : !q?.price ? { error: noPriceMsg() } : openPosition(p, { token: a, symbol: c.symbol, pool: c.pool, px: q.price, size });
     if (r.error) toast = r.error;
     else {
@@ -617,7 +646,7 @@ export async function handleCallback(env, cq) {
     }
   } else if (op === 'pl') {
     const c = await coinInfo(env, a);
-    const r = c?.entry?.mid ? placeOrder(p, { token: a, symbol: c.symbol, pool: c.pool, limit: c.entry.mid, size: Math.min(p.settings.size, p.cash) }) : { error: 'No pullback entry for this coin.' };
+    const r = c?.entry?.mid ? placeOrder(p, { token: a, symbol: c.symbol, pool: c.pool, limit: c.entry.mid, size: sizeFor(p.cash, p.settings.sizePct) }) : { error: 'No pullback entry for this coin.' };
     if (r.error) toast = r.error;
     else {
       await savePaper(env, p);
@@ -653,16 +682,20 @@ export async function handleCallback(env, cq) {
     }
     scr = positionScreen(p, Number(a));
   } else if (['ss', 'st', 'sr', 'sz'].includes(op)) {
-    const key = { ss: 'sl', st: 'tp1', sr: 'runner', sz: 'size' }[op];
+    const key = { ss: 'sl', st: 'tp1', sr: 'runner', sz: 'sizePct' }[op];
     p.settings[key] = Number(a);
     await savePaper(env, p);
     toast = 'Saved';
     scr = tpslScreen(p);
   } else if (op === 'wr') {
-    scr = { text: 'PAPER · 🔄 RESET?\n\nThis wipes all paper positions, orders and history and starts again with $30.', kb: [[btn('Yes, reset', 'wry'), btn('Cancel', 'w')]] };
+    scr = {
+      text: 'PAPER · 🔄 RESET?\n\nThis wipes all paper positions, orders and history. Pick the amount to start again with:',
+      kb: [START_AMOUNTS.map((v) => btn(money(v), `wry:${v}`)), [btn('Cancel', 'w')]],
+    };
   } else if (op === 'wry') {
-    await savePaper(env, freshPaper());
-    toast = 'Wallet reset to $30';
+    const start = START_AMOUNTS.includes(Number(a)) ? Number(a) : DEFAULTS.start;
+    await savePaper(env, freshPaper(Date.now(), start));
+    toast = `Wallet reset to ${money(start)}`;
     scr = await mainScreen(env);
   }
 
