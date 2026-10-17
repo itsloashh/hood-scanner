@@ -85,7 +85,7 @@ export function alertMessage(c) {
   } else {
     L.push(`👀 WATCH · $${sym} — ${score.total}/100`);
     L.push(score.buyBlocked
-      ? 'Passed the safety checks, but its trading looks bot-driven — watch only, no trade.'
+      ? `Scored ${score.total}, but ${score.buyBlockedWhy || 'its trading looks bot-driven'} — watch only for now.`
       : `Passed every safety check. ${Math.max(0, CONFIG.alertScore - score.total)} points short of the buy zone (${CONFIG.alertScore}).`);
   }
   if (score.lane === 'quality') L.push('🏛 QUALITY LANE — established coin with a real crowd, setting up a possible second leg.');
@@ -225,7 +225,7 @@ export function checkMessage(c) {
   } else if (c.verdict === 'buy') {
     head.push('✅ Passes all your rules — this would be a 🟢 BUY ZONE alert.');
   } else if (c.verdict === 'watch') {
-    head.push(c.score.buyBlocked ? '✅ Passes your rules, but trading looks bot-driven — 👀 watch only.' : `✅ Passes all your rules — 👀 WATCH level (${CONFIG.alertScore - c.score.total} pts short of buy zone).`);
+    head.push(c.score.buyBlocked ? `✅ Passes your rules, but ${c.score.buyBlockedWhy || 'trading looks bot-driven'} — 👀 watch only.` : `✅ Passes all your rules — 👀 WATCH level (${CONFIG.alertScore - c.score.total} pts short of buy zone).`);
   } else {
     head.push(`✅ Passes your rules, but scores below the watch level (${CONFIG.watchScore}).`);
   }
@@ -303,7 +303,7 @@ export function tradeMessage(ev) {
 }
 
 // ── daily summary ───────────────────────────────────────────
-export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch24h, walletStats, sinceLast }) {
+export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch24h, walletStats, sinceLast, scorecard }) {
   const start = CONFIG.paper.startingBankroll;
   const change = ((eq - start) / start) * 100;
   const L = [];
@@ -330,6 +330,16 @@ export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch2
   L.push(bullet(`${funnel.runs} scans ran. A typical scan looked at ${funnel.scanned} coins → ${funnel.quickPass} survived the junk filter → ${funnel.deepPass} passed the full safety check`));
   const mood = { 'risk-on': 'heating up', 'risk-off': 'cooling off', neutral: 'normal' }[regime.state] || regime.state;
   L.push(bullet(`Chain-wide trading is ${mood}${regime.ratio ? ` (${regime.ratio.toFixed(2)}× the usual volume)` : ''}`));
+
+  if (scorecard && Object.keys(scorecard).length) {
+    L.push('', '🎯 ALERT SCORECARD (did alerts reach 3x before −50%? tracked 30 days)');
+    const names = { buy: '🟢 Buy', watch: '👀 Watch', pump: '🚀 Pump', ignition: '🔥 Ignition' };
+    for (const [k, g] of Object.entries(scorecard).sort()) {
+      const [tier, lane] = k.split('/');
+      const closed = g.win + g.stopped + g.expired;
+      L.push(bullet(`${names[tier] || tier}${lane ? ` (${lane})` : ''}: ${g.n} alert(s) · ✅ ${g.win} hit 3x · ❌ ${g.stopped} fell 50% · ⏹ ${g.expired} expired · ${g.open} still open${closed ? ` · ${Math.round(g.winRate * 100)}% win rate` : ''} · ${g.hit2x} touched 2x`));
+    }
+  }
 
   const top = Object.entries(funnel.reasons).sort((a, b) => b[1] - a[1]).slice(0, 5);
   if (top.length) {

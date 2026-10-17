@@ -10,7 +10,10 @@ export const CONFIG = {
   blockscoutBase: 'https://robinhoodchain.blockscout.com/api/v2', // public explorer (used when no key)
   blockscoutProBase: 'https://api.blockscout.com', // PRO API (used when BLOCKSCOUT_API_KEY is set)
   chainId: 4663, // Robinhood Chain
-  holderCacheMin: 120, // re-use a coin's holder data for 2h — keeps Blockscout well inside the free 100k credits/day
+  holderCacheMin: 120,
+  // Holder lists (top wallets) are slow on Blockscout, so a separate job fetches them with
+  // long timeouts and writes data/holders.json; scans just read it.
+  holdersJob: { maxCoins: 30, freshHours: 6, timeoutSec: 75, budgetMin: 11 }, // re-use a coin's holder data for 2h — keeps Blockscout well inside the free 100k credits/day
   dexpaprika: { base: 'https://api.dexpaprika.com', network: 'robinhood', minIntervalMs: 4200 }, // keyless ≈ 15 calls/min
   infoCacheMin: 120, // token info (socials, holder count, GT score) re-used for 2h
   chartCacheMin: 60, // daily candles re-used for 1h (today's candle comes from the live pool price)
@@ -30,7 +33,7 @@ export const CONFIG = {
     watchlistMax: 120, // coins that once passed the quick filter get re-checked every run, even if they drop off the top lists
     // Discovery by holder count (Blockscout) — finds established coins too quiet for the volume lists
     discoverEveryMin: 120,
-    discoverPages: 6, // 50 tokens per page
+    discoverPages: 10, // 50 tokens per page → top 500 tokens by holder count
     universeMax: 240,
     timeBudgetMin: 8, // stop starting new checks after 8 min so the run always saves (GitHub kills it at 12)
   },
@@ -186,6 +189,11 @@ export const CONFIG = {
   },
 
   // Summary message every N hours, around the clock. Alerts themselves go out any time.
+  // Every alert is tracked for 30 days: did it reach 3x before falling 50%?
+  scorecard: { winX: 3, stopX: 0.5, days: 30, maxEntries: 400 },
+  // On alerts, DexPaprika's price is compared with GeckoTerminal's; disagreement = warning
+  priceCheckMaxDiffPct: 10,
+
   digestEveryHours: 4,
   digestHourLocal: 9, // (legacy — no longer used)
   timezone: 'America/Toronto',

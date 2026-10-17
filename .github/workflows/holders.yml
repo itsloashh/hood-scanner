@@ -1,0 +1,34 @@
+name: holders
+
+# Top-wallet lists from Blockscout (slow), kept out of the 15-minute scan.
+on:
+  schedule:
+    - cron: '11,41 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['triggers/holders.txt']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: holders # own lane: only writes data/holders.json
+  cancel-in-progress: false
+
+jobs:
+  holders:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Fetch top holders
+        run: node src/holders-job.js
+        env:
+          BLOCKSCOUT_API_KEY: ${{ secrets.BLOCKSCOUT_API_KEY }}
+      - name: Save
+        if: always()
+        run: scripts/save-data.sh "holders $(date -u +%Y-%m-%dT%H:%MZ)" data/holders.json

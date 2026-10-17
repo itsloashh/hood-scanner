@@ -188,7 +188,9 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
     lane,
     catalystWhy: cat.why,
     // fake-activity coins can be watched but never reach the buy zone
-    buyBlocked: Boolean(flow?.washLikely),
+    buyBlocked: Boolean(flow?.washLikely) || conc?.top1Pct == null,
+    // why it can't be a buy even with a high score
+    buyBlockedWhy: flow?.washLikely ? 'trading looks bot-driven' : conc?.top1Pct == null ? "the biggest single wallet couldn't be checked yet" : null,
   };
 }
 

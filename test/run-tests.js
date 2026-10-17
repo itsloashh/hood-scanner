@@ -411,6 +411,46 @@ await test('rate limits: a 429 slows that host down instead of hammering it', as
   }
 });
 
+await test('holders job: slow Blockscout lists saved for the scan; buy zone needs the top wallet checked', async () => {
+  const hj = await import('../src/holders-job.js');
+  const holders = { coins: { '0xold': { at: Date.now(), conc: {} } } };
+  const t = hj.pickTargets({ watchlist: { '0xw': { pool: '0xwp', symbol: 'W' }, '0xold': { pool: '0xop', symbol: 'O' } } },
+    [{ token: '0xs', pool: '0xsp', symbol: 'S', tier: 'scored' }, { token: '0xb', pool: '0xbp', symbol: 'B', tier: 'buy' }], holders);
+  assert.deepEqual(t.map((x) => x.token), ['0xb', '0xs', '0xw']); // buy first, fresh ones skipped
+  const { scoreCoin } = await import('../src/score.js');
+  const pool = { baseToken: { symbol: 'X' }, marketCap: 100_000, liquidityUsd: 20_000, volume24h: 5000, buyers24h: 50, sellers24h: 30, change: { h24: 2 } };
+  const est = scoreCoin({ pool, holdersCount: 900, conc: { top10Pct: 20, top1Pct: null, source: 'estimate' }, socials: 2, chart: null, rotation: {}, community: {} });
+  assert.equal(est.buyBlocked, true);
+  assert.match(est.buyBlockedWhy, /biggest single wallet/);
+  const real = scoreCoin({ pool, holdersCount: 900, conc: { top10Pct: 20, top1Pct: 3 }, socials: 2, chart: null, rotation: {}, community: {} });
+  assert.equal(real.buyBlocked, false);
+});
+
+await test('scorecard: every alert is followed to 3x, −50% or 30 days', async () => {
+  const sc = await import('../src/scorecard.js');
+  const card = [];
+  const t0 = Date.now();
+  assert.equal(sc.recordAlert(card, { token: 'a', symbol: 'A', tier: 'buy', lane: 'quality', price: 1 }, t0), true);
+  assert.equal(sc.recordAlert(card, { token: 'a', symbol: 'A', tier: 'buy', price: 1.1 }, t0), false); // no duplicates while open
+  sc.recordAlert(card, { token: 'b', symbol: 'B', tier: 'watch', lane: 'micro', price: 1 }, t0);
+  sc.recordAlert(card, { token: 'c', symbol: 'C', tier: 'watch', lane: 'micro', price: 1 }, t0);
+  sc.updateScorecard(card, { a: 2.2, b: 0.7, c: 1.2 }, t0 + 3_600_000);
+  sc.updateScorecard(card, { a: 3.1, b: 0.45, c: 1.1 }, t0 + 7_200_000);
+  assert.equal(card[0].outcome, 'win');
+  assert.equal(card[1].outcome, 'stopped');
+  assert.equal(card[2].outcome, null);
+  sc.updateScorecard(card, {}, t0 + 31 * 86_400_000);
+  assert.equal(card[2].outcome, 'expired');
+  const sum = sc.summarize(card);
+  assert.equal(sum['buy/quality'].win, 1);
+  assert.equal(sum['watch/micro'].stopped, 1);
+  assert.equal(sum['watch/micro'].winRate, 0);
+  const { digestMessage } = await import('../src/messages.js');
+  const msg = digestMessage({ paper: { positions: [] }, eq: 30, stats: {}, regime: { state: 'neutral' }, funnel: { runs: 1, scanned: 1, quickPass: 1, deepPass: 1, reasons: {} }, buy24h: 0, watch24h: 0, scorecard: sum });
+  assert.match(msg, /ALERT SCORECARD/);
+  assert.match(msg, /🟢 Buy \(quality\): 1 alert/);
+});
+
 await test('API keys never appear in error messages (public logs)', async () => {
   const { redact } = await import('../src/http.js');
   assert.equal(redact('HTTP 403 for https://api.blockscout.com/4663/api/v2/tokens?x=1&apikey=proapi_SECRET123'), 'HTTP 403 for https://api.blockscout.com/4663/api/v2/tokens?x=1&apikey=***');

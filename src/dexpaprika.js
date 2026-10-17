@@ -18,3 +18,10 @@ export async function hourly(poolAddress, hours = 24) {
     .filter((k) => Number.isFinite(k.t))
     .sort((a, b) => a.t - b.t);
 }
+
+// Token price/liquidity/FDV in USD — used to double-check GeckoTerminal on alerts
+export async function token(address) {
+  const j = await getJson(`${base()}/tokens/${address.toLowerCase()}`, opts());
+  if (!j) return null;
+  return { price: Number(j.summary?.price_usd) || null, liquidityUsd: Number(j.summary?.liquidity_usd) || null, fdv: Number(j.summary?.fdv) || null };
+}

@@ -5,7 +5,12 @@
 import { CONFIG } from '../config.js';
 import { getJson } from './http.js';
 
-const opts = () => ({ minIntervalMs: CONFIG.blockscoutMinIntervalMs });
+// The scan keeps Blockscout calls short (20s); the separate holders job allows slow calls.
+let slow = false;
+export const setSlowMode = (on) => {
+  slow = on;
+};
+const opts = () => (slow ? { minIntervalMs: CONFIG.blockscoutMinIntervalMs, timeoutMs: CONFIG.holdersJob.timeoutSec * 1000, retries: 1 } : { minIntervalMs: CONFIG.blockscoutMinIntervalMs });
 export const usage = { calls: 0 };
 
 export const hasKey = () => Boolean(process.env.BLOCKSCOUT_API_KEY);

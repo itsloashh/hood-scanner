@@ -104,6 +104,10 @@ async function status(env) {
   if (r.regime) L.push(`Market: ${{ 'risk-on': 'heating up', 'risk-off': 'cooling off', neutral: 'normal' }[r.regime] || r.regime}`);
   const paper = await loadPaper(env).catch(() => null);
   if (paper) L.push('', `💵 Paper: ${usd(paper.cash)} cash · ${paper.positions.length} open · ${paper.orders.length} limit order(s) — /paper for details`);
+  if (r.scorecard && Object.keys(r.scorecard).length) {
+    L.push('', '🎯 Alert scorecard (3x before −50%, 30 days):');
+    for (const [k, g] of Object.entries(r.scorecard)) L.push(`• ${k}: ${g.n} alerts · ✅${g.win} ❌${g.stopped} ⏹${g.expired} · ${g.open} open`);
+  }
   if (r.wallets) L.push('', `🧠 Tracking ${r.wallets.tracked} wallets · ${r.wallets.smart} smart`);
   if (r.httpErrors && Object.keys(r.httpErrors).length) {
     L.push('', `⚠️ Data source errors: ${Object.entries(r.httpErrors).map(([h, e]) => `${h.split('.')[0]} ${e.last}`).join(', ')}`);
@@ -749,6 +753,9 @@ export default {
   async scheduled(event, env, ctx) {
     const job = event.cron === '23 14 * * *' ? 'research.yml' : 'scan.yml';
     if (job === 'scan.yml' && env.PAPER) ctx.waitUntil(paperTick(env).catch(() => {}));
+    // every 30 min: the slow Blockscout holder-list job (GitHub's own schedule is unreliable)
+    const minute = new Date(event.scheduledTime || Date.now()).getUTCMinutes();
+    if (job === 'scan.yml' && minute % 30 < 15) ctx.waitUntil(dispatch(env, 'holders.yml').catch(() => {}));
     ctx.waitUntil(
       dispatch(env, job).then(async (r) => {
         // only speak up if the clock breaks, so a bad token doesn't fail silently

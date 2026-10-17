@@ -36,7 +36,7 @@ function recordError(host, msg) {
   e.last = msg;
 }
 
-export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
+export async function getJson(url, { minIntervalMs = 0, retries = 3, timeoutMs = TIMEOUT_MS } = {}) {
   const host = new URL(url).host;
   if ((strikes.get(host) || 0) >= BREAKER) throw new Error(`${host} skipped for the rest of this run (kept failing)`);
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -54,7 +54,7 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
     try {
       res = await globalThis.fetch(url, {
         headers: { accept: 'application/json', 'user-agent': 'hood-scanner/2.1 (+github.com/itsloashh/hood-scanner)' },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (err) {
       stat(host).ms += Date.now() - t0;

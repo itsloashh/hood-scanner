@@ -7,6 +7,8 @@ import * as bs from './blockscout.js';
 import * as dp from './dexpaprika.js';
 import { quickFilter, deepFilter, pumpFilter, ageDays, tally, laneOf, laneChartCheck, copycatOf, buildKnownTickers, normSymbol } from './filters.js';
 import { pumpPlan, loadPullbacks } from './pump.js';
+import { loadHolders } from './holders-job.js';
+import { recordAlert, updateScorecard, summarize } from './scorecard.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { tagNarratives, clusterLeaders, rotationSignal } from './narrative.js';
@@ -65,15 +67,24 @@ async function discover(state, now) {
       t.holders >= CONFIG.community.minHolders &&
       !CONFIG.ignoreSymbols.includes((t.symbol || '').toUpperCase()) &&
       !CONFIG.excludeNamePattern.test(`${t.name || ''} ${t.symbol || ''}`) &&
-      !state.universe[t.address]
+      !state.universe[t.address] &&
+      !(state.noPool?.[t.address] && now - state.noPool[t.address] < DAY) // no trading pool last time we asked
   );
   let pools = {};
+  let lookupOk = false;
   try {
     pools = await gecko.topPoolsFor(fresh.map((t) => t.address));
+    lookupOk = true;
   } catch (e) {
+    state.lastDiscovery.poolLookupError = e.message.slice(0, 160);
     log('discovery (pool lookup) failed:', e.message);
   }
-  for (const t of fresh) if (pools[t.address]) state.universe[t.address] = { pool: pools[t.address], symbol: t.symbol, at: now };
+  state.noPool ||= {};
+  for (const t of fresh) {
+    if (pools[t.address]) state.universe[t.address] = { pool: pools[t.address], symbol: t.symbol, at: now };
+    else if (lookupOk) state.noPool[t.address] = now; // only trust "no pool" when the lookup itself worked
+  }
+  for (const [a, at] of Object.entries(state.noPool)) if (now - at > DAY) delete state.noPool[a];
   state.lastDiscovery.fresh = fresh.length;
   state.lastDiscovery.withPools = Object.keys(pools).length;
   const u = Object.entries(state.universe).sort((a, b) => b[1].at - a[1].at).slice(0, CONFIG.scan.universeMax);
@@ -152,10 +163,16 @@ async function holderData(pool, info, state, now) {
   const token = pool.baseToken.address;
   const hit = state.holderCache[token];
   if (hit && now - hit.at < CONFIG.holderCacheMin * MIN) return { conc: hit.conc, holdersCount: hit.holdersCount, cached: true };
+  // the holders job (slow Blockscout calls, every 30 min) — fresh enough within 6h
+  const job = (state.holdersFile ||= loadHolders()).coins?.[token];
+  if (job?.conc && now - job.at < CONFIG.holdersJob.freshHours * HOUR) return { conc: job.conc, holdersCount: job.holdersCount, cached: true, fromJob: true };
+  // Blockscout already failing this run → don't spend 20s per coin finding that out again
+  if (state.health?.bsDown) return { conc: null, holdersCount: null, cached: false };
   const [meta, holders] = await Promise.all([
     bs.tokenMeta(token).catch(() => null),
     bs.topHolders(token).catch(() => []),
   ]);
+  if (!meta && !holders.length && state.health) state.health.bsDown = (state.health.bsFails = (state.health.bsFails || 0) + 1) >= 2;
   const conc =
     meta?.totalSupply && holders.length
       ? bs.concentration(holders, meta.totalSupply, { poolAddresses: pool.allPools || [pool.poolAddress], devAddress: info?.devAddress })
@@ -203,7 +220,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false, catalyst
   const hd = await holderData(pool, info, state, now);
   let conc = hd.conc;
   if (!conc) conc = bs.estimateConcentration(info, pool); // backup: GeckoTerminal holder split
-  state.health.concSource[conc ? (conc.source || (hd.cached ? 'cached' : 'blockscout')) : 'none'] += 1;
+  state.health.concSource[conc ? (conc.source || (hd.fromJob ? 'holdersJob' : hd.cached ? 'cached' : 'blockscout')) : 'none'] = (state.health.concSource[conc ? (conc.source || (hd.fromJob ? 'holdersJob' : hd.cached ? 'cached' : 'blockscout')) : 'none'] || 0) + 1;
   const holdersCount = hd.holdersCount ?? info?.holders ?? null;
 
   // Holder history — our own dataset; sampled every ~2h so the 3-day trend means something
@@ -258,6 +275,23 @@ async function deepCheck(pool, state, leaders, now, w, { force = false, catalyst
     filt.warnings.push(`Holder count looks padded — only ${usdOf(score.usdPerHolder)} of market cap per holder (airdropped dust wallets?)`);
   }
   return { pool, info, conc, holdersCount, holderChangePct, filt, chart, candles, age, narratives: tags, stockPaired, rotation, score, community, flow, burns, lane };
+}
+
+// Second opinion on price before alerting: DexPaprika vs GeckoTerminal
+async function priceCrossCheck(r) {
+  const gt = r.pool.priceUsd;
+  if (!gt) return;
+  try {
+    const d = await dp.token(r.pool.baseToken.address);
+    if (!d?.price) return;
+    const diff = Math.abs(d.price / gt - 1) * 100;
+    r.priceCheck = { dexpaprika: d.price, diffPct: diff };
+    if (diff > CONFIG.priceCheckMaxDiffPct) {
+      r.filt.warnings.push(`Price sources disagree by ${diff.toFixed(0)}% (GeckoTerminal vs DexPaprika) — check the chart before trusting the numbers`);
+    }
+  } catch {
+    /* second opinion unavailable — not a reason to hold the alert */
+  }
 }
 
 // Token info (socials, holder count, GT score) barely changes — re-use it for 2h
@@ -373,6 +407,8 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
     const mcap = pool?.marketCap ?? null;
     await notify(ignitionMessage({ token, base, sig, pool }), { buttons: paperButtons(token) });
     state.ignitionAlerts[token] = { at: now, symbol: base.symbol };
+    state.scorecard ||= [];
+    recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score }, now);
     candidates.push({
       token, symbol: base.symbol, pool: base.pool, tier: 'ignition', score: base.score ?? null, price: sig.price,
       mcap, liquidity: pool?.liquidityUsd ?? null, change24h: pool?.change.h24 ?? null, washLikely: false, lane: base.lane,
@@ -447,6 +483,10 @@ export async function main() {
     prices = await priceMapFor(state.paper, pools);
     const allPrices = Object.fromEntries(pools.filter((p) => p.priceUsd).map((p) => [p.baseToken.address, p.priceUsd]));
     const resolved = resolveOutcomes(w, allPrices, now);
+    state.scorecard ||= [];
+    for (const a of updateScorecard(state.scorecard, allPrices, now)) {
+      log(`scorecard: $${a.symbol} ${a.tier} alert → ${a.outcome} (peak ${a.peakX.toFixed(2)}×)`);
+    }
     if (resolved.length) log(`wallet buys resolved: ${resolved.filter((r) => r.r === 'W').length} wins, ${resolved.filter((r) => r.r === 'L').length} losses`);
     for (const ev of CONFIG.paper.auto ? updatePositions(state.paper, prices, now) : []) {
       await notify(tradeMessage(ev));
@@ -528,12 +568,16 @@ export async function main() {
         const paperOpened = CONFIG.paper.auto
           ? openPosition(state.paper, { token, symbol: pool.baseToken.symbol, pool: pool.poolAddress, price: pool.priceUsd, score: s }, now)
           : null;
+        await priceCrossCheck(r);
         await notify(alertMessage({ ...r, tier: 'buy', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }), { buttons: paperButtons(token) });
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'buy', lane: r.lane, price: pool.priceUsd, score: s }, now);
         state.alerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.buy += 1;
         if (row) row.decision = 'BUY-ALERT';
       } else if (s >= watchBar && (s < buyBar || r.score.buyBlocked) && shouldAlert(state.watchAlerts, token, s, CONFIG.watchCooldownHours, now)) {
+        await priceCrossCheck(r);
         await notify(alertMessage({ ...r, tier: 'watch', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings }), { buttons: paperButtons(token) });
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'watch', lane: r.lane, price: pool.priceUsd, score: s }, now);
         state.watchAlerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.watch += 1;
         if (row) row.decision = 'WATCH-ALERT';
@@ -572,6 +616,7 @@ export async function main() {
         { text: '📝 Buy now', data: `pc:${token}` },
       ]] });
       state.pumpAlerts[token] = { at: now, symbol: p.baseToken.symbol };
+      recordAlert(state.scorecard, { token, symbol: p.baseToken.symbol, tier: 'pump', lane: r.lane, price: p.priceUsd, score: r.score?.total }, now);
       runStats.pump += 1;
     }
 
@@ -596,6 +641,7 @@ export async function main() {
         paper: state.paper, eq: equity(state.paper, prices), stats: stats(state.paper), regime: reg,
         funnel: { runs: recent.length, scanned: avg('scanned'), quickPass: avg('quickPass'), deepPass: avg('deepPass'), reasons: reasonSum },
         buy24h: count(state.alerts), watch24h: count(state.watchAlerts),
+        scorecard: summarize(state.scorecard),
         sinceLast: state.lastDigestAt
           ? { hours: Math.round((now - state.lastDigestAt) / HOUR), buy: Object.values(state.alerts).filter((a) => a.at > state.lastDigestAt).length, watch: Object.values(state.watchAlerts).filter((a) => a.at > state.lastDigestAt).length }
           : null,
@@ -612,6 +658,7 @@ export async function main() {
       holderData: state.health.concSource, cacheHits: state.health.cacheHits, ignitionSource: state.health.ignitionSource,
       http: Object.fromEntries(Object.entries(httpStats).map(([h, v]) => [h.split('.').slice(-2, -1)[0] || h, { calls: v.calls, sec: Math.round(v.ms / 1000), waitSec: Math.round(v.waitMs / 1000), backoffSec: Math.round(v.backoffMs / 1000), r429: v.r429 }])),
       phases: state.health.phases,
+      scorecard: summarize(state.scorecard || []),
       httpErrors, outOfTime: Boolean(state.health.outOfTime), seconds: Math.round((Date.now() - now) / 1000),
       blockscout: { key: bs.hasKey(), calls: bs.usage.calls },
       quietBases: Object.keys(state.quietBases).length,
@@ -635,6 +682,7 @@ export async function main() {
     saveWallets(w, now);
     saveCandidates(candidates, now);
     for (const [t, v] of Object.entries(state.pumpAlerts)) if (now - v.at > 3 * DAY) delete state.pumpAlerts[t];
+    delete state.holdersFile; // read-only copy of data/holders.json, never saved into state
     saveState(state);
   }
   return runStats;
