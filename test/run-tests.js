@@ -792,6 +792,33 @@ await test('paper menu: buttons place trades, TP/SL fire on the cron, limits fil
   globalThis.fetch = prevFetch;
 });
 
+await test('paper prices: GeckoTerminal blocked → falls back to last scan price, else explains why', async () => {
+  const W = await import('../worker/worker.js');
+  const kv = new Map();
+  const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_REPO: 'itsloashh/hood-scanner', PAPER: { get: async (k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null), put: async (k, v) => kv.set(k, v) } };
+  const sent = [];
+  let candAt = new Date().toISOString();
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) { sent.push({ m: url.split('/').pop(), b: JSON.parse(init.body || '{}') }); return new Response('{"ok":true}'); }
+    if (url.includes('geckoterminal')) return new Response('blocked', { status: 403 });
+    if (url.includes('candidates.json')) return new Response(JSON.stringify({ coins: [{ token: '0xgen', symbol: 'GENESIS', pool: '0xgp', tier: 'watch', score: 60, price: 0.002, mcap: 120000, at: candAt }] }));
+    return new Response('{}', { status: 404 });
+  };
+  const tap = (data) => W.handleCallback(env, { id: 'c', data, message: { chat: { id: 111 }, message_id: 1, text: 'PAPER · x' } });
+  await tap('pc:0xgen');
+  assert.match(sent.at(-1).b.text, /Price \$0\.00200 · market cap \$120\.0k \(from the last scan\)/);
+  await tap('pb:0xgen:5');
+  assert.equal(JSON.parse(kv.get('paper')).positions.length, 1);
+  // scan price too old → clear error naming the cause
+  candAt = new Date(Date.now() - 3 * 3_600_000).toISOString();
+  await tap('pb:0xgen:5');
+  const toast = sent.filter((x) => x.m === 'answerCallbackQuery').at(-1).b.text;
+  assert.match(toast, /GeckoTerminal HTTP 403/);
+  globalThis.fetch = prevFetch;
+});
+
 console.log = origLog;
 console.log(`\n${failures ? `${failures} test(s) failed` : 'all tests passed'} · ${calls.length} mocked API calls`);
 process.exit(failures ? 1 : 0);

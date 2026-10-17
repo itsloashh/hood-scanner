@@ -179,21 +179,66 @@ export async function loadPaper(env) {
 }
 const savePaper = (env, p) => env.PAPER.put('paper', JSON.stringify(p));
 
-// live prices from GeckoTerminal (free): pool → { price, liq, mcap }
-export async function poolPrices(pools) {
+// Live prices. Tries, in order:
+//   1. GeckoTerminal pools (price + liquidity + market cap)
+//   2. GeckoTerminal token price (if the pool lookup missed)
+//   3. the scanner's own price from its last run (≤45 min old), marked as such
+// items: [{ pool, token }] → { [pool]: { price, liq, mcap, source } }
+const GT_HEADERS = { accept: 'application/json', 'user-agent': 'hood-scanner-bot/1.0 (+https://github.com/itsloashh/hood-scanner)' };
+export const priceErrors = [];
+
+async function gtJson(url) {
+  try {
+    const res = await fetch(url, { headers: GT_HEADERS });
+    if (!res.ok) {
+      priceErrors.push(`GeckoTerminal HTTP ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (e) {
+    priceErrors.push(`GeckoTerminal unreachable (${String(e.message).slice(0, 40)})`);
+    return null;
+  }
+}
+
+export async function priceMap(env, items) {
   const out = {};
-  const list = [...new Set(pools.filter(Boolean))];
-  for (let i = 0; i < list.length; i += 30) {
-    const res = await fetch(`${GT}/pools/multi/${list.slice(i, i + 30).join(',')}`, { headers: { accept: 'application/json' } });
-    if (!res.ok) continue;
-    const j = await res.json().catch(() => null);
+  const list = items.filter((x) => x?.pool);
+  const pools = [...new Set(list.map((x) => x.pool.toLowerCase()))];
+  for (let i = 0; i < pools.length; i += 30) {
+    const j = await gtJson(`${GT}/pools/multi/${pools.slice(i, i + 30).join(',')}`);
     for (const d of j?.data || []) {
       const a = d.attributes || {};
-      out[(a.address || '').toLowerCase()] = { price: Number(a.base_token_price_usd), liq: Number(a.reserve_in_usd), mcap: Number(a.market_cap_usd || a.fdv_usd) || null };
+      const price = Number(a.base_token_price_usd);
+      if (price > 0) out[(a.address || '').toLowerCase()] = { price, liq: Number(a.reserve_in_usd), mcap: Number(a.market_cap_usd || a.fdv_usd) || null, source: 'live' };
+    }
+  }
+  const missing = list.filter((x) => !out[x.pool.toLowerCase()] && x.token);
+  if (missing.length) {
+    const j = await gtJson(`${GT.replace('/networks/robinhood', '/simple/networks/robinhood')}/token_price/${[...new Set(missing.map((x) => x.token.toLowerCase()))].slice(0, 30).join(',')}`);
+    const tp = j?.data?.attributes?.token_prices || {};
+    for (const x of missing) {
+      const price = Number(tp[x.token.toLowerCase()] ?? tp[x.token]);
+      if (price > 0) out[x.pool.toLowerCase()] = { price, liq: null, mcap: null, source: 'live' };
+    }
+  }
+  const still = list.filter((x) => !out[x.pool.toLowerCase()]);
+  if (still.length && env) {
+    const cands = await candidates(env);
+    for (const x of still) {
+      const c = cands.find((k) => k.pool === x.pool.toLowerCase() || k.token === x.token);
+      if (c?.price > 0 && Date.now() - Date.parse(c.at) < 45 * 60_000) {
+        out[x.pool.toLowerCase()] = { price: c.price, liq: c.liquidity ?? null, mcap: c.mcap ?? null, source: 'scan' };
+      }
     }
   }
   return out;
 }
+
+// kept for older callers: pools only, no fallbacks
+export const poolPrices = (pools) => priceMap(null, pools.map((pool) => ({ pool })));
+
+const noPriceMsg = () => `No live price right now${priceErrors.length ? ` (${priceErrors.at(-1)})` : ''} — try again in a minute.`;
 
 // any coin → its main pool + symbol
 async function coinInfo(env, token) {
@@ -318,7 +363,7 @@ export function tickOrders(p, prices, now = Date.now()) {
 export async function paperTick(env, now = Date.now()) {
   const p = await loadPaper(env);
   if (!p || (!p.positions.length && !p.orders.length)) return [];
-  const prices = await poolPrices([...p.positions.map((x) => x.pool), ...p.orders.map((x) => x.pool)]);
+  const prices = await priceMap(env, [...p.positions, ...p.orders]);
   const evs = [...tickOrders(p, prices, now)];
   for (const pos of [...p.positions]) evs.push(...tickPosition(p, pos, prices[pos.pool], now));
   await savePaper(env, p);
@@ -344,7 +389,7 @@ const needKV = { text: 'PAPER · setup needed\n\nPaper trading needs the KV step
 export async function mainScreen(env) {
   const p = await loadPaper(env);
   if (!p) return needKV;
-  const prices = p.positions.length ? await poolPrices(p.positions.map((x) => x.pool)) : {};
+  const prices = p.positions.length ? await priceMap(env, p.positions) : {};
   for (const pos of p.positions) if (prices[pos.pool]?.price) pos.last = prices[pos.pool].price;
   const eq = equity(p);
   const text = [
@@ -385,13 +430,13 @@ async function coinScreen(env, token) {
   if (!p) return needKV;
   const c = await coinInfo(env, token);
   if (!c) return { text: 'PAPER · coin not found\n\nCouldn\'t find a trading pool for that coin.', kb: [BACK] };
-  const q = (await poolPrices([c.pool]))[c.pool];
+  const q = (await priceMap(env, [c]))[c.pool];
   const st = p.settings;
   const lines = [
     `PAPER · 🛒 BUY $${c.symbol}`,
     '',
-    `Price ${price(q?.price)} · market cap ${money(q?.mcap)}`,
-    q?.mcap ? `🎯 3x = ${money(q.mcap * 3)} mc · 10x = ${money(q.mcap * 10)} mc` : null,
+    q?.price ? `Price ${price(q.price)} · market cap ${money(q.mcap ?? c.mcap)}${q.source === 'scan' ? ' (from the last scan)' : ''}` : `⚠️ ${noPriceMsg()}`,
+    (q?.mcap ?? c.mcap) ? `🎯 3x = ${money((q?.mcap ?? c.mcap) * 3)} mc · 10x = ${money((q?.mcap ?? c.mcap) * 10)} mc` : null,
     c.score != null ? `Scanner: ${c.tier} · ${c.score}/100` : null,
     c.entry ? `🚀 Pumping — suggested limit buy ${price(c.entry.mid)} (zone ${price(c.entry.top)} → ${price(c.entry.deep)}), stop ${price(c.entry.stop)}` : null,
     '',
@@ -437,7 +482,7 @@ function tpslScreen(p) {
 async function positionsScreen(env) {
   const p = await loadPaper(env);
   if (!p) return needKV;
-  const prices = await poolPrices([...p.positions.map((x) => x.pool), ...p.orders.map((x) => x.pool)]);
+  const prices = await priceMap(env, [...p.positions, ...p.orders]);
   const lines = ['PAPER · 📂 POSITIONS', ''];
   if (!p.positions.length) lines.push('No open positions.');
   for (const pos of p.positions) {
@@ -487,7 +532,7 @@ function positionScreen(p, id) {
 async function walletScreen(env) {
   const p = await loadPaper(env);
   if (!p) return needKV;
-  const prices = p.positions.length ? await poolPrices(p.positions.map((x) => x.pool)) : {};
+  const prices = p.positions.length ? await priceMap(env, p.positions) : {};
   for (const pos of p.positions) if (prices[pos.pool]?.price) pos.last = prices[pos.pool].price;
   const inPos = p.positions.reduce((s, x) => s + posValue(x), 0);
   const eq = equity(p);
@@ -507,7 +552,7 @@ async function walletScreen(env) {
 async function pnlScreen(env) {
   const p = await loadPaper(env);
   if (!p) return needKV;
-  const prices = p.positions.length ? await poolPrices(p.positions.map((x) => x.pool)) : {};
+  const prices = p.positions.length ? await priceMap(env, p.positions) : {};
   for (const pos of p.positions) if (prices[pos.pool]?.price) pos.last = prices[pos.pool].price;
   const realized = p.closed.reduce((s, r) => s + r.pnl, 0) + p.positions.reduce((s, x) => s + x.realized - x.size * (1 - x.rem), 0);
   const unrealized = p.positions.reduce((s, x) => s + posValue(x) - x.size * x.rem, 0);
@@ -537,6 +582,7 @@ async function sendScreen(env, chatId, scr) {
 
 // ── button taps ─────────────────────────────────────────────
 export async function handleCallback(env, cq) {
+  priceErrors.length = 0;
   const chatId = cq.message?.chat?.id;
   if (String(chatId) !== String(env.ALLOWED_CHAT_ID)) return;
   const data = cq.data || '';
@@ -555,14 +601,14 @@ export async function handleCallback(env, cq) {
   else if (op === 'w') scr = await walletScreen(env);
   else if (op === 'pnl') scr = await pnlScreen(env);
   else if (op === 'po') {
-    const prices = await poolPrices(p.positions.map((x) => x.pool));
+    const prices = await priceMap(env, p.positions);
     for (const pos of p.positions) if (prices[pos.pool]?.price) pos.last = prices[pos.pool].price;
     scr = positionScreen(p, Number(a));
   } else if (op === 'pb') {
     const c = await coinInfo(env, a);
-    const q = c ? (await poolPrices([c.pool]))[c.pool] : null;
+    const q = c ? (await priceMap(env, [{ ...c, token: a }]))[c.pool] : null;
     const size = b === 'all' ? Math.floor(p.cash * 100) / 100 : b === 'q' ? Math.floor((p.cash / 4) * 100) / 100 : Number(b);
-    const r = c ? openPosition(p, { token: a, symbol: c.symbol, pool: c.pool, px: q?.price, size }) : { error: 'Coin not found.' };
+    const r = !c ? { error: 'Coin not found.' } : !q?.price ? { error: noPriceMsg() } : openPosition(p, { token: a, symbol: c.symbol, pool: c.pool, px: q.price, size });
     if (r.error) toast = r.error;
     else {
       await savePaper(env, p);
@@ -589,14 +635,14 @@ export async function handleCallback(env, cq) {
     scr = await positionsScreen(env);
   } else if (op === 'px') {
     const pos = p.positions.find((x) => x.id === Number(a));
-    const q = pos ? (await poolPrices([pos.pool]))[pos.pool] : null;
+    const q = pos ? (await priceMap(env, [pos]))[pos.pool] : null;
     if (pos && q?.price) {
       pos.last = q.price;
       const ev = sellPart(p, pos, Number(b) >= 100 ? pos.rem : Number(b) / 100, q.price, 'sold manually');
       await savePaper(env, p);
       toast = `Sold → ${money(ev.proceeds)}`;
       scr = ev.closed ? await positionsScreen(env) : positionScreen(p, pos.id);
-    } else toast = 'No live price right now — try again.';
+    } else toast = noPriceMsg();
   } else if (op === 'pS' || op === 'pT') {
     const pos = p.positions.find((x) => x.id === Number(a));
     if (pos) {
