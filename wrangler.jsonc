@@ -4,6 +4,8 @@
   "name": "hood-scanner-bot",
   "main": "worker/worker.js",
   "compatibility_date": "2026-10-01",
+  // keep anything set in the Cloudflare dashboard when GitHub pushes an update
+  "keep_vars": true,
   // Secrets (TELEGRAM_BOT_TOKEN, ALLOWED_CHAT_ID, GITHUB_TOKEN, WEBHOOK_SECRET) are added in the
   // Cloudflare dashboard and are never stored here.
   "vars": {
