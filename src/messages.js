@@ -231,7 +231,9 @@ export function pumpMessage(c) {
   }[plan.status];
 
   L.push(`🚀 PUMPING · $${sym} — up ${Math.round(pool.change.h24)}% in 24h (peaked +${Math.round(plan.gain * 100)}%)`);
-  L.push("Don't chase. Here's where it usually pulls back to, based on past pumps.");
+  L.push(plan.roundTrip
+    ? `⚠️ Don't chase. On this chain, pumps this size usually give back ~${Math.round(plan.retraceMedian * 100)}% of the move — most round-trip to where they started. Treat it as a fresh setup later, near the pre-pump price.`
+    : "Don't chase. Here's where it usually pulls back to, based on past pumps.");
   L.push(statusTxt);
 
   L.push('', '💰 SIZE');
@@ -252,7 +254,7 @@ export function pumpMessage(c) {
   L.push(bullet(`Peak ${px(plan.peak)} · now ${px(plan.price)} (${Math.round(plan.offPeak * 100)}% off the peak)`));
   L.push(bullet(`Entry zone: ${px(plan.entryTop)} → ${px(plan.entryDeep)}`));
   L.push(bullet(`Best limit buy: ${px(plan.entryMid)} (the typical pullback)${plan.mcapEntry ? ` ≈ ${usd(plan.mcapEntry)} market cap` : ''}`));
-  L.push(bullet(`Stop: ${px(plan.stop)} — below where the pump started (risk ${Math.round(plan.riskPct)}% from the limit)`));
+  L.push(bullet(`Stop: ${px(plan.stop)} — below the deepest typical pullback (risk ${Math.round(plan.riskPct)}% from the limit)`));
   L.push(bullet(`From that entry: 3x = ${px(plan.target3x)}${plan.mcap3x ? ` (${usd(plan.mcap3x)} mc)` : ''} · 10x = ${px(plan.target10x)}${plan.mcap10x ? ` (${usd(plan.mcap10x)} mc)` : ''}`));
 
   L.push('', '👥 IS THE PUMP REAL?');

@@ -40,12 +40,16 @@ export function pumpPlan({ pool, candles, stats }) {
   const entryTop = peak - s.retraceP25 * move; // shallow pullback
   const entryMid = peak - s.retraceMedian * move; // typical pullback = main limit price
   const entryDeep = peak - s.retraceP75 * move; // deep pullback
-  const stop = base * (1 - CONFIG.pump.stopBelowBasePct / 100); // whole pump failed
+  // Robinhood Chain pumps often give back the whole move (retrace ≥ 100%), so the deep
+  // end of the zone can sit below where the pump started. The stop must sit below the
+  // deepest entry, never above it.
+  const stop = Math.min(base * (1 - CONFIG.pump.stopBelowBasePct / 100), entryDeep * 0.85);
+  const roundTrip = s.retraceMedian >= CONFIG.pump.roundTripRetrace; // typical pump gives (almost) everything back
   const offPeak = 1 - price / peak;
   const status = price <= entryDeep ? 'deep' : price <= entryTop ? 'in-zone' : 'above';
   const mcapAt = (px) => (pool.marketCap && price ? (pool.marketCap * px) / price : null);
   return {
-    key, gain, base, peak, price, offPeak, status, proven, n: s.n,
+    key, gain, base, peak, price, offPeak, status, proven, n: s.n, roundTrip,
     pPullback30: s.pPullback30, pNewHigh14: s.pNewHigh14, pFullRetrace: s.pFullRetrace,
     retraceMedian: s.retraceMedian, medianDaysToLow: proven ? b.medianDaysToLow : null,
     entryTop, entryMid, entryDeep, stop,

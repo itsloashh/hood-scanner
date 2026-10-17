@@ -656,6 +656,10 @@ await test('pump path: coin up 120% gets pullback odds + limit-buy entry, judged
   assert.equal(plan.status, 'above');
   const generic = pumpPlan({ pool, candles, stats: null });
   assert.equal(generic.proven, false);
+  // real chain stats (17 Oct): +100–200% pumps gave back 77–114% of the move
+  const real = pumpPlan({ pool, candles, stats: { buckets: { '100-200': { n: 7, pPullback30: 0.86, retraceP25: 0.77, retraceMedian: 1.1, retraceP75: 1.14, pNewHigh14: 0.14, pFullRetrace: 0.71, medianDaysToLow: 5 } } } });
+  assert.equal(real.roundTrip, true);
+  assert.ok(real.stop < real.entryDeep, `stop ${real.stop} must sit below deepest entry ${real.entryDeep}`);
 
   const { pumpFilter } = await import('../src/filters.js');
   const f = pumpFilter({ marketCap: 440_000, liquidityUsd: 60_000, createdAt: new Date(now - 40 * 86_400_000).toISOString(), buyers24h: 90, sellers24h: 60, change: { h24: 120 } }, now);

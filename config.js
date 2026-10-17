@@ -71,6 +71,7 @@ export const CONFIG = {
     minChangePct: 50, // +50% in 24h = "pumping"
     minExamples: 5, // past pumps needed before we trust chain stats (else Fibonacci 38–62% fallback)
     stopBelowBasePct: 3, // stop just under where the pump started
+    roundTripRetrace: 0.85, // if the typical pump gives back ≥85% of its move, say so: it's a fade, not a dip-buy
     cooldownHours: 24,
   },
 
