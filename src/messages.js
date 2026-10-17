@@ -189,11 +189,12 @@ export function tradeMessage(ev) {
 }
 
 // ── daily summary ───────────────────────────────────────────
-export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch24h, walletStats }) {
+export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch24h, walletStats, sinceLast }) {
   const start = CONFIG.paper.startingBankroll;
   const change = ((eq - start) / start) * 100;
   const L = [];
-  L.push('☀️ HOOD SCANNER — daily summary');
+  L.push(`📋 HOOD SCANNER — summary (every ${CONFIG.digestEveryHours}h)`);
+  if (sinceLast) L.push(`Since the last summary (${sinceLast.hours}h ago): ${sinceLast.buy} buy-zone, ${sinceLast.watch} watch alert(s)`);
 
   L.push('', '💵 PAPER BANKROLL');
   L.push(bullet(`${usd(eq)} now (started with ${usd(start)}, ${pctTxt(change, 1)})`));

@@ -109,8 +109,9 @@ export const CONFIG = {
     smartBonusMax: 10, // …up to this many points
   },
 
-  // Daily summary message (Toronto time). Alerts themselves go out any hour.
-  digestHourLocal: 9,
+  // Summary message every N hours, around the clock. Alerts themselves go out any time.
+  digestEveryHours: 4,
+  digestHourLocal: 9, // (legacy — no longer used)
   timezone: 'America/Toronto',
 
   // Snapshot logger — builds the research dataset

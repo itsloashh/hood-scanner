@@ -2,7 +2,7 @@ name: research
 
 on:
   schedule:
-    - cron: '23 14 * * 0' # Sundays ~10:23 AM Toronto
+    - cron: '23 14 * * *' # every day ~10:23 AM Toronto
   workflow_dispatch: # "Run workflow" button
 
 permissions:

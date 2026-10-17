@@ -1,6 +1,6 @@
 // REVERSE-ENGINEER PAST RUNNERS
 //
-// Runs weekly (and on demand). Answers: "Which Robinhood Chain coins fit our profile
+// Runs daily (and on demand). Answers: "Which Robinhood Chain coins fit our profile
 // and then ran 3x+, who bought them before the run, and what did the winners have
 // in common that the duds didn't?"
 //
@@ -327,7 +327,7 @@ export async function main() {
 
   // Telegram summary
   const tg = [
-    '🔬 WEEKLY RESEARCH — what came before the runs',
+    '🔬 DAILY RESEARCH — what came before the runs',
     '',
     `Looked at ${coins.length} Robinhood Chain coins.`,
     `${setups.length} times a coin matched our rules → ${wins.length} went 3x within 30 days (${hitRate.toFixed(0)}% hit rate). That's the number to beat.`,
@@ -340,7 +340,7 @@ export async function main() {
   tg.push('', smart.length
     ? `🧠 Found ${smart.length} smart wallet(s) that bought early into multiple winners. The scanner now watches them.`
     : analysed.length
-      ? '🧠 No repeat early buyers across winners yet — the sample grows every week.'
+      ? '🧠 No repeat early buyers across winners yet — the sample grows every day.'
       : '🧠 Wallet history unavailable — add the free BLOCKSCOUT_API_KEY secret to turn this on.');
   tg.push('', 'Full report: data/research/report.md in the repo');
   await notify(tg.join('\n'));

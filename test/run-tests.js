@@ -383,7 +383,7 @@ await test('research job runs end-to-end and writes a report', async () => {
   assert.ok(r.coins >= 1, 'no coins');
   const report = fs.readFileSync(path.join(process.env.DATA_DIR, 'research', 'report.md'), 'utf8');
   assert.match(report, /The base rate/);
-  assert.match(printed.join('\n'), /WEEKLY RESEARCH/);
+  assert.match(printed.join('\n'), /DAILY RESEARCH/);
 });
 
 await test('wash trading: ROO-style churn is flagged and blocked from the buy zone', async () => {

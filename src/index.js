@@ -340,9 +340,8 @@ export async function main() {
 
     // 6. Funnel record + daily digest
     state.funnel24h.push({ t: now, scanned: runStats.scanned, quickPass: runStats.quickPass, deepPass: runStats.deepPass, reasons });
-    const today = new Intl.DateTimeFormat('en-CA', { timeZone: CONFIG.timezone }).format(now);
-    const hour = Number(new Intl.DateTimeFormat('en-US', { timeZone: CONFIG.timezone, hour: 'numeric', hourCycle: 'h23' }).format(now));
-    if (state.lastDigest !== today && hour >= CONFIG.digestHourLocal) {
+    const due = !state.lastDigestAt || now - state.lastDigestAt >= (CONFIG.digestEveryHours * 60 - 5) * MIN;
+    if (due) {
       const recent = state.funnel24h.filter((f) => now - f.t < DAY);
       const n = recent.length || 1;
       const avg = (k) => Math.round(recent.reduce((s, f) => s + f[k], 0) / n);
@@ -354,8 +353,11 @@ export async function main() {
         paper: state.paper, eq: equity(state.paper, prices), stats: stats(state.paper), regime: reg,
         funnel: { runs: recent.length, scanned: avg('scanned'), quickPass: avg('quickPass'), deepPass: avg('deepPass'), reasons: reasonSum },
         buy24h: count(state.alerts), watch24h: count(state.watchAlerts),
+        sinceLast: state.lastDigestAt
+          ? { hours: Math.round((now - state.lastDigestAt) / HOUR), buy: Object.values(state.alerts).filter((a) => a.at > state.lastDigestAt).length, watch: Object.values(state.watchAlerts).filter((a) => a.at > state.lastDigestAt).length }
+          : null,
       }));
-      state.lastDigest = today;
+      state.lastDigestAt = now;
     }
 
     const topCuts = Object.entries(reasons).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => `${k} ${v}`).join(' · ');

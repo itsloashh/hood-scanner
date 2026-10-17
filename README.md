@@ -57,7 +57,7 @@ X's API has no free tier any more (reading posts costs $0.005 each), so the bot 
 - **Time stop:** 30 days
 - Rugs (liquidity pulled) and vanished pools count as near-total losses
 
-You get a phone message on every alert (any hour), every paper sell, and a daily summary at 9 AM Toronto time with the bankroll, win rate, and a **funnel** showing how many coins passed each stage and the top reasons coins got cut — that's how to tell if a filter is too tight.
+You get a phone message on every alert (any hour), every paper sell, and a summary every 4 hours with the bankroll, win rate, and a **funnel** showing how many coins passed each stage and the top reasons coins got cut — that's how to tell if a filter is too tight.
 
 ---
 
@@ -121,7 +121,7 @@ npm run scan:dry  # live scan, prints alerts instead of sending
 
 Every alert now has a **Who's buying** section: how many different wallets bought or sold, net dollars in or out, typical buy size, big buys, repeat buyers, and any smart wallets. Each smart wallet buying adds **+4** to the score (max +10). If 30%+ of buys were bundled (several wallets in the same block, usually bots), the coin loses 5 points.
 
-**Weekly research (`research.yml`, Sundays + on demand).** This reverse-engineers past runners:
+**Daily research (`research.yml`, every day ~10:23 AM Toronto + on demand).** This reverse-engineers past runners:
 1. It finds every time a coin matched our rules (21+ days old, $10k–$333k, 50%+ off its high, tight base with lows holding).
 2. It labels each one: did it go 3x within 30 days?
 3. It compares winners and duds on volume, base tightness, drawdown, age and market cap. **The hit rate is the number any signal has to beat.**
