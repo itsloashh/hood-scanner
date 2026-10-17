@@ -30,6 +30,8 @@ export const CONFIG = {
   // Not memecoins: Robinhood Stock Tokens and other wrapped/real-world assets
   excludeNamePattern: /stock token|tokenized|xstock|\betf\b|\binc\.?$|corporation|holdings|treasury|wrapped|bridged|usd coin|tether/i,
 
+  minMinutesBetweenScheduledScans: 10, // GitHub's backup schedule skips if a scan just ran
+
   // Runs every 15 min. These keep the dataset and history at sensible spacing.
   cadence: {
     snapshotEveryMin: 60, // research CSV row per coin

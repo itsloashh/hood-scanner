@@ -17,16 +17,28 @@ import { DATA_DIR } from './store.js';
 const DAY = 86_400_000;
 const FILE = () => path.join(DATA_DIR, 'wallets.json');
 
-export function loadWallets() {
+// Smart wallets found by the research job live in their own file (owned by research),
+// so the two jobs never write the same file.
+export function loadSeeds() {
   try {
-    const w = JSON.parse(fs.readFileSync(FILE(), 'utf8'));
+    const j = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'research', 'smart-wallets.json'), 'utf8'));
+    return Object.fromEntries((j.wallets || []).map((x) => [x.addr, { wins: x.wins, duds: x.duds, coins: x.coins }]));
+  } catch {
+    return {};
+  }
+}
+
+export function loadWallets() {
+  let w;
+  try {
+    w = JSON.parse(fs.readFileSync(FILE(), 'utf8'));
     w.wallets ||= {};
     w.tokens ||= {};
-    w.seeded ||= {};
-    return w;
   } catch {
-    return { wallets: {}, tokens: {}, seeded: {}, updatedAt: null };
+    w = { wallets: {}, tokens: {}, updatedAt: null };
   }
+  w.seeded = { ...(w.seeded || {}), ...loadSeeds() };
+  return w;
 }
 
 export function saveWallets(w, now = Date.now()) {
@@ -41,7 +53,8 @@ export function saveWallets(w, now = Date.now()) {
   w.wallets = Object.fromEntries(entries);
   w.updatedAt = new Date(now).toISOString();
   fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.writeFileSync(FILE(), JSON.stringify(w));
+  const { seeded, ...rest } = w; // seeds are re-read from the research file each run
+  fs.writeFileSync(FILE(), JSON.stringify(rest));
 }
 
 export function isSmart(v) {

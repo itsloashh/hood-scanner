@@ -229,6 +229,13 @@ function shouldAlert(store, token, score, cooldownH, now) {
 export async function main() {
   const now = Date.now();
   const state = loadState();
+  // Two clocks trigger scans (Cloudflare cron + GitHub's own schedule). If GitHub's
+  // backup schedule fires right after a scan already ran, skip it.
+  const lastAt = state.lastRun?.at ? Date.parse(state.lastRun.at) : 0;
+  if (process.env.GITHUB_EVENT_NAME === 'schedule' && now - lastAt < CONFIG.minMinutesBetweenScheduledScans * MIN) {
+    log(`skipping: last scan was ${Math.round((now - lastAt) / MIN)} min ago`);
+    return { skipped: true };
+  }
   state.holderCache ||= {};
   const w = loadWallets();
   state.runs = (state.runs || 0) + 1;

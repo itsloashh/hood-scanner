@@ -15,6 +15,11 @@
 //   GITHUB_REPO         itsloashh/hood-scanner   (plain text variable)
 //
 // After deploying, open:  https://<your-worker>.workers.dev/setup?key=<WEBHOOK_SECRET>
+//
+// It is also the bot's CLOCK. Add two Cron Triggers (Settings → Triggers):
+//   */15 * * * *    → full scan every 15 minutes
+//   23 14 * * *     → research every day (~10:23 AM Toronto)
+// GitHub's own schedule stays on as a backup; the scanner skips duplicates.
 
 const ADDR = /^0x[0-9a-fA-F]{40}$/;
 
@@ -146,6 +151,17 @@ async function handleMessage(env, msg) {
 }
 
 export default {
+  // Cloudflare Cron Triggers — reliable clock (GitHub schedules can lag for hours)
+  async scheduled(event, env, ctx) {
+    const job = event.cron === '23 14 * * *' ? 'research.yml' : 'scan.yml';
+    ctx.waitUntil(
+      dispatch(env, job).then(async (r) => {
+        // only speak up if the clock breaks, so a bad token doesn't fail silently
+        if (!r.ok && env.ALLOWED_CHAT_ID) await reply(env, env.ALLOWED_CHAT_ID, `⏰ Scheduled ${job.replace('.yml', '')} couldn't start. ${dispatchError(r)}`);
+      })
+    );
+  },
+
   async fetch(request, env) {
     const url = new URL(request.url);
 

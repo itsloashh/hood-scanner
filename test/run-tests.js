@@ -32,7 +32,8 @@ const coins = {
 };
 const price = 0.00018;
 const SMART = '0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a';
-fs.writeFileSync(path.join(process.env.DATA_DIR, 'wallets.json'), JSON.stringify({ wallets: {}, tokens: {}, seeded: { [SMART]: { wins: 3, duds: 0, coins: ['OLDCAT'] } } }));
+fs.mkdirSync(path.join(process.env.DATA_DIR, 'research'), { recursive: true });
+fs.writeFileSync(path.join(process.env.DATA_DIR, 'research', 'smart-wallets.json'), JSON.stringify({ wallets: [{ addr: SMART, wins: 3, duds: 0, coins: ['OLDCAT'] }] }));
 
 function poolJson(list) {
   return {
@@ -500,7 +501,27 @@ await test('telegram relay: commands trigger GitHub, strangers and forged reques
   const hook = sent.find((x) => x.method === 'setWebhook');
   assert.equal(hook.body.url, 'https://bot.example.workers.dev/telegram');
   assert.equal(hook.body.secret_token, 'sec_123');
+  // cron clock: every 15 min → scan, daily → research
+  const waits = [];
+  const ctx = { waitUntil: (p) => waits.push(p) };
+  await worker.scheduled({ cron: '*/15 * * * *' }, env, ctx);
+  await worker.scheduled({ cron: '23 14 * * *' }, env, ctx);
+  await Promise.all(waits);
+  assert.deepEqual(dispatched.slice(-2).map((d) => d.wf), ['scan.yml', 'research.yml']);
   globalThis.fetch = prevFetch;
+});
+
+await test('GitHub backup schedule skips when a scan just ran; manual runs never skip', async () => {
+  const st = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'));
+  st.lastRun = { ...(st.lastRun || {}), at: new Date().toISOString() };
+  fs.writeFileSync(path.join(process.env.DATA_DIR, 'state.json'), JSON.stringify(st));
+  process.env.GITHUB_EVENT_NAME = 'schedule';
+  const r = await main();
+  assert.equal(r.skipped, true);
+  process.env.GITHUB_EVENT_NAME = 'workflow_dispatch';
+  const r2 = await main();
+  assert.ok(!r2.skipped);
+  delete process.env.GITHUB_EVENT_NAME;
 });
 
 console.log = origLog;

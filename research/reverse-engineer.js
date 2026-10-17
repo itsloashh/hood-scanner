@@ -22,7 +22,6 @@ import { CONFIG } from '../config.js';
 import * as gecko from '../src/gecko.js';
 import * as bs from '../src/blockscout.js';
 import { loadState, DATA_DIR, appendCsv } from '../src/store.js';
-import { loadWallets, saveWallets } from '../src/wallets.js';
 import { notify } from '../src/notify.js';
 
 const DAY = 86_400_000;
@@ -279,11 +278,7 @@ export async function main() {
     })));
   fs.writeFileSync(path.join(outDir, 'smart-wallets.json'), JSON.stringify({ at: new Date(now).toISOString(), wallets: smart }, null, 1));
 
-  // seed the live scanner
-  const w = loadWallets();
-  w.seeded = {};
-  for (const s of smart) w.seeded[s.addr] = { wins: s.wins, duds: s.duds, coins: s.coins, at: now };
-  saveWallets(w, now);
+  // the live scanner reads smart-wallets.json directly (see src/wallets.js → loadSeeds)
 
   // report
   const hitRate = setups.length ? (wins.length / setups.length) * 100 : 0;
