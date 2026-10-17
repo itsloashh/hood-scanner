@@ -48,7 +48,7 @@ export function holderTrend(history, holdersNow, now = Date.now()) {
   return ((holdersNow - ref[1]) / ref[1]) * 100;
 }
 
-export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community }) {
+export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community, flow, smartBonus = { per: 4, max: 10 } }) {
   const parts = {};
 
   // Community (25): on-chain crowd + off-chain crowd
@@ -72,7 +72,8 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   else if (holderChangePct >= -5) parts.conviction = 3;
   else parts.conviction = 0;
 
-  parts.distribution = conc ? lerp(conc.top10Pct, 35, 10, 10) + lerp(conc.top1Pct, 8, 2, 5) : 0;
+  // top-1 unknown (estimated split) gets a neutral half credit
+  parts.distribution = conc ? lerp(conc.top10Pct, 40, 10, 10) + (conc.top1Pct == null ? 2.5 : lerp(conc.top1Pct, 8, 2, 5)) : 0;
 
   let structure = 0;
   if (chart) {
@@ -87,19 +88,33 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   }
   parts.structure = structure;
 
+  // Awakening (15): buyers coming back, without it already ripping
   let awakening = 0;
   const volRatio = chart?.avgVol7 ? pool.volume24h / chart.avgVol7 : null;
-  awakening += lerp(volRatio, 1, 3, 8);
+  awakening += lerp(volRatio, 1, 3, 7);
   const bs = pool.sellers24h > 0 ? pool.buyers24h / pool.sellers24h : null;
-  if (bs != null && bs >= 1.1 && bs <= 3) awakening += 4;
+  if (flow) {
+    // real money flow from the trade feed: net $ bought vs pool depth
+    const liq = pool.liquidityUsd || 1;
+    awakening += lerp(flow.netFlowUsd / liq, 0, 0.25, 4);
+    if (flow.repeatBuyers >= 5) awakening += 2;
+  } else if (bs != null && bs >= 1.1 && bs <= 3) {
+    awakening += 4;
+  }
   const ch = pool.change.h24 ?? 0;
-  if (ch >= -5 && ch <= 40) awakening += 3;
-  parts.awakening = awakening;
+  if (ch >= -5 && ch <= 40) awakening += 2;
+  parts.awakening = clamp(awakening, 0, 15);
 
   const liqRatio = pool.marketCap ? (pool.liquidityUsd ?? 0) / pool.marketCap : 0;
   parts.liquidity = lerp(liqRatio, 0.05, 0.2, 5);
 
   parts.narrative = (rotation?.active ? 3 : 0) + (stockPaired ? 2 : 0);
+
+  // Smart money bonus (outside the 100 base): proven wallets buying in the last 24h
+  const smartN = flow?.smartBuyers?.length || 0;
+  parts.smartMoney = Math.min(smartBonus.max, smartN * smartBonus.per);
+  // Bundled buying (several wallets in the same block) is usually bots dressing up demand
+  parts.bundlePenalty = flow && flow.bundledShare >= 0.3 ? -5 : 0;
 
   const total = Math.round(Object.values(parts).reduce((s, v) => s + v, 0));
   return {

@@ -31,6 +31,8 @@ const coins = {
   big: { sym: 'BIGCAT', token: addr(4), pool: addr(104), mcap: 2_000_000, liq: 300_000, age: 90, buyers: 900, sellers: 700, ch24: 30, vol: 900_000 },
 };
 const price = 0.00018;
+const SMART = '0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a';
+fs.writeFileSync(path.join(process.env.DATA_DIR, 'wallets.json'), JSON.stringify({ wallets: {}, tokens: {}, seeded: { [SMART]: { wins: 3, duds: 0, coins: ['OLDCAT'] } } }));
 
 function poolJson(list) {
   return {
@@ -93,6 +95,21 @@ globalThis.fetch = async (url) => {
   if (url.includes('/pools?page=')) return ok(poolJson(all));
   if (url.includes('/pools/multi/')) return ok(poolJson(all.filter((c) => url.includes(c.pool))));
   if (url.includes('/ohlcv/')) return ok(candles());
+  if (url.includes('/trades')) {
+    const c = find(url);
+    const t0 = now - 6 * 3_600_000;
+    const data = [];
+    for (let i = 0; i < 40; i++) {
+      const buy = i % 3 !== 0;
+      data.push({ attributes: {
+        tx_hash: `0xtx${i}`, block_number: 1000 + i, block_timestamp: new Date(t0 + i * 300_000).toISOString(),
+        tx_from_address: addr(9000 + (i % 25)), kind: buy ? 'buy' : 'sell', volume_in_usd: String(buy ? 60 : 30),
+        price_to_in_usd: String(price), price_from_in_usd: String(price),
+      } });
+    }
+    if (c?.sym === 'GOODCAT') data.push({ attributes: { tx_hash: '0xsmart', block_number: 2000, block_timestamp: new Date(now - 3_600_000).toISOString(), tx_from_address: SMART, kind: 'buy', volume_in_usd: '250', price_to_in_usd: String(price) } });
+    return ok({ data });
+  }
   if (url.includes('api.telegram.org') && url.includes('getChatMemberCount')) return ok({ ok: true, result: 1200 });
   if (url.includes('/info')) {
     const c = find(url);
@@ -146,8 +163,11 @@ await test('full scan alerts on the good coin only and opens a $10 paper positio
   stats1 = await main();
   const out = printed.join('\n');
   assert.equal(stats1.buy, 1, `buy alerts ${stats1.buy}\n${out.slice(-3000)}`);
-  assert.match(out, /BUY ZONE — \$GOODCAT/);
-  assert.match(out, /TG @goodcatportal \(1\.2k members\)/);
+  assert.match(out, /BUY ZONE · \$GOODCAT/);
+  assert.match(out, /Telegram @goodcatportal — 1,200 members/);
+  assert.match(out, /WHO'S BUYING/);
+  assert.match(out, /1 proven wallet\(s\) bought/);
+  assert.match(out, /Smart money \+4/);
   if (process.env.SHOW_ALERT) origLog(out.slice(out.indexOf('──── ALERT')));
   assert.doesNotMatch(out, /— \$WHALEINU/);
   assert.doesNotMatch(out, /— \$NEWDOG/);
@@ -181,15 +201,15 @@ await test('WATCH tier fires below the buy bar, with no paper position', async (
   CONFIG.alertScore = saved;
   assert.equal(s.watch, 1);
   assert.equal(s.buy, 0);
-  assert.match(printed.join('\n'), /👀 WATCH — \$GOODCAT/);
+  assert.match(printed.join('\n'), /👀 WATCH · \$GOODCAT/);
   const state = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'));
   assert.equal(state.paper.positions.length, 0);
 });
 
 await test('digest shows the funnel and why coins got cut', () => {
   const out = printed.join('\n');
-  assert.match(out, /Funnel \(24h avg per scan\)/);
-  assert.match(out, /younger than 21d: 1/);
+  assert.match(out, /WHY COINS GOT CUT/);
+  assert.match(out, /1 — younger than 21d/);
 });
 
 await test('X handle reused on another token gets flagged', async () => {
@@ -263,6 +283,107 @@ await test('discovery finds quiet established coins; stock tokens excluded', asy
   assert.ok(!state.universe[stock.token], 'stock token leaked into universe');
   assert.ok(state.lastRun.holderData, 'health report missing');
   assert.match(printed.join('\n'), /QUIETFROG/);
+});
+
+await test('wallet tracker: buys resolve to wins at 3x and losses at −60%', async () => {
+  const wm = await import('../src/wallets.js');
+  const w = { wallets: {}, tokens: {}, seeded: {} };
+  const T = (wallet, tk, p, ts) => ({ wallet, kind: 'buy', priceUsd: p, usd: 50, ts, block: ts });
+  wm.ingestTrades(w, 'tkA', 'A', [T('0xw1', 'tkA', 1, now - 1000)], now);
+  wm.ingestTrades(w, 'tkB', 'B', [T('0xw1', 'tkB', 1, now - 900)], now);
+  wm.ingestTrades(w, 'tkC', 'C', [T('0xw1', 'tkC', 1, now - 800)], now);
+  wm.resolveOutcomes(w, { tkA: 3.2, tkB: 3.5, tkC: 0.35 }, now);
+  const v = w.wallets['0xw1'];
+  assert.equal(v.wins, 2);
+  assert.equal(v.losses, 1);
+  assert.equal(wm.isSmart(v), true);
+});
+
+await test('wallet tracker: spray bots are never "smart"', async () => {
+  const wm = await import('../src/wallets.js');
+  const w = { wallets: {}, tokens: {}, seeded: {} };
+  for (let i = 0; i < 20; i++) wm.ingestTrades(w, `tk${i}`, `S${i}`, [{ wallet: '0xbot', kind: 'buy', priceUsd: 1, usd: 5, ts: now - 100 + i, block: i }], now);
+  w.wallets['0xbot'].wins = 5;
+  assert.equal(w.wallets['0xbot'].bot, true);
+  assert.equal(wm.isSmart(w.wallets['0xbot']), false);
+});
+
+await test('flow features: bundles, repeat buyers, net flow', async () => {
+  const wm = await import('../src/wallets.js');
+  const tr = [
+    { wallet: '0xa', kind: 'buy', usd: 100, ts: 1, block: 5 },
+    { wallet: '0xb', kind: 'buy', usd: 100, ts: 1, block: 5 },
+    { wallet: '0xc', kind: 'buy', usd: 100, ts: 1, block: 5 },
+    { wallet: '0xd', kind: 'buy', usd: 700, ts: 2, block: 6 },
+    { wallet: '0xd', kind: 'buy', usd: 50, ts: 3, block: 7 },
+    { wallet: '0xe', kind: 'sell', usd: 200, ts: 4, block: 8 },
+  ];
+  const f = wm.flowFeatures(tr, { wallets: {}, seeded: {} });
+  assert.equal(f.uniqueBuyers, 4);
+  assert.equal(f.repeatBuyers, 1);
+  assert.equal(f.netFlowUsd, 850);
+  assert.equal(f.whaleBuys, 1);
+  assert.ok(Math.abs(f.bundledShare - 0.6) < 1e-9);
+});
+
+await test('research: finds setups and labels 3x winners vs duds', async () => {
+  const { findSetups } = await import('../research/reverse-engineer.js');
+  const D = 86_400_000;
+  const t0 = now - 120 * D;
+  const mk = (i, c, v = 1000) => ({ t: t0 + i * D, o: c, h: c * 1.02, l: c * 0.98, c, v });
+  const cs = [];
+  for (let i = 0; i < 20; i++) cs.push(mk(i, 1 + i * 0.2)); // pump to ~4.8
+  for (let i = 20; i < 35; i++) cs.push(mk(i, 4.8 - (i - 20) * 0.28)); // bleed to ~0.9
+  for (let i = 35; i < 45; i++) cs.push(mk(i, 0.9 + (i % 2) * 0.05)); // base
+  for (let i = 45; i < 60; i++) cs.push(mk(i, 0.9 * (1 + (i - 44) * 0.25), 4000)); // run to ~4.5x
+  for (let i = 60; i < 120; i++) cs.push(mk(i, 2));
+  const setups = findSetups(cs, { mcapNow: 200_000, priceNow: 2 }, now);
+  assert.ok(setups.length >= 1, 'no setups');
+  assert.equal(setups[0].label, 'WIN');
+  assert.ok(setups[0].peakX >= 3);
+  assert.ok(setups.every((s) => s.mcap <= 333_000));
+});
+
+await test('research: pre-run buyers drop bundles; overlap finds smart wallets, not bots', async () => {
+  const { preRunBuyers, findSmartWallets } = await import('../research/reverse-engineer.js');
+  const D = 86_400_000;
+  const T = now - 40 * D;
+  const tx = (to, ts, block, fromC = true) => ({ to, from: '0xpool', fromIsContract: fromC, toIsContract: false, ts, block, value: '1000000000000000000', decimals: 18 });
+  const mkBuyers = (list) => preRunBuyers([...list, tx('0xold', T - 9 * D, 1)], T);
+  const b1 = mkBuyers([tx('0xsmart', T - 2 * D, 10), tx('0xb1', T - D, 11), tx('0xb2', T - D, 11), tx('0xb3', T - D, 11), tx('0xbot', T - D, 12)]);
+  assert.ok(b1.covered);
+  assert.ok(!b1.wallets.has('0xb1'), 'bundle wallet kept');
+  assert.ok(b1.wallets.has('0xsmart'));
+  const b2 = mkBuyers([tx('0xsmart', T - 3 * D, 20), tx('0xbot', T - D, 21)]);
+  const b3 = mkBuyers([tx('0xbot', T - D, 30)]);
+  const b4 = mkBuyers([tx('0xbot', T - D, 40), tx('0xrand', T - D, 41)]);
+  const smart = findSmartWallets([
+    { symbol: 'W1', setup: { label: 'WIN' }, buyers: b1 },
+    { symbol: 'W2', setup: { label: 'WIN' }, buyers: b2 },
+    { symbol: 'D1', setup: { label: 'DUD' }, buyers: b3 },
+    { symbol: 'D2', setup: { label: 'DUD' }, buyers: b4 },
+  ]);
+  assert.deepEqual(smart.map((s) => s.addr), ['0xsmart']);
+});
+
+await test('API keys never appear in error messages (public logs)', async () => {
+  const { redact } = await import('../src/http.js');
+  assert.equal(redact('HTTP 403 for https://api.blockscout.com/4663/api/v2/tokens?x=1&apikey=proapi_SECRET123'), 'HTTP 403 for https://api.blockscout.com/4663/api/v2/tokens?x=1&apikey=***');
+  process.env.BLOCKSCOUT_API_KEY = 'proapi_TEST';
+  const bsm = await import('../src/blockscout.js');
+  assert.equal(bsm.bsUrl('/tokens/0xabc'), 'https://api.blockscout.com/4663/api/v2/tokens/0xabc?apikey=proapi_TEST');
+  delete process.env.BLOCKSCOUT_API_KEY;
+  assert.equal(bsm.bsUrl('/tokens/0xabc'), 'https://robinhoodchain.blockscout.com/api/v2/tokens/0xabc');
+});
+
+await test('research job runs end-to-end and writes a report', async () => {
+  const { main: research } = await import('../research/reverse-engineer.js');
+  printed.length = 0;
+  const r = await research();
+  assert.ok(r.coins >= 1, 'no coins');
+  const report = fs.readFileSync(path.join(process.env.DATA_DIR, 'research', 'report.md'), 'utf8');
+  assert.match(report, /The base rate/);
+  assert.match(printed.join('\n'), /WEEKLY RESEARCH/);
 });
 
 console.log = origLog;

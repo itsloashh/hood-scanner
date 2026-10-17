@@ -1,9 +1,28 @@
-// Blockscout — Robinhood Chain's official explorer (free, keyless).
-// Used for real holder counts and wallet concentration.
+// Blockscout — Robinhood Chain's official explorer.
+// With BLOCKSCOUT_API_KEY set (free at dev.blockscout.com) requests go through the
+// PRO API, which doesn't block GitHub's servers. Without a key it falls back to the
+// public explorer (fine from a home PC, usually blocked from cloud servers).
 import { CONFIG } from '../config.js';
 import { getJson } from './http.js';
 
 const opts = () => ({ minIntervalMs: CONFIG.blockscoutMinIntervalMs });
+export const usage = { calls: 0 };
+
+export const hasKey = () => Boolean(process.env.BLOCKSCOUT_API_KEY);
+
+export function bsUrl(path, params = {}) {
+  const key = process.env.BLOCKSCOUT_API_KEY;
+  const base = key ? `${CONFIG.blockscoutProBase}/${CONFIG.chainId}/api/v2` : CONFIG.blockscoutBase;
+  const q = new URLSearchParams(params);
+  if (key) q.set('apikey', key);
+  const qs = q.toString();
+  return `${base}${path}${qs ? `?${qs}` : ''}`;
+}
+
+async function bsGet(path, params) {
+  usage.calls += 1;
+  return getJson(bsUrl(path, params), opts());
+}
 
 export const BURN_ADDRESSES = new Set([
   '0x0000000000000000000000000000000000000000',
@@ -14,9 +33,9 @@ export const BURN_ADDRESSES = new Set([
 // established coins whose volume is too quiet for GeckoTerminal's top lists.
 export async function listTokensByHolders(maxPages = 4) {
   const out = [];
-  let params = 'type=ERC-20&sort=holders_count&order=desc';
+  let params = { type: 'ERC-20', sort: 'holders_count', order: 'desc' };
   for (let page = 0; page < maxPages && params; page++) {
-    const d = await getJson(`${CONFIG.blockscoutBase}/tokens?${params}`, opts());
+    const d = await bsGet('/tokens', params);
     for (const t of d?.items || []) {
       out.push({
         address: (t.address_hash || t.address)?.toLowerCase(),
@@ -26,13 +45,13 @@ export async function listTokensByHolders(maxPages = 4) {
       });
     }
     const next = d?.next_page_params;
-    params = next ? `type=ERC-20&sort=holders_count&order=desc&${new URLSearchParams(next)}` : null;
+    params = next ? { type: 'ERC-20', sort: 'holders_count', order: 'desc', ...next } : null;
   }
   return out.filter((t) => t.address);
 }
 
 export async function tokenMeta(address) {
-  const d = await getJson(`${CONFIG.blockscoutBase}/tokens/${address}`, opts());
+  const d = await bsGet(`/tokens/${address}`);
   if (!d) return null;
   return {
     holders: Number(d.holders_count ?? d.holders ?? NaN) || null,
@@ -41,12 +60,39 @@ export async function tokenMeta(address) {
 }
 
 export async function topHolders(address) {
-  const d = await getJson(`${CONFIG.blockscoutBase}/tokens/${address}/holders`, opts());
+  const d = await bsGet(`/tokens/${address}/holders`);
   return (d?.items || []).map((it) => ({
     address: it.address?.hash?.toLowerCase(),
     isContract: Boolean(it.address?.is_contract),
     value: BigInt(it.value || '0'),
   }));
+}
+
+// Token transfers, newest first, paging back until `sinceMs` (or maxPages).
+export async function tokenTransfers(address, { sinceMs = 0, maxPages = 20 } = {}) {
+  const out = [];
+  let params = {};
+  for (let page = 0; page < maxPages && params; page++) {
+    const d = await bsGet(`/tokens/${address}/transfers`, params);
+    const items = d?.items || [];
+    for (const it of items) {
+      out.push({
+        ts: it.timestamp ? Date.parse(it.timestamp) : null,
+        block: Number(it.block_number ?? it.block ?? 0),
+        tx: it.transaction_hash || it.tx_hash,
+        from: it.from?.hash?.toLowerCase(),
+        fromIsContract: Boolean(it.from?.is_contract),
+        to: it.to?.hash?.toLowerCase(),
+        toIsContract: Boolean(it.to?.is_contract),
+        value: it.total?.value ?? '0',
+        decimals: Number(it.total?.decimals ?? 18),
+      });
+    }
+    const oldest = items.at(-1)?.timestamp ? Date.parse(items.at(-1).timestamp) : null;
+    if (!items.length || (oldest && oldest < sinceMs)) break;
+    params = d?.next_page_params || null;
+  }
+  return out;
 }
 
 const pctOf = (part, whole) => (whole > 0n ? Number((part * 1_000_000n) / whole) / 10_000 : 0);

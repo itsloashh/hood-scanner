@@ -114,3 +114,28 @@ npm run scan:dry  # live scan, prints alerts instead of sending
 - **Coverage:** each run scans the top ~400 pools by volume and transactions. Coins with zero activity aren't scanned — by design.
 - **If holder data is missing, the coin is rejected.** Missing data never counts as a pass.
 - This is a research tool, not financial advice. Most memecoins go to zero. Run paper mode for at least 2 weeks and ~20 alerts before putting real money behind it.
+
+## 🧠 Wallet intelligence (v3)
+
+**Live tracker (free, no key).** Each scan pulls the last 24h of trades for coins that pass the junk filter and records which wallets bought, when, and at what price. Later scans check what happened next: a buy is a **win** if the coin hit 3x within 30 days, and a **loss** if it fell 60% first or time ran out. Wallets with 2+ wins and a 40%+ hit rate become **smart wallets**. Wallets buying 15+ different coins a day are marked as bots and never count.
+
+Every alert now has a **Who's buying** section: how many different wallets bought or sold, net dollars in or out, typical buy size, big buys, repeat buyers, and any smart wallets. Each smart wallet buying adds **+4** to the score (max +10). If 30%+ of buys were bundled (several wallets in the same block, usually bots), the coin loses 5 points.
+
+**Weekly research (`research.yml`, Sundays + on demand).** This reverse-engineers past runners:
+1. It finds every time a coin matched our rules (21+ days old, $10k–$333k, 50%+ off its high, tight base with lows holding).
+2. It labels each one: did it go 3x within 30 days?
+3. It compares winners and duds on volume, base tightness, drawdown, age and market cap. **The hit rate is the number any signal has to beat.**
+4. It pulls the wallets that bought in the week *before* each setup, removes bundles and bots, and finds wallets that bought early into 2+ winners while mostly avoiding duds. Those wallets seed the live tracker.
+
+Results: `data/research/report.md`, `setups.csv` and `smart-wallets.json`, plus a Telegram summary. Run it any time: **Actions → research → Run workflow**.
+
+### Free Blockscout key (needed for holder lists + wallet research)
+Blockscout blocks anonymous requests from GitHub's servers. Its free API key fixes that (no card, about 100k credits a day; the bot caches to stay well under):
+1. Go to **dev.blockscout.com**, sign up, then **Keys → Create API Key**.
+2. In the repo: **Settings → Secrets and variables → Actions → New repository secret**, name it `BLOCKSCOUT_API_KEY`, and paste the key.
+
+The key is never printed. Error messages redact it, because this repo's logs are public.
+Without the key, the scanner still runs: holder spread is estimated from GeckoTerminal, and wallet research is skipped.
+
+## Health report
+After every scan, `data/state.json → lastRun` records coins scanned, the funnel, top cut reasons, which holder data source worked, API errors per site, Blockscout usage, and wallet-tracker counts.

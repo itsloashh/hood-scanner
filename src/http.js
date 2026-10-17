@@ -5,6 +5,9 @@ export const httpErrors = {}; // host → { count, last }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// The repo is public, so its run logs are too — never let an API key reach them.
+export const redact = (s) => String(s).replace(/(apikey|api_key|key)=[^&\s]+/gi, '$1=***');
+
 function recordError(host, msg) {
   const e = (httpErrors[host] ||= { count: 0, last: null });
   e.count += 1;
@@ -25,8 +28,8 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
       });
     } catch (err) {
       if (attempt === retries) {
-        recordError(host, `network: ${err.message}`);
-        throw err;
+        recordError(host, redact(`network: ${err.message}`));
+        throw new Error(redact(`network error for ${url}: ${err.message}`));
       }
       await sleep(2000 * (attempt + 1));
       continue;
@@ -35,14 +38,14 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
     if (res.status === 429 || res.status >= 500) {
       if (attempt === retries) {
         recordError(host, `HTTP ${res.status}`);
-        throw new Error(`HTTP ${res.status} for ${url}`);
+        throw new Error(redact(`HTTP ${res.status} for ${url}`));
       }
       await sleep(Math.max(minIntervalMs, 5000) * (attempt + 1));
       continue;
     }
     if (!res.ok) {
       recordError(host, `HTTP ${res.status}`);
-      throw new Error(`HTTP ${res.status} for ${url}`);
+      throw new Error(redact(`HTTP ${res.status} for ${url}`));
     }
     try {
       return await res.json();

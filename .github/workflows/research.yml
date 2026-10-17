@@ -1,0 +1,42 @@
+name: research
+
+on:
+  schedule:
+    - cron: '23 14 * * 0' # Sundays ~10:23 AM Toronto
+  workflow_dispatch: # "Run workflow" button
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hood-scanner # never runs at the same time as a scan
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Reverse-engineer past runners
+        run: node research/reverse-engineer.js
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          BLOCKSCOUT_API_KEY: ${{ secrets.BLOCKSCOUT_API_KEY }}
+
+      - name: Save report + smart wallets
+        if: always()
+        run: |
+          git config user.name "hood-scanner-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet || git commit -m "research $(date -u +%Y-%m-%d)"
+          git pull --rebase --autostash || true
+          git push

@@ -7,7 +7,10 @@ export const CONFIG = {
   // Data sources (free, no API keys)
   network: process.env.GT_NETWORK || 'robinhood', // GeckoTerminal network id for Robinhood Chain
   geckoBase: 'https://api.geckoterminal.com/api/v2',
-  blockscoutBase: 'https://robinhoodchain.blockscout.com/api/v2',
+  blockscoutBase: 'https://robinhoodchain.blockscout.com/api/v2', // public explorer (used when no key)
+  blockscoutProBase: 'https://api.blockscout.com', // PRO API (used when BLOCKSCOUT_API_KEY is set)
+  chainId: 4663, // Robinhood Chain
+  holderCacheMin: 120, // re-use a coin's holder data for 2h — keeps Blockscout well inside the free 100k credits/day
   geckoMinIntervalMs: 2200, // keyless GeckoTerminal ≈ 30 calls/min — stay under it
   blockscoutMinIntervalMs: 300,
 
@@ -85,6 +88,25 @@ export const CONFIG = {
     trailFromPeakPct: 40, // after TP1, close the runner if it drops 40% from its peak
     maxHoldDays: 30,
     slippagePct: 3, // per side, assumed
+  },
+
+  // ── Wallet intelligence ───────────────────────────────────
+  // Every run pulls the last 24h of trades (free, GeckoTerminal) for coins that pass
+  // the junk filter, records who bought, and later checks whether those buys won.
+  wallets: {
+    tradesPerRunMaxPools: 12, // pools whose trades get pulled each run
+    tradeRefreshMin: 60, // re-pull a pool's trades at most hourly
+    whaleBuyUsd: 500,
+    bundleMinWallets: 3, // ≥3 different wallets buying in the same block = likely bundle/bot cluster
+    winMultiple: 3, // a buy "wins" if price hits 3x within…
+    winWindowDays: 30,
+    lossDrawdownPct: -60, // …and "loses" if it falls 60% first (or the window ends)
+    smartMinWins: 2, // smart wallet = at least 2 wins…
+    smartMinHitRate: 0.4, // …and ≥40% of its resolved buys won
+    sprayMaxTokensPerDay: 15, // wallets buying more distinct tokens than this per day are treated as bots
+    maxWallets: 6000, // cap file size
+    smartBonusPerWallet: 4, // score bonus per smart wallet buying in last 24h…
+    smartBonusMax: 10, // …up to this many points
   },
 
   // Daily summary message (Toronto time). Alerts themselves go out any hour.

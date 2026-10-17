@@ -55,7 +55,8 @@ export async function communitySignals({ pool, info, state, now = Date.now() }) 
   const tgHandle = info?.telegram || null;
   const tgMembers = await telegramMembers(tgHandle, state.tgCache, now);
   const xShared = info?.twitter ? recordXHandle(state.xIndex, info.twitter, pool.baseToken.address) : 0;
-  const votes = pool.sentimentPos != null || pool.sentimentNeg != null;
+  // GeckoTerminal returns 0/0 when nobody has voted — that's "no votes", not "0% positive"
+  const votes = (pool.sentimentPos || 0) + (pool.sentimentNeg || 0) > 0;
   return {
     x: cleanHandle(info?.twitter),
     xShared,

@@ -86,6 +86,27 @@ export async function topPoolsFor(tokenAddresses) {
   return map;
 }
 
+// Last 300 trades from the past 24h (free tier), oldest → newest
+export async function poolTrades(poolAddress) {
+  const json = await getJson(`${base()}/pools/${poolAddress}/trades`, opts());
+  return (json?.data || [])
+    .map((t) => {
+      const a = t.attributes || {};
+      const buy = a.kind === 'buy';
+      return {
+        tx: a.tx_hash,
+        block: num(a.block_number),
+        ts: a.block_timestamp ? Date.parse(a.block_timestamp) : null,
+        wallet: a.tx_from_address?.toLowerCase(),
+        kind: buy ? 'buy' : 'sell',
+        usd: num(a.volume_in_usd) || 0,
+        priceUsd: buy ? num(a.price_to_in_usd) : num(a.price_from_in_usd),
+      };
+    })
+    .filter((t) => t.wallet && t.ts)
+    .sort((a, b) => a.ts - b.ts);
+}
+
 export async function tokenInfo(address) {
   const json = await getJson(`${base()}/tokens/${address}/info`, opts());
   const a = json?.data?.attributes;

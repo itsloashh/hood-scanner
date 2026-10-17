@@ -12,6 +12,7 @@ import { openPosition, updatePositions, equity, stats, planFor } from './paper.j
 import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS } from './store.js';
 import { notify } from './notify.js';
 import { httpErrors } from './http.js';
+import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
 import { alertMessage, tradeMessage, digestMessage } from './messages.js';
 
 const MIN = 60_000;
@@ -128,20 +129,50 @@ async function priceMapFor(paper, pools) {
   return map;
 }
 
-async function deepCheck(pool, state, leaders, now) {
+async function holderData(pool, info, state, now) {
   const token = pool.baseToken.address;
-  const [info, meta, holders] = await Promise.all([
-    gecko.tokenInfo(token).catch(() => null),
+  const hit = state.holderCache[token];
+  if (hit && now - hit.at < CONFIG.holderCacheMin * MIN) return { conc: hit.conc, holdersCount: hit.holdersCount, cached: true };
+  const [meta, holders] = await Promise.all([
     bs.tokenMeta(token).catch(() => null),
     bs.topHolders(token).catch(() => []),
   ]);
-  let conc =
+  const conc =
     meta?.totalSupply && holders.length
       ? bs.concentration(holders, meta.totalSupply, { poolAddresses: pool.allPools || [pool.poolAddress], devAddress: info?.devAddress })
       : null;
+  const holdersCount = meta?.holders ?? null;
+  if (conc) state.holderCache[token] = { at: now, conc, holdersCount };
+  return { conc, holdersCount, cached: false };
+}
+
+async function tradeFlow(pool, w, state, now) {
+  const token = pool.baseToken.address;
+  const t = w.tokens[token];
+  const fresh = t?.fetchedAt && now - t.fetchedAt < CONFIG.wallets.tradeRefreshMin * MIN;
+  if (fresh || state.health.tradePulls >= CONFIG.wallets.tradesPerRunMaxPools) return t?.flow || null;
+  try {
+    const trades = await gecko.poolTrades(pool.poolAddress);
+    state.health.tradePulls += 1;
+    ingestTrades(w, token, pool.baseToken.symbol, trades, now);
+    const flow = flowFeatures(trades, w);
+    w.tokens[token].fetchedAt = now;
+    w.tokens[token].flow = flow;
+    return flow;
+  } catch (e) {
+    log(`trades ${pool.baseToken.symbol} failed: ${e.message}`);
+    return t?.flow || null;
+  }
+}
+
+async function deepCheck(pool, state, leaders, now, w) {
+  const token = pool.baseToken.address;
+  const info = await gecko.tokenInfo(token).catch(() => null);
+  const hd = await holderData(pool, info, state, now);
+  let conc = hd.conc;
   if (!conc) conc = bs.estimateConcentration(info, pool); // backup: GeckoTerminal holder split
-  state.health.concSource[conc ? conc.source || 'blockscout' : 'none'] += 1;
-  const holdersCount = meta?.holders ?? info?.holders ?? null;
+  state.health.concSource[conc ? (conc.source || (hd.cached ? 'cached' : 'blockscout')) : 'none'] += 1;
+  const holdersCount = hd.holdersCount ?? info?.holders ?? null;
 
   // Holder history — our own dataset; sampled every ~2h so the 3-day trend means something
   const hist = (state.holders[token] ||= []);
@@ -154,12 +185,16 @@ async function deepCheck(pool, state, leaders, now) {
   const community = await communitySignals({ pool, info, state, now });
   const filt = deepFilter({ info, holdersCount, conc, community });
   let chart = null;
+  let flow = null;
   if (filt.ok) {
     try {
       chart = chartFeatures(await gecko.ohlcvDaily(pool.poolAddress, 90), pool.priceUsd);
     } catch {
       filt.warnings.push('chart unavailable');
     }
+    flow = await tradeFlow(pool, w, state, now);
+    if (flow?.bundledShare >= 0.3) filt.warnings.push(`${Math.round(flow.bundledShare * 100)}% of buys were bundled (several wallets in one block — likely bots)`);
+    if (flow?.botBuyers) filt.warnings.push(`${flow.botBuyers} known bot wallet(s) buying`);
   }
 
   // True age = older of pool creation and first candle
@@ -169,10 +204,13 @@ async function deepCheck(pool, state, leaders, now) {
   const { tags, stockPaired } = tagNarratives(pool);
   const rotation = rotationSignal(pool, leaders);
   const score = filt.ok
-    ? scoreCoin({ pool, holdersCount, conc, socials: filt.socials, chart, holderChangePct, rotation, stockPaired, community })
+    ? scoreCoin({
+        pool, holdersCount, conc, socials: filt.socials, chart, holderChangePct, rotation, stockPaired, community, flow,
+        smartBonus: { per: CONFIG.wallets.smartBonusPerWallet, max: CONFIG.wallets.smartBonusMax },
+      })
     : null;
 
-  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, age, narratives: tags, stockPaired, rotation, score, community };
+  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, age, narratives: tags, stockPaired, rotation, score, community, flow };
 }
 
 function shouldAlert(store, token, score, cooldownH, now) {
@@ -185,6 +223,8 @@ function shouldAlert(store, token, score, cooldownH, now) {
 export async function main() {
   const now = Date.now();
   const state = loadState();
+  state.holderCache ||= {};
+  const w = loadWallets();
   state.runs = (state.runs || 0) + 1;
   const snapshots = [];
   const runStats = { scanned: 0, quickPass: 0, deepPass: 0, buy: 0, watch: 0 };
@@ -194,7 +234,7 @@ export async function main() {
 
   try {
     // 1. Discover + scan
-    state.health = { concSource: { blockscout: 0, estimate: 0, none: 0 } };
+    state.health = { concSource: { blockscout: 0, cached: 0, estimate: 0, none: 0 }, tradePulls: 0 };
     await discover(state, now);
     const pools = await scanPools(state);
     runStats.scanned = pools.length;
@@ -211,8 +251,11 @@ export async function main() {
     const watchBar = CONFIG.watchScore + delta;
     log(`regime ${reg.state}${reg.ratio ? ` (${reg.ratio.toFixed(2)}×)` : ''} → buy ≥${buyBar}, watch ≥${watchBar}`);
 
-    // 3. Mark paper positions to market
+    // 3. Mark paper positions + every tracked wallet buy to market
     prices = await priceMapFor(state.paper, pools);
+    const allPrices = Object.fromEntries(pools.filter((p) => p.priceUsd).map((p) => [p.baseToken.address, p.priceUsd]));
+    const resolved = resolveOutcomes(w, allPrices, now);
+    if (resolved.length) log(`wallet buys resolved: ${resolved.filter((r) => r.r === 'W').length} wins, ${resolved.filter((r) => r.r === 'L').length} losses`);
     for (const ev of updatePositions(state.paper, prices, now)) {
       await notify(tradeMessage(ev));
       if (ev.type === 'closed') {
@@ -255,7 +298,7 @@ export async function main() {
     for (const pool of toCheck) {
       let r;
       try {
-        r = await deepCheck(pool, state, leaders, now);
+        r = await deepCheck(pool, state, leaders, now, w);
       } catch (e) {
         log(`deep check ${pool.baseToken.symbol} failed: ${e.message}`);
         continue;
@@ -316,6 +359,8 @@ export async function main() {
       universe: Object.keys(state.universe).length, watchlist: Object.keys(state.watchlist).length,
       topCuts: Object.fromEntries(Object.entries(reasons).sort((a, b) => b[1] - a[1]).slice(0, 8)),
       holderData: state.health.concSource, httpErrors,
+      blockscout: { key: bs.hasKey(), calls: bs.usage.calls },
+      wallets: { tracked: Object.keys(w.wallets).length, smart: smartWallets(w).length, seeded: Object.keys(w.seeded).length, tradePulls: state.health.tradePulls },
     };
     log(`done: ${runStats.buy} buy-zone, ${runStats.watch} watch alert(s)`);
   } finally {
@@ -325,9 +370,22 @@ export async function main() {
       appendCsv(`snapshots/v2-${month}.csv`, SNAPSHOT_COLUMNS, snapshots);
       if (snapshots.length) state.lastSnapshotAt = now;
     }
+    // holder cache: drop stale entries
+    for (const [t, v] of Object.entries(state.holderCache)) if (now - v.at > 6 * HOUR) delete state.holderCache[t];
+    saveWallets(w, now);
     saveState(state);
   }
   return runStats;
+}
+
+function walletSummary(w) {
+  let wins = 0, losses = 0, open = 0;
+  for (const v of Object.values(w.wallets)) {
+    wins += v.wins;
+    losses += v.losses;
+    open += v.buys.filter((b) => !b.r).length;
+  }
+  return { tracked: Object.keys(w.wallets).length, smart: smartWallets(w).length, seeded: Object.keys(w.seeded).length, wins, losses, open };
 }
 
 function snapRow(p, now, extra) {
