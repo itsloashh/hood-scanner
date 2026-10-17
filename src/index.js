@@ -419,12 +419,19 @@ export async function main() {
   try {
     // 1. Discover + scan
     state.health = { concSource: { blockscout: 0, cached: 0, estimate: 0, none: 0 }, tradePulls: 0, ignitionSource: { dexpaprika: 0, gecko: 0 }, cacheHits: { info: 0, chart: 0 } };
+    let lastMark = now;
+    state.health.phases = {};
+    const mark = (name) => {
+      state.health.phases[name] = Math.round((Date.now() - lastMark) / 1000);
+      lastMark = Date.now();
+    };
     await discover(state, now);
     const pools = await scanPools(state);
     runStats.scanned = pools.length;
     log(`scanned ${pools.length} tokens on ${CONFIG.network}`);
     if (!pools.length) throw new Error('no pools returned — API down or network id changed');
 
+    mark('discover+lists');
     // 2. Market regime (sampled every ~2h so the median spans days, not hours)
     const totalVol = pools.reduce((s, p) => s + (p.volume24h || 0), 0);
     reg = computeRegime(state.volumeHistory, totalVol);
@@ -451,6 +458,7 @@ export async function main() {
       }
     }
 
+    mark('paper+wallets');
     // 4. Quick junk filter
     const leaders = clusterLeaders(pools);
     const known = buildKnownTickers(state.knownTickers);
@@ -531,6 +539,7 @@ export async function main() {
       }
     }
 
+    mark('deepChecks');
     // 5b. Coins already pumping: pullback odds + entry zone (don't chase)
     const pullStats = loadPullbacks();
     const pumping = pools
@@ -565,10 +574,12 @@ export async function main() {
       runStats.pump += 1;
     }
 
+    mark('pumps');
     // 5c. 🔥 IGNITION: hourly volume exploding out of a quiet base
     const poolByToken = new Map(pools.map((p) => [p.baseToken.address, p]));
     if (!outOfTime()) await checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime);
 
+    mark('ignition');
     // 6. Funnel record + daily digest
     state.funnel24h.push({ t: now, scanned: runStats.scanned, quickPass: runStats.quickPass, deepPass: runStats.deepPass, reasons });
     const due = !state.lastDigestAt || now - state.lastDigestAt >= (CONFIG.digestEveryHours * 60 - 5) * MIN;
@@ -598,7 +609,8 @@ export async function main() {
       universe: Object.keys(state.universe).length, watchlist: Object.keys(state.watchlist).length,
       topCuts: Object.fromEntries(Object.entries(reasons).sort((a, b) => b[1] - a[1]).slice(0, 8)),
       holderData: state.health.concSource, cacheHits: state.health.cacheHits, ignitionSource: state.health.ignitionSource,
-      http: Object.fromEntries(Object.entries(httpStats).map(([h, v]) => [h.split('.').slice(-2, -1)[0] || h, { calls: v.calls, sec: Math.round(v.ms / 1000), waitSec: Math.round(v.waitMs / 1000) }])),
+      http: Object.fromEntries(Object.entries(httpStats).map(([h, v]) => [h.split('.').slice(-2, -1)[0] || h, { calls: v.calls, sec: Math.round(v.ms / 1000), waitSec: Math.round(v.waitMs / 1000), backoffSec: Math.round(v.backoffMs / 1000), r429: v.r429 }])),
+      phases: state.health.phases,
       httpErrors, outOfTime: Boolean(state.health.outOfTime), seconds: Math.round((Date.now() - now) / 1000),
       blockscout: { key: bs.hasKey(), calls: bs.usage.calls },
       quietBases: Object.keys(state.quietBases).length,

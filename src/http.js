@@ -13,7 +13,11 @@ export function resetBreakers() {
 }
 // Per-host timing for the run's health report: where the minutes go
 export const httpStats = {}; // host → { calls, ms, waitMs }
-const stat = (host) => (httpStats[host] ||= { calls: 0, ms: 0, waitMs: 0 });
+const stat = (host) => (httpStats[host] ||= { calls: 0, ms: 0, waitMs: 0, backoffMs: 0, r429: 0 });
+const backoff = async (host, ms) => {
+  stat(host).backoffMs += ms;
+  await sleep(ms);
+};
 const strike = (host) => strikes.set(host, (strikes.get(host) || 0) + 1);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -53,12 +57,13 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
         recordError(host, redact(`network: ${err.message}`));
         throw new Error(redact(`network error for ${url}: ${err.message}`));
       }
-      await sleep(2000 * (attempt + 1));
+      await backoff(host, 2000 * (attempt + 1));
       continue;
     }
     stat(host).ms += Date.now() - t0;
     if (res.status === 404) return null;
     if (res.status >= 500) strike(host);
+    if (res.status === 429) stat(host).r429 += 1;
     if (res.status === 429 || res.status >= 500) {
       // gateway timeouts (524/504) already cost us the wait — retry once at most
       const maxTries = res.status === 524 || res.status === 504 ? Math.min(1, retries) : retries;
@@ -66,7 +71,7 @@ export async function getJson(url, { minIntervalMs = 0, retries = 3 } = {}) {
         recordError(host, `HTTP ${res.status}`);
         throw new Error(redact(`HTTP ${res.status} for ${url}`));
       }
-      await sleep(Math.max(minIntervalMs, 5000) * (attempt + 1));
+      await backoff(host, Math.max(minIntervalMs, 5000) * (attempt + 1));
       continue;
     }
     if (res.ok) strikes.set(host, 0);

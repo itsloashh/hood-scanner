@@ -29,7 +29,8 @@ export async function telegramMembers(handle, cache, now = Date.now()) {
   let n = null;
   try {
     const res = await globalThis.fetch(
-      `https://api.telegram.org/bot${token}/getChatMemberCount?chat_id=@${encodeURIComponent(h)}`
+      `https://api.telegram.org/bot${token}/getChatMemberCount?chat_id=@${encodeURIComponent(h)}`,
+      { signal: AbortSignal.timeout(10_000) }
     );
     const j = await res.json();
     if (j?.ok && Number.isFinite(j.result)) n = j.result;
