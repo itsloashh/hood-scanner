@@ -111,6 +111,12 @@
     1792260814927,
     32916
    ]
+  ],
+  "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": [
+   [
+    1792269336700,
+    1617693
+   ]
   ]
  },
  "volumeHistory": [
@@ -134,47 +140,42 @@
  "lastDigest": "2026-10-17",
  "runs": 14,
  "lastRun": {
-  "at": "2026-10-17T20:29:07.753Z",
-  "scanned": 392,
-  "quickPass": 5,
-  "deepPass": 4,
+  "at": "2026-10-17T20:35:36.700Z",
+  "scanned": 423,
+  "quickPass": 6,
+  "deepPass": 5,
   "buy": 0,
   "watch": 0,
   "pump": 0,
   "regime": "neutral",
   "universe": 217,
-  "watchlist": 6,
+  "watchlist": 7,
   "topCuts": {
-   "younger than 21d": 214,
+   "younger than 21d": 242,
    "too few buyers 24h": 203,
-   "mcap under min (dead)": 146,
-   "liquidity too thin": 133,
-   "mcap over max": 131,
-   "almost no sellers (honeypot risk)": 111,
-   "already pumping": 64,
+   "mcap under min (dead)": 165,
+   "liquidity too thin": 149,
+   "mcap over max": 136,
+   "almost no sellers (honeypot risk)": 110,
+   "already pumping": 67,
    "flagged suspicious on GeckoTerminal": 4
   },
   "holderData": {
-   "blockscout": 0,
+   "blockscout": 1,
    "cached": 5,
    "estimate": 0,
    "none": 0
   },
-  "httpErrors": {
-   "api.geckoterminal.com": {
-    "count": 1,
-    "last": "HTTP 429"
-   }
-  },
+  "httpErrors": {},
   "blockscout": {
    "key": true,
-   "calls": 0
+   "calls": 4
   },
   "wallets": {
-   "tracked": 569,
+   "tracked": 772,
    "smart": 0,
    "seeded": 0,
-   "tradePulls": 0
+   "tradePulls": 1
   }
  },
  "watchAlerts": {
@@ -203,27 +204,32 @@
   "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
    "pool": "0x91e9823a895a2d05a2c853fbd1619da089b36054f0a342039a0e8046608bbece",
    "symbol": "ROO",
-   "at": 1792268947753
+   "at": 1792269336700
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "symbol": "CANNACAT",
-   "at": 1792268947753
+   "at": 1792269336700
   },
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
    "pool": "0x8449bc525b02fb251bc7e281da91bdec6ef184a0e99f4a40bfa9a5fc7ebb4fcf",
    "symbol": "hpe",
-   "at": 1792268947753
+   "at": 1792269336700
   },
   "0xb0711574537f61298d43be9cebc05d8c5e6101e9": {
    "pool": "0x4d182c29116399b1b65db74df4025788ca0c4246",
    "symbol": "DOG",
-   "at": 1792268947753
+   "at": 1792269336700
   },
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
    "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
    "symbol": "GENESIS",
-   "at": 1792268947753
+   "at": 1792269336700
+  },
+  "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": {
+   "pool": "0x2b3211e96d15212086e8333b447fbb35dc08348a",
+   "symbol": "DIH",
+   "at": 1792269336700
   },
   "0x63ffd4aa844f4befcee1b4606e467d1d209a926b": {
    "pool": "0x2a4e49b6f4026be2d9c4cc273f389d986256e27b18950a8967d1daa095b27978",
@@ -256,6 +262,9 @@
   ],
   "adonrh": [
    "0x63ffd4aa844f4befcee1b4606e467d1d209a926b"
+  ],
+  "holdthisdih": [
+   "0x0c1ed62d7811e5b437e537ac9d0592469c119c74"
   ]
  },
  "funnel24h": [
@@ -471,19 +480,19 @@
    }
   },
   {
-   "t": 1792268947753,
-   "scanned": 392,
-   "quickPass": 5,
-   "deepPass": 4,
+   "t": 1792269336700,
+   "scanned": 423,
+   "quickPass": 6,
+   "deepPass": 5,
    "reasons": {
-    "mcap over max": 131,
-    "younger than 21d": 214,
+    "mcap over max": 136,
+    "younger than 21d": 242,
     "too few buyers 24h": 203,
-    "liquidity too thin": 133,
-    "almost no sellers (honeypot risk)": 111,
-    "already pumping": 64,
+    "liquidity too thin": 149,
+    "almost no sellers (honeypot risk)": 110,
+    "already pumping": 67,
     "flagged suspicious on GeckoTerminal": 4,
-    "mcap under min (dead)": 146,
+    "mcap under min (dead)": 165,
     "no socials linked": 1,
     "top wallet too big": 1
    }
@@ -1644,6 +1653,17 @@
     "devPctOnchain": null
    },
    "holdersCount": 32916
+  },
+  "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": {
+   "at": 1792269336700,
+   "conc": {
+    "top1Pct": 2.3391,
+    "top10Pct": 14.0774,
+    "largestContractPct": 1.4006,
+    "burnedPct": 2.0001,
+    "devPctOnchain": null
+   },
+   "holdersCount": 1617693
   }
  },
  "burnCache": {
@@ -1676,6 +1696,12 @@
    "count": 0,
    "units": 0,
    "lastTs": null
+  },
+  "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": {
+   "at": 1792269336700,
+   "count": 4,
+   "units": 5,
+   "lastTs": 1792200311000
   }
  },
  "lastDigestAt": 1792265433760,
