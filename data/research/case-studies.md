@@ -1,5 +1,5 @@
 # Case studies — why these coins ran
-_Generated 2026-10-17 19:57 UTC_
+_Generated 2026-10-17 20:06 UTC_
 
 ## $CASHCAT
 - Launched 2026-07-01 (108d ago) · paired with WETH
@@ -15,16 +15,18 @@ _Generated 2026-10-17 19:57 UTC_
   - Our scanner: ❌ would have missed it — market cap $61.84M (rule: ≤ $333k)
 
 ## $PONS
-- Launched 2026-10-17 (0d ago) · paired with USDG
-- Now: $305.63M mc · liquidity $91.26M · 13 holders · 0% off its high ($305.70M)
-- Tokenomics/safety: burned 65.0% · dev — · top-10 (raw, incl. pool) 100% · GT score 51
-- Socials: none listed
-- Launch: 1.0× in the first 24h, 1.0× within 72h (from first trade)
-- No 3x+ run found in the daily data.
+- Launched 2026-08-11 (67d ago) · paired with USDG
+- Now: $194.61M mc · liquidity $1.11M · 104,320 holders · 70% off its high ($658.57M)
+- Tokenomics/safety: burned 32.5% · dev — · top-10 (raw, incl. pool) 80.2909% · GT score 90
+- Socials: X @ponsdotfamily · https://ponsfamily.com
+- Launch: 1.2× in the first 24h, 1.2× within 72h (from first trade)
+- **Run 1:** 2026-08-11 · age 0d · from $23.42M → peak 28.1× ($658.57M) · 3x in 14d, peak in 25d
+  - Before it: launch run · 7d range — · volume trend — · ignition —
+  - Our scanner: ❌ would have missed it — only 0d old (rule: 21d+); market cap $23.42M (rule: ≤ $333k)
 
 ## $FRONG
 - Launched 2026-07-30 (79d ago) · paired with WETH
-- Now: $2.76M mc · liquidity $498k · 16,576 holders · 86% off its high ($19.37M)
+- Now: $2.75M mc · liquidity $497k · 16,576 holders · 86% off its high ($19.37M)
 - Tokenomics/safety: burned 0.9% · dev — · top-10 (raw, incl. pool) 30.4688% · GT score 74
 - Socials: https://pools.trade/t/0x6245e67affa44a23077f0ea7f981a8dc743a0c47
 - Launch: 1015.0× in the first 24h, 1015.0× within 72h (from first trade)
@@ -35,24 +37,16 @@ _Generated 2026-10-17 19:57 UTC_
   - Before it: 79% off prior high · 7d range 1.97× · volume trend 0.51× · ignition 8.5×
   - Our scanner: ❌ would have missed it — market cap $3.61M (rule: ≤ $333k)
 
-## $FLORK
-- Launched 2026-07-12 (97d ago) · paired with WETH
-- Now: $1.56M mc · liquidity $784k · 14 holders · 13% off its high ($1.79M)
-- Tokenomics/safety: burned 0.0% · dev — · top-10 (raw, incl. pool) 100% · GT score 39
-- Socials: none listed
-- Launch: 1.0× in the first 24h, 1.0× within 72h (from first trade)
-- No 3x+ run found in the daily data.
-
 ## $DIH
 - Launched 2026-07-23 (86d ago) · paired with WETH
-- Now: $10k mc · liquidity $8k · 1,617,690 holders · 99% off its high ($1.34M)
+- Now: $10k mc · liquidity $8k · 1,617,691 holders · 99% off its high ($1.36M)
 - Tokenomics/safety: burned 2.0% · dev — · top-10 (raw, incl. pool) 73.2398% · GT score 49
 - Socials: X @holdthisdih · https://holdthisdih.xyz
 - Launch: 512.9× in the first 24h, 512.9× within 72h (from first trade)
-- **Run 1:** 2026-07-23 · age 0d · from $3k → peak 512.9× ($1.34M) · 3x in 0d, peak in 0d
+- **Run 1:** 2026-07-23 · age 0d · from $3k → peak 512.9× ($1.36M) · 3x in 0d, peak in 0d
   - Before it: launch run · 7d range — · volume trend — · ignition —
   - Our scanner: ❌ would have missed it — only 0d old (rule: 21d+); market cap $3k (rule: ≥ $10k)
-- **Run 2:** 2026-08-18 · age 26d · from $8k → peak 7.3× ($58k) · 3x in 6d, peak in 6d
+- **Run 2:** 2026-08-18 · age 26d · from $8k → peak 7.3× ($59k) · 3x in 6d, peak in 6d
   - Before it: 99% off prior high · 7d range 1.24× · volume trend 0.37× · ignition 14.5×
   - Our scanner: ❌ would have missed it — market cap $8k (rule: ≥ $10k)
 
