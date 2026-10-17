@@ -1,5 +1,5 @@
 {
- "at": "2026-10-17T20:06:38.081Z",
+ "at": "2026-10-17T23:37:00.458Z",
  "results": [
   {
    "label": "CASHCAT",
@@ -8,17 +8,17 @@
    "pool": "0xd42a491087a15e5afd51feb3606066cc152d2b09",
    "quote": "WETH",
    "launchedAt": 1782864000000,
-   "ageDays": 108.83794075231482,
-   "mcapNow": 103205302.14444,
-   "liquidityNow": 1458196.9512,
-   "priceNow": 0.104482676829889,
-   "athMcap": 311093418.82495,
-   "offAthPct": 66.82498056877479,
-   "holders": 113880,
+   "ageDays": 108.9840330787037,
+   "mcapNow": 99499020.1481218,
+   "liquidityNow": 1440345.3394,
+   "priceNow": 0.100746308549293,
+   "athMcap": 311044671.97768545,
+   "offAthPct": 68.01134077768099,
+   "holders": 113885,
    "burnedPct": 1.2225,
-   "buyers24h": 629,
-   "sellers24h": 737,
-   "volume24h": 1378624.50533666,
+   "buyers24h": 620,
+   "sellers24h": 708,
+   "volume24h": 1487457.58598119,
    "socials": {
     "x": "cashcat_token",
     "tg": "cashcat_robinhood",
@@ -26,7 +26,7 @@
    },
    "gtScore": 90.47619047619048,
    "devPct": null,
-   "top10RawPct": 36.7533,
+   "top10RawPct": 37.2507,
    "launch": {
     "firstPrice": 0.0052155673607876,
     "high24h": 0.00693666806111542,
@@ -39,9 +39,9 @@
      "start": 1782864000000,
      "ageDays": 0,
      "startPrice": 0.00468924959398164,
-     "startMcap": 4631920.198268928,
+     "startMcap": 4631194.398580527,
      "peakX": 49.75710245071176,
-     "peakMcap": 230470927.84878817,
+     "peakMcap": 230434814.1593337,
      "daysTo3x": 7,
      "daysToPeak": 10,
      "drawdownFromAth": null,
@@ -53,18 +53,18 @@
      "scanner": {
       "caught": false,
       "misses": [
-       "only 0d old (rule: 21d+)",
-       "market cap $4.63M (rule: ≤ $333k)"
-      ]
+       "only 0d old (rule: 21d+)"
+      ],
+      "lane": "quality"
      }
     },
     {
      "start": 1785715200000,
      "ageDays": 33,
      "startPrice": 0.0626069840807805,
-     "startMcap": 61841569.382157266,
+     "startMcap": 61831879.10472015,
      "peakX": 4.708816020318156,
-     "peakMcap": 291200572.6283189,
+     "peakMcap": 291154942.8946817,
      "daysTo3x": 3,
      "daysToPeak": 30,
      "drawdownFromAth": 73.16730142088399,
@@ -76,8 +76,9 @@
      "scanner": {
       "caught": false,
       "misses": [
-       "market cap $61.84M (rule: ≤ $333k)"
-      ]
+       "market cap $61.83M (rule: ≤ $25.00M)"
+      ],
+      "lane": "quality"
      }
     }
    ],
@@ -85,63 +86,7 @@
   },
   {
    "label": "PONS",
-   "symbol": "PONS",
-   "token": "0x39dbed3a2bd333467115de45665cc57f813c4571",
-   "pool": "0xf2a0be59ab76b96f957bd5e5b967f2b75e8db269",
-   "quote": "USDG",
-   "launchedAt": 1786406400000,
-   "ageDays": 67.83794075231482,
-   "mcapNow": 194611247.413207,
-   "liquidityNow": 1111032.2338,
-   "priceNow": 0.288417318403642,
-   "athMcap": 658569258.0856874,
-   "offAthPct": 70.4493878170235,
-   "holders": 104320,
-   "burnedPct": 32.5299,
-   "buyers24h": 934,
-   "sellers24h": 875,
-   "volume24h": 5512148.90458992,
-   "socials": {
-    "x": "ponsdotfamily",
-    "tg": null,
-    "web": "https://ponsfamily.com"
-   },
-   "gtScore": 90.47619047619048,
-   "devPct": null,
-   "top10RawPct": 80.2909,
-   "launch": {
-    "firstPrice": 0.0347126726688259,
-    "high24h": 0.0418186347423087,
-    "high72h": 0.0418186347423087,
-    "x24h": 1.2047080079738255,
-    "x72h": 1.2047080079738255
-   },
-   "runs": [
-    {
-     "start": 1786406400000,
-     "ageDays": 0,
-     "startPrice": 0.0347126726688259,
-     "startMcap": 23422575.89286719,
-     "peakX": 28.11685875618145,
-     "peakMcap": 658569258.0856874,
-     "daysTo3x": 14,
-     "daysToPeak": 25,
-     "drawdownFromAth": null,
-     "baseRange": null,
-     "volTrend": null,
-     "volIgnition": null,
-     "runVolumeUsd": 34865534.3497813,
-     "isLaunchRun": true,
-     "scanner": {
-      "caught": false,
-      "misses": [
-       "only 0d old (rule: 21d+)",
-       "market cap $23.42M (rule: ≤ $333k)"
-      ]
-     }
-    }
-   ],
-   "alternatives": 1
+   "error": "lookup failed: HTTP 429 for https://api.geckoterminal.com/api/v2/networks/robinhood/tokens/mult"
   },
   {
    "label": "FRONG",
@@ -150,17 +95,17 @@
    "pool": "0xacea8920877840033f0275c37f9b61550b5326917e948bcf8339714d96f9521a",
    "quote": "WETH",
    "launchedAt": 1785369600000,
-   "ageDays": 79.83794075231482,
-   "mcapNow": 2749121.097,
-   "liquidityNow": 497465.1762,
-   "priceNow": 0.00274912109666206,
-   "athMcap": 19370636.854034666,
-   "offAthPct": 85.80779187738791,
-   "holders": 16576,
+   "ageDays": 79.9840330787037,
+   "mcapNow": 2707152.885,
+   "liquidityNow": 492763.5129,
+   "priceNow": 0.0027071528847635,
+   "athMcap": 19370636.85334574,
+   "offAthPct": 86.02445079376719,
+   "holders": 16582,
    "burnedPct": 0.901,
-   "buyers24h": 82,
-   "sellers24h": 96,
-   "volume24h": 57497.6165493708,
+   "buyers24h": 81,
+   "sellers24h": 95,
+   "volume24h": 54162.8712500468,
    "socials": {
     "x": null,
     "tg": null,
@@ -181,9 +126,9 @@
      "start": 1785369600000,
      "ageDays": 0,
      "startPrice": 0.00000489712611098166,
-     "startMcap": 4897.126111583647,
+     "startMcap": 4897.126111409478,
      "peakX": 3589.758599752923,
-     "peakMcap": 17579500.57313199,
+     "peakMcap": 17579500.572506767,
      "daysTo3x": 0,
      "daysToPeak": 6,
      "drawdownFromAth": null,
@@ -196,17 +141,18 @@
       "caught": false,
       "misses": [
        "only 0d old (rule: 21d+)",
-       "market cap $5k (rule: ≥ $10k)"
-      ]
+       "market cap $5k (rule: ≥ $5k)"
+      ],
+      "lane": "micro"
      }
     },
     {
      "start": 1788912000000,
      "ageDays": 41,
      "startPrice": 0.0036129638796623,
-     "startMcap": 3612963.880106429,
+     "startMcap": 3612963.879977932,
      "peakX": 5.361425548894238,
-     "peakMcap": 19370636.854034666,
+     "peakMcap": 19370636.85334574,
      "daysTo3x": 1,
      "daysToPeak": 1,
      "drawdownFromAth": 79.44785823080561,
@@ -216,10 +162,91 @@
      "runVolumeUsd": 18643247.28666845,
      "isLaunchRun": false,
      "scanner": {
+      "caught": true,
+      "misses": [],
+      "lane": "quality"
+     }
+    }
+   ],
+   "alternatives": 1
+  },
+  {
+   "label": "FLORK",
+   "symbol": "FLORK",
+   "token": "0x46544163f545a8e306e2671528ffc1b0ef8fe8cf",
+   "pool": "0x2817982c3caadba951057a8411a0c5a3fcbbec5f",
+   "quote": "WETH",
+   "launchedAt": 1783900800000,
+   "ageDays": 96.9840330787037,
+   "mcapNow": 212577.0207,
+   "liquidityNow": 42925.195,
+   "priceNow": 0.000212577020749776,
+   "athMcap": 582164.0035144812,
+   "offAthPct": 63.48502837401691,
+   "holders": 238,
+   "burnedPct": 30,
+   "buyers24h": 1,
+   "sellers24h": 0,
+   "volume24h": 296.0380659164,
+   "socials": {
+    "x": null,
+    "tg": null,
+    "web": null
+   },
+   "gtScore": 31.746031746031743,
+   "devPct": null,
+   "top10RawPct": 71.9563,
+   "launch": {
+    "firstPrice": 0.00000184229869732658,
+    "high24h": 0.00016490486345486,
+    "high72h": 0.000178043201520444,
+    "x24h": 89.51038379072777,
+    "x72h": 96.641875597485
+   },
+   "runs": [
+    {
+     "start": 1783900800000,
+     "ageDays": 0,
+     "startPrice": 0.00000180861300247237,
+     "startMcap": 1808.613002048874,
+     "peakX": 107.82663272514168,
+     "peakMcap": 195016.64991383985,
+     "daysTo3x": 0,
+     "daysToPeak": 3,
+     "drawdownFromAth": null,
+     "baseRange": null,
+     "volTrend": null,
+     "volIgnition": null,
+     "runVolumeUsd": 563292.4754066624,
+     "isLaunchRun": true,
+     "scanner": {
       "caught": false,
       "misses": [
-       "market cap $3.61M (rule: ≤ $333k)"
-      ]
+       "only 0d old (rule: 21d+)",
+       "market cap $2k (rule: ≥ $5k)"
+      ],
+      "lane": "micro"
+     }
+    },
+    {
+     "start": 1787184000000,
+     "ageDays": 38,
+     "startPrice": 0.0000222145697235417,
+     "startMcap": 22214.569718340044,
+     "peakX": 19.21589561640787,
+     "peakMcap": 426872.8528710375,
+     "daysTo3x": 5,
+     "daysToPeak": 30,
+     "drawdownFromAth": 88.60888558584375,
+     "baseRange": 1.380316681970982,
+     "volTrend": 1.81313432423049,
+     "volIgnition": 40.51895787454585,
+     "runVolumeUsd": 128201.93895968416,
+     "isLaunchRun": false,
+     "scanner": {
+      "caught": true,
+      "misses": [],
+      "lane": "micro"
      }
     }
    ],
@@ -232,17 +259,17 @@
    "pool": "0x2b3211e96d15212086e8333b447fbb35dc08348a",
    "quote": "WETH",
    "launchedAt": 1784764800000,
-   "ageDays": 86.83794075231482,
-   "mcapNow": 10126.9022507825,
-   "liquidityNow": 8339.7208,
-   "priceNow": 0.000010125509533988,
-   "athMcap": 1364747.000756842,
-   "offAthPct": 99.25796486490415,
-   "holders": 1617691,
+   "ageDays": 86.9840330787037,
+   "mcapNow": 9850.3087605893,
+   "liquidityNow": 8272.622,
+   "priceNow": 0.0000102612380390744,
+   "athMcap": 1309913.1404796736,
+   "offAthPct": 99.24801817340483,
+   "holders": 1617697,
    "burnedPct": 2.0001,
-   "buyers24h": 25,
-   "sellers24h": 202,
-   "volume24h": 195.8803842603,
+   "buyers24h": 30,
+   "sellers24h": 203,
+   "volume24h": 216.3952664349,
    "socials": {
     "x": "holdthisdih",
     "tg": null,
@@ -263,9 +290,9 @@
      "start": 1784764800000,
      "ageDays": 0,
      "startPrice": 0.00000266059465418719,
-     "startMcap": 2660.9606066210704,
+     "startMcap": 2554.0464737996817,
      "peakX": 512.8775666054745,
-     "peakMcap": 1364747.000756842,
+     "peakMcap": 1309913.1404796736,
      "daysTo3x": 0,
      "daysToPeak": 0,
      "drawdownFromAth": null,
@@ -278,17 +305,18 @@
       "caught": false,
       "misses": [
        "only 0d old (rule: 21d+)",
-       "market cap $3k (rule: ≥ $10k)"
-      ]
+       "market cap $3k (rule: ≥ $5k)"
+      ],
+      "lane": "micro"
      }
     },
     {
      "start": 1787011200000,
      "ageDays": 26,
      "startPrice": 0.00000819133271255293,
-     "startMcap": 8192.459392311594,
+     "startMcap": 7863.296424087253,
      "peakX": 7.255673773916977,
-     "peakMcap": 59441.81275667505,
+     "peakMcap": 57053.51364078503,
      "daysTo3x": 6,
      "daysToPeak": 6,
      "drawdownFromAth": 99.39970856226331,
@@ -298,10 +326,9 @@
      "runVolumeUsd": 30673.51944072367,
      "isLaunchRun": false,
      "scanner": {
-      "caught": false,
-      "misses": [
-       "market cap $8k (rule: ≥ $10k)"
-      ]
+      "caught": true,
+      "misses": [],
+      "lane": "micro"
      }
     }
    ],
@@ -314,9 +341,9 @@
    "pool": "0xb98b3ffe8dd09d107852b22124598d69fecfded7",
    "quote": "WETH",
    "launchedAt": 1782864000000,
-   "ageDays": 108.83794075231482,
+   "ageDays": 108.9840330787037,
    "mcapNow": 18450.11869,
-   "liquidityNow": 12152.7207,
+   "liquidityNow": 12023.7115,
    "priceNow": 0.0000184501186877432,
    "athMcap": 949006.8707429555,
    "offAthPct": 98.05584983009071,
@@ -360,8 +387,9 @@
       "caught": false,
       "misses": [
        "only 0d old (rule: 21d+)",
-       "market cap $2k (rule: ≥ $10k)"
-      ]
+       "market cap $2k (rule: ≥ $5k)"
+      ],
+      "lane": "micro"
      }
     },
     {
@@ -381,7 +409,8 @@
      "isLaunchRun": false,
      "scanner": {
       "caught": true,
-      "misses": []
+      "misses": [],
+      "lane": "micro"
      }
     }
    ],
