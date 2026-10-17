@@ -127,6 +127,23 @@ export async function tokenInfo(address) {
   };
 }
 
+// Search pools on our network by symbol / name / address
+export async function searchPools(query) {
+  const url = `${CONFIG.geckoBase}/search/pools?query=${encodeURIComponent(query)}&network=${CONFIG.network}&include=base_token,quote_token`;
+  return parsePools(await getJson(url, opts()));
+}
+
+// Candles at any timeframe, oldest → newest. before = ms timestamp (optional)
+export async function ohlcv(poolAddress, timeframe = 'day', { limit = 180, before = null, aggregate = 1 } = {}) {
+  const q = new URLSearchParams({ limit: String(limit), currency: 'usd', token: 'base', aggregate: String(aggregate) });
+  if (before) q.set('before_timestamp', String(Math.floor(before / 1000)));
+  const json = await getJson(`${base()}/pools/${poolAddress}/ohlcv/${timeframe}?${q}`, opts());
+  const list = json?.data?.attributes?.ohlcv_list || [];
+  return list
+    .map(([t, o, h, l, c, v]) => ({ t: t * 1000, o: +o, h: +h, l: +l, c: +c, v: +v }))
+    .sort((a, b) => a.t - b.t);
+}
+
 // Daily candles, oldest → newest: [{t, o, h, l, c, v}]
 export async function ohlcvDaily(poolAddress, limit = 60) {
   const json = await getJson(

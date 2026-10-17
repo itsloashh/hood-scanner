@@ -1,0 +1,39 @@
+name: case-study
+
+on:
+  push:
+    branches: [main]
+    paths: ['triggers/case-study.txt'] # editing this file starts the case study
+  workflow_dispatch:
+    inputs:
+      coins:
+        description: 'Comma-separated symbols or SYMBOL:0xaddress (blank = defaults)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: hood-scanner
+  cancel-in-progress: false
+
+jobs:
+  case-study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Reverse-engineer named runners
+        run: node research/case-studies.js
+        env:
+          CASE_COINS: ${{ inputs.coins }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          BLOCKSCOUT_API_KEY: ${{ secrets.BLOCKSCOUT_API_KEY }}
+      - name: Save results
+        if: always()
+        run: scripts/save-data.sh "case study $(date -u +%Y-%m-%d)" data/research/case-studies.md data/research/case-studies.json

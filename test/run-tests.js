@@ -819,6 +819,25 @@ await test('paper prices: GeckoTerminal blocked → falls back to last scan pric
   globalThis.fetch = prevFetch;
 });
 
+await test('case studies: finds launch runs and later base-breakout runs, judges them against our rules', async () => {
+  const { findRuns, wouldScannerCatch } = await import('../research/case-studies.js');
+  const D = 86_400_000;
+  const mk = (i, c, extra = {}) => ({ t: i * D, o: c, h: c * 1.03, l: c * 0.97, c, v: 1000, ...extra });
+  const cs = [mk(0, 1, { o: 0.2, l: 0.2, h: 1.2 })]; // launch day: 0.2 → 1.2 (6x)
+  for (let i = 1; i < 10; i++) cs.push(mk(i, 1 - i * 0.07)); // bleeds to ~0.37
+  for (let i = 10; i < 30; i++) cs.push(mk(i, 0.35 + (i % 2) * 0.02)); // base
+  for (let i = 30; i < 40; i++) cs.push(mk(i, 0.35 * (1 + (i - 29) * 0.4), { v: 6000 })); // run to ~1.75 (5x)
+  for (let i = 40; i < 60; i++) cs.push(mk(i, 1.2));
+  const runs = findRuns(cs, { mcapFactor: 100_000 });
+  assert.equal(runs.length, 2, JSON.stringify(runs.map((r) => [r.start / D, r.peakX])));
+  assert.equal(runs[0].isLaunchRun, true);
+  assert.ok(runs[0].peakX >= 5);
+  assert.ok(runs[1].ageDays >= 25 && runs[1].peakX >= 3);
+  assert.ok(runs[1].volIgnition >= 3);
+  assert.equal(wouldScannerCatch(runs[0]).caught, false); // too young
+  assert.equal(wouldScannerCatch(runs[1]).caught, true); // 29d old, ~$36k mc
+});
+
 console.log = origLog;
 console.log(`\n${failures ? `${failures} test(s) failed` : 'all tests passed'} · ${calls.length} mocked API calls`);
 process.exit(failures ? 1 : 0);
