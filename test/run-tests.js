@@ -488,7 +488,6 @@ await test('telegram relay: commands trigger GitHub, strangers and forged reques
 
   await post('/status');
   assert.match(sent.at(-1).body.text, /190 coins → 3 survived/);
-  assert.match(sent.at(-1).body.text, /\$ROO: 1\.10×/);
 
   const before = { d: dispatched.length, s: sent.length };
   await post('/scan', 999); // stranger
@@ -667,6 +666,115 @@ await test('pump path end-to-end: alert with limit-buy button', async () => {
   assert.match(out, /Paper limit buy @ .* → pl:0x0+1/);
   const cand = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'candidates.json'), 'utf8'));
   assert.ok(cand.coins.find((c) => c.tier === 'pump' && c.entry?.mid > 0));
+});
+
+await test('paper menu: buttons place trades, TP/SL fire on the cron, limits fill, P/L adds up', async () => {
+  const W = await import('../worker/worker.js');
+  const worker = W.default;
+  const kv = new Map();
+  const PAPER = { get: async (k, t) => (kv.has(k) ? (t === 'json' ? JSON.parse(kv.get(k)) : kv.get(k)) : null), put: async (k, v) => kv.set(k, v) };
+  const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_TOKEN: 'G', WEBHOOK_SECRET: 's', GITHUB_REPO: 'itsloashh/hood-scanner', PAPER };
+  const TK = '0x00000000000000000000000000000000000000c1';
+  const PL = '0x00000000000000000000000000000000000000p1'.replace('p', 'a');
+  let px = 1;
+  const sent = [];
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) { sent.push({ m: url.split('/').pop(), b: JSON.parse(init.body || '{}') }); return new Response(JSON.stringify({ ok: true })); }
+    if (url.includes('raw.githubusercontent.com') && url.includes('candidates.json')) {
+      return new Response(JSON.stringify({ coins: [
+        { token: TK, symbol: 'CATX', pool: PL, tier: 'buy', score: 71, mcap: 150000, price: 1 },
+        { token: '0xpump', symbol: 'PUMPY', pool: '0xpp', tier: 'pump', score: 60, mcap: 400000, entry: { top: 0.9, mid: 0.8, deep: 0.7, stop: 0.6 } },
+        { token: '0xwash', symbol: 'WASH', pool: '0xww', tier: 'watch', score: 55, washLikely: true },
+      ] }));
+    }
+    if (url.includes('/pools/multi/')) {
+      const data = [];
+      if (url.includes(PL)) data.push({ attributes: { address: PL, base_token_price_usd: String(px), reserve_in_usd: '50000', market_cap_usd: String(150000 * px) } });
+      if (url.includes('0xpp')) data.push({ attributes: { address: '0xpp', base_token_price_usd: String(pumpPx), reserve_in_usd: '80000', market_cap_usd: '400000' } });
+      return new Response(JSON.stringify({ data }));
+    }
+    return new Response('{}', { status: 404 });
+  };
+  let pumpPx = 1;
+  const last = () => sent.at(-1).b;
+  const tap = (data, menuText = 'PAPER · x') => W.handleCallback(env, { id: 'cq', data, message: { chat: { id: 111 }, message_id: 5, text: menuText } });
+
+  // /paper → main menu with the 5 buttons
+  await worker.fetch(new Request('https://w.dev/telegram', { method: 'POST', headers: { 'x-telegram-bot-api-secret-token': 's' }, body: JSON.stringify({ message: { chat: { id: 111 }, text: '/paper' } }) }), env);
+  const kbText = last().reply_markup.inline_keyboard.flat().map((b) => b.text).join('|');
+  for (const k of ['Place trade', 'TP / SL', 'Positions', 'Wallet', 'P/L']) assert.ok(kbText.includes(k), k);
+  assert.match(last().text, /Wallet \$30\.00/);
+
+  // Place trade lists candidates (wash coin hidden)
+  await tap('pt');
+  assert.equal(last().text.includes('WASH'), false);
+  assert.match(last().text, /\$CATX — buy · 71\/100/);
+
+  // tapping Paper buy on a scanner alert opens a NEW message, not an edit
+  await tap(`pc:${TK}`, '🟢 BUY ZONE · $CATX — 71/100');
+  assert.equal(sent.at(-1).m, 'sendMessage');
+  assert.match(last().text, /🎯 3x = \$450\.0k mc · 10x = \$1\.5M mc/);
+
+  // buy $10 → position opens, $20 cash left
+  await tap(`pb:${TK}:10`);
+  let st = JSON.parse(kv.get('paper'));
+  assert.equal(st.positions.length, 1);
+  assert.ok(Math.abs(st.cash - 20) < 1e-9);
+  assert.equal(sent.at(-1).m, 'editMessageText');
+
+  // move SL to breakeven, then price runs to 3.2x → cron sells 50%
+  await tap(`pS:${st.positions[0].id}:-25`);
+  px = 3.2;
+  let evs = await W.paperTick(env);
+  assert.ok(evs.some((e) => e.why === 'take profit 3x'));
+  st = JSON.parse(kv.get('paper'));
+  assert.ok(Math.abs(st.positions[0].rem - 0.5) < 1e-9);
+  assert.match(sent.map((x) => x.b.text).join('\n'), /take profit 3x: sold 50%/);
+
+  // peak 4, then drops 45% → trailing stop closes the rest
+  px = 4; await W.paperTick(env);
+  px = 2.2; evs = await W.paperTick(env);
+  st = JSON.parse(kv.get('paper'));
+  assert.equal(st.positions.length, 0);
+  assert.equal(st.closed.length, 1);
+  assert.ok(st.closed[0].pnl > 0);
+  assert.match(sent.map((x) => x.b.text).join('\n'), /Paper trade closed · \$CATX/);
+
+  // limit order on the pumping coin: cash reserved, fills when price dips to the limit
+  await tap('pl:0xpump');
+  st = JSON.parse(kv.get('paper'));
+  assert.equal(st.orders.length, 1);
+  const cashBefore = st.cash;
+  pumpPx = 0.85; await W.paperTick(env);
+  assert.equal(JSON.parse(kv.get('paper')).orders.length, 1, 'filled too early');
+  pumpPx = 0.79; await W.paperTick(env);
+  st = JSON.parse(kv.get('paper'));
+  assert.equal(st.orders.length, 0);
+  assert.equal(st.positions.length, 1);
+  assert.ok(Math.abs(st.positions[0].entry - 0.8 * 1.03) < 1e-9);
+  assert.ok(Math.abs(st.cash - cashBefore) < 1e-9);
+
+  // P/L and wallet screens
+  await tap('pnl');
+  assert.match(last().text, /1 closed trade\(s\) · 1 winner\(s\)/);
+  await tap('w');
+  assert.match(last().text, /In open positions/);
+
+  // default TP/SL settings change
+  await tap('ss:-35');
+  assert.equal(JSON.parse(kv.get('paper')).settings.sl, -35);
+
+  // strangers can't press buttons
+  const before = kv.get('paper');
+  await W.handleCallback(env, { id: 'x', data: 'wry', message: { chat: { id: 999 }, message_id: 1, text: 'PAPER · x' } });
+  assert.equal(kv.get('paper'), before);
+
+  // reset
+  await tap('wry');
+  assert.equal(JSON.parse(kv.get('paper')).cash, 30);
+  globalThis.fetch = prevFetch;
 });
 
 console.log = origLog;

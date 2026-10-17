@@ -1,6 +1,7 @@
-# Telegram commands — setup (free, ~10 minutes)
+# Telegram bot — setup (free, ~15 minutes)
 
-Lets you text your bot `/scan`, `/check 0x…`, `/research` and `/status`.
+Lets you text your bot `/scan`, `/check 0x…`, `/research`, `/status`, and use the
+**/paper** paper-trading buttons. The Worker is also the bot's reliable 15-minute clock.
 Telegram → a free Cloudflare Worker → GitHub Actions.
 
 ## 1. GitHub token (lets the Worker start runs)
@@ -25,6 +26,11 @@ Telegram → a free Cloudflare Worker → GitHub Actions.
    | `GITHUB_REPO` | Text | `itsloashh/hood-scanner` |
 
    Click **Deploy** / **Save** after adding them.
+5. **Paper wallet storage (KV):** go to **Storage & Databases → KV → Create** (name it `hood-paper`).
+   Back in the Worker: **Settings → Bindings → Add → KV namespace**, set the **Variable name** to `PAPER`, pick `hood-paper`, and **Deploy**.
+6. **Clock:** go to Worker **Settings → Triggers → Cron Triggers → Add** and add both:
+   - `*/15 * * * *` (scan + paper TP/SL check every 15 min)
+   - `23 14 * * *` (daily research)
 
 ## 3. Connect Telegram
 Open this in your browser (your Worker's address is shown on its page):
@@ -39,7 +45,15 @@ You should see **"✅ Telegram is connected."** Then send `/help` to your bot.
 - `/scan` — full scan now (results ~4 min; alerts only if something qualifies)
 - `/check 0x…` — full report on one coin, even if it fails your rules. Pasting an address works too.
 - `/research` — research job now (10–30 min)
-- `/status` — last scan, paper bankroll, open trades (instant)
+- `/status` — what the last scan found (instant)
+- `/paper` — paper trading menu:
+  - **🛒 Place trade** — coins the scanner analysed in the last 24h → pick a size ($5/$10/$15/25%/All), or a limit buy at the pullback entry for pumping coins
+  - **🎯 TP / SL** — default stop, take-profits, runner and size for new trades
+  - **📂 Positions** — open trades with live price, sell 25/50/100%, move stop (incl. breakeven), change TP1, cancel limit orders
+  - **💰 Wallet** — cash, money in positions, money reserved for limit orders, total vs your $30 start (reset button)
+  - **📊 P/L** — locked-in vs open profit, win rate, best/worst, last trades
+  Every scanner alert also has **📝 Paper buy** / **📋 Paper menu** buttons. Pumping-coin alerts have **Paper limit buy @ entry**.
+  Every 15 minutes the Worker marks positions to market and runs your TP/SL/trailing stops and limit fills, messaging you on each fill.
 
 Only your chat ID can use it — anyone else is silently ignored. Requests that don't carry
 your `WEBHOOK_SECRET` are rejected, so nobody can fake Telegram messages to the Worker.

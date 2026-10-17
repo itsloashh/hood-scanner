@@ -147,6 +147,18 @@ Without the key, the scanner still runs: holder spread is estimated from GeckoTe
 ## Health report
 After every scan, `data/state.json → lastRun` records coins scanned, the funnel, top cut reasons, which holder data source worked, API errors per site, Blockscout usage, and wallet-tracker counts.
 
+## 📝 Paper trading (Telegram buttons)
+Paper trades are placed by you, not automatically (`paper.auto: false`). Send **/paper** for the menu: **Place trade · TP/SL · Positions · Wallet · P/L**. You can also tap **📝 Paper buy** on any alert. The wallet starts at $30 and lives in the Telegram Worker's KV storage. Every 15 minutes the Worker checks prices and runs your stop-losses, take-profits, trailing stops and limit-order fills. Setup: `worker/SETUP.md` steps 5–6.
+
+## 🚀 Coins already pumping
+A coin up 50%+ in 24h isn't chased. It's judged on its size *before* the pump (still $10k–$333k), and must pass every other rule (age, community, wallet spread, no wash trading). Then you get a **PUMPING** alert covering:
+- **Pullback odds** from every past +50% day on Robinhood Chain (`data/research/pullbacks.json`, rebuilt daily): how often a pump that size pulled back 30%+, how much of the move it typically gave back, how soon it bottomed, and how often it made a new high anyway. Until there are 5+ examples for a pump size, it uses the textbook 38–62% retrace and says so.
+- **Entry plan:** the zone, the best limit price (the typical pullback), a stop just under where the pump started, and 3x/10x targets from that entry.
+- A **Paper limit buy** button that places the order, which fills only if the price actually pulls back.
+
+## 🎯 Target: 3–10x
+Every alert shows what 3x and 10x would mean in market cap. Research only learns from runs that peaked between 3x and 10x.
+
 ## 📱 Telegram commands
 Text your bot `/scan`, `/check 0x…` (or just paste an address), `/research` or `/status`.
 Free Cloudflare Worker relay — setup in **[worker/SETUP.md](worker/SETUP.md)**.
