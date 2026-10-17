@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: hood-scanner
+  group: case-study # own lane: only writes research files, so scans can't bump it from the queue
   cancel-in-progress: false
 
 jobs:

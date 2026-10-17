@@ -97,6 +97,7 @@ export const CONFIG = {
     CASHCAT: '0x020bfc650a365f8bb26819deaabf3e21291018b4',
     PONS: '0x39dbed3a2bd333467115de45665cc57f813c4571',
     FRONG: '0x6245e67affa44a23077f0ea7f981a8dc743a0c47',
+    FLORK: '0x46544163f545a8e306e2671528ffc1b0ef8fe8cf', // Robinhood Chain FLORK (not the BNB one)
   },
   copycatMinHolders: 5_000, // any ticker held by 5k+ wallets is "established" and protected
 
