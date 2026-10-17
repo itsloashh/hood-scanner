@@ -165,8 +165,10 @@ export function alertMessage(c) {
     L.push(bullet(volumeNote(score.volRatio)));
     if (chart.volTrend != null) {
       L.push(bullet(p.quietBase
-        ? `🤫 Quiet base: volume has dried up to ${chart.volTrend.toFixed(2)}× while price goes sideways — the setup the big second legs started from. Watching hourly for ignition.`
-        : `Volume trend ${chart.volTrend.toFixed(2)}× (last 3 days vs the week before)`));
+        ? `🤫 Quiet base: volume has dried up to ${chart.volTrend.toFixed(2)}× while price goes sideways — sellers are exhausted (CASHCAT/FRONG setup). Watching hourly for ignition.`
+        : p.absorption
+          ? `🧲 Absorption base: volume up ${chart.volTrend.toFixed(2)}× but price won't drop — weak sellers being soaked up by steady buyers (FLORK's 19× setup). Watching hourly for ignition.`
+          : `Volume trend ${chart.volTrend.toFixed(2)}× (last 3 days vs the week before)`));
     }
   } else {
     L.push(bullet('Chart data unavailable this scan'));
@@ -180,6 +182,7 @@ export function alertMessage(c) {
   if (p.smartMoney) extras.push(`Smart money +${p.smartMoney}`);
   if (p.burn) extras.push(`Burns +${p.burn}`);
   if (p.quietBase) extras.push(`Quiet base +${Math.round(p.quietBase)}`);
+  if (p.absorption) extras.push(`Absorption +${Math.round(p.absorption)}`);
   if (p.catalyst) extras.push(`Catalysts +${p.catalyst}`);
   if (p.bundlePenalty) extras.push(`Bundled buys ${p.bundlePenalty}`);
   if (p.washPenalty) extras.push(`Wash trading ${p.washPenalty}`);
@@ -363,7 +366,11 @@ export function ignitionMessage({ token, base, sig, pool }) {
   L.push(`This is how the case-study second legs started — FRONG went 5.4× within a day of it. It's fast: decide within the hour.`);
   L.push('', '📍 WHERE IT IS');
   L.push(bullet(`${base.lane === 'quality' ? '🏛 Quality lane' : '🧪 Micro lane (small size only)'} · market cap ${usd(pool?.marketCap)} · liquidity ${usd(pool?.liquidityUsd)}`));
-  if (base.drawdownPct != null) L.push(bullet(`Was ${Math.round(base.drawdownPct)}% off its high, volume dried to ${base.volTrend?.toFixed(2) ?? '—'}× before this`));
+  if (base.drawdownPct != null) {
+    L.push(bullet(base.type === 'absorption'
+      ? `Was ${Math.round(base.drawdownPct)}% off its high, absorbing sellers (volume ${base.volTrend?.toFixed(2) ?? '—'}× with flat price) before this`
+      : `Was ${Math.round(base.drawdownPct)}% off its high, volume dried to ${base.volTrend?.toFixed(2) ?? '—'}× before this`));
+  }
   if (sig.aboveBasePct != null) L.push(bullet(sig.aboveBasePct <= 0 ? 'Price is still inside the base — early' : `Price is ${Math.round(sig.aboveBasePct)}% above the top of the base`));
   if (pool?.marketCap) L.push(bullet(`🎯 ${CONFIG.targetMinX}–${CONFIG.targetMaxX}x = ${usd(pool.marketCap * CONFIG.targetMinX)} to ${usd(pool.marketCap * CONFIG.targetMaxX)} market cap`));
   L.push('', '⚠️ BEFORE YOU BUY');

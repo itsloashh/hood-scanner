@@ -72,6 +72,10 @@ export const CONFIG = {
   // Quiet base: price going sideways while volume dries up — every second leg in the
   // case study started from this (volume trend 0.37–0.79×, 7-day range 1.2–2×)
   quietBase: { maxVolTrend: 0.8, maxBaseRange: 2, minDrawdownPct: 50, maxDrawdownPct: 97 },
+  // Absorption base: the opposite volume picture with the same flat price — volume keeps coming
+  // in (≥1.2×) yet price won't drop: weak sellers are being soaked up by steady buyers.
+  // FLORK's 19× second leg came from this (volume 1.81×, 7-day range 1.38×, 89% off its high).
+  absorption: { minVolTrend: 1.2, maxBaseRange: 1.6, maxWeekMovePct: 30, minDrawdownPct: 50, maxDrawdownPct: 97, maxSellerRatio: 1.5 },
 
   // 🔥 IGNITION: hourly volume explodes out of a quiet base (FRONG went 5.4× within a day of it)
   ignition: {

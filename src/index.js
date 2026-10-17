@@ -333,11 +333,12 @@ export function loadCatalysts(now = Date.now()) {
 // Coins sitting in a quiet base get their hourly volume watched for ignition
 function rememberQuietBase(state, r, now) {
   const token = r.pool.baseToken.address;
-  if (!r.score?.parts.quietBase || r.flow?.washLikely || !r.chart?.baseDailyVol) return;
+  const p = r.score?.parts;
+  if (!(p?.quietBase || p?.absorption) || r.flow?.washLikely || !r.chart?.baseDailyVol) return;
   state.quietBases[token] = {
     pool: r.pool.poolAddress, symbol: r.pool.baseToken.symbol, lane: r.lane, at: now,
     baseHigh: r.chart.baseHigh, baseHourVol: r.chart.baseDailyVol / 24, drawdownPct: r.chart.drawdownPct,
-    volTrend: r.chart.volTrend, score: r.score.total,
+    volTrend: r.chart.volTrend, score: r.score.total, type: p.absorption ? 'absorption' : 'quiet',
   };
 }
 

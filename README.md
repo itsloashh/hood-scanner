@@ -27,6 +27,7 @@ The thesis: a 3+ week old coin that already crashed, whose community held on, wh
 
 **What the case study taught it (CASHCAT, PONS, FRONG, DIH, 🪶):** every one had a second leg 26–41 days after launch, starting 73–99% off its high, out of a **quiet base** (sideways price while volume dried up to 0.37–0.79× of normal), then a sudden **volume ignition** (8–24×) and 3x within 1–6 days. The quality ones had a reason to exist (chain identity, a buyback-and-burn) and a **catalyst** that brought in outside buyers (Robinhood app listing, Binance Wallet). So the scanner adds, on top of the 100 points:
 - **Quiet base** up to +8: crashed, sideways, volume drying up.
+- **Absorption base** up to +8 (FLORK's 19× setup): crashed, price flat for a week while volume *rises* — weak sellers being soaked up by steady buyers. Not when price is dumping on that volume or sellers swamp buyers.
 - **Catalysts** up to +8: your `/catalyst` tag (+6 for 14 days), an ongoing buyback (3+ burns a week, +2), chain identity (Robinhood-themed or launchpad token, +2).
 - **🔥 IGNITION alert**: coins in a quiet base get their hourly candles checked every run. Last 3 hours at 5×+ normal volume, price rising and no more than 40% above the base = immediate alert.
 
@@ -140,6 +141,8 @@ Every alert now has a **Who's buying** section: how many different wallets bough
 **Only real 3–10x runs count as wins.** Runs past 10x are listed as moonshots but not learned from, because outliers mislead. Setups with fewer than 15 real buyers the week before, or with wash trading, are thrown out as fake or thin.
 
 **Why it pumped.** For every real winner, the report lists what the on-chain data shows. *Before* the run: volume already rising, buyers up 50%+ week-over-week, token burns, smart wallets buying, 20%+ of supply burned, stock pairing, and theme. *During* the run: volume explosion and burns. It then ranks each signal by how much more often it shows up in winners than in duds (`data/research/catalysts.json`). A signal that keeps showing up before winners is a candidate for a new scanner parameter. If a winner has no on-chain reason, the cause was likely off-chain (X, a listing, news), and the report links an X search filtered to verified accounts.
+
+**Accuracy tracking.** Every alert (buy, watch, pump, ignition) is followed for 30 days from its alert price: ✅ reached 3x, ❌ fell 50% first, or ⏹ expired. The scorecard shows in the 4-hour summary and in /status, split by tier and lane — this is how parameters get tuned, by what actually ran. Alert prices are also double-checked against DexPaprika; a >10% disagreement is flagged. Coins only reach the buy zone when their biggest wallet was actually checked (top-wallet lists come from a separate `holders` job every 30 min, because Blockscout is slow).
 
 Results: `data/research/report.md`, `setups.csv` and `smart-wallets.json`, plus a Telegram summary. Run it any time: **Actions → research → Run workflow**.
 

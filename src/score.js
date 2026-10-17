@@ -46,7 +46,11 @@ export function chartFeatures(candles, priceNow) {
   const baseHigh = last7.length ? Math.max(...last7.map((c) => c.h)) : null;
   const baseDailyVol = avg(candles.slice(-8, -1));
 
-  return { ath, drawdownPct, baseRange, lowsHolding, avgVol7, firstCandleAt, volTrend, baseHigh, baseDailyVol };
+  // Net price move over the base week (close 7 days ago → now)
+  const weekAgo = candles.length >= 8 ? candles.at(-8).c : null;
+  const weekMovePct = weekAgo > 0 ? (price / weekAgo - 1) * 100 : null;
+
+  return { ath, drawdownPct, baseRange, lowsHolding, avgVol7, firstCandleAt, volTrend, baseHigh, baseDailyVol, weekMovePct };
 }
 
 // Quiet base (0–8): crashed, going sideways, and volume drying up — the setup every
@@ -57,6 +61,20 @@ export function quietBaseScore(chart) {
   if (chart.drawdownPct < q.minDrawdownPct || chart.drawdownPct > q.maxDrawdownPct) return 0;
   if (chart.baseRange > q.maxBaseRange || chart.volTrend > q.maxVolTrend) return 0;
   return 4 + lerp(chart.volTrend, q.maxVolTrend, 0.4, 2) + lerp(chart.baseRange, q.maxBaseRange, 1.3, 2);
+}
+
+// Absorption base (0–8): crashed, price flat for a week while volume RISES — sellers are being
+// absorbed rather than dumping price. Not when sellers clearly outnumber buyers (that's distribution).
+export function absorptionScore(chart, flow) {
+  const a = CONFIG.absorption;
+  if (!chart || chart.drawdownPct == null || chart.baseRange == null || chart.volTrend == null) return 0;
+  if (chart.drawdownPct < a.minDrawdownPct || chart.drawdownPct > a.maxDrawdownPct) return 0;
+  if (chart.baseRange > a.maxBaseRange || chart.volTrend < a.minVolTrend) return 0;
+  if (chart.weekMovePct != null && Math.abs(chart.weekMovePct) > a.maxWeekMovePct) return 0;
+  if (chart.lowsHolding === false) return 0;
+  if (flow?.washLikely) return 0; // fake volume isn't absorption
+  if (flow && flow.uniqueBuyers > 0 && flow.uniqueSellers / flow.uniqueBuyers > a.maxSellerRatio) return 0;
+  return 4 + lerp(chart.volTrend, a.minVolTrend, 2.5, 2) + lerp(chart.baseRange, a.maxBaseRange, 1.2, 2);
 }
 
 // Catalysts (0–8): outside buyers arriving + buyback machines + chain identity
@@ -164,6 +182,7 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
 
   // Quiet base + catalysts (outside the 100 base)
   parts.quietBase = quietBaseScore(chart);
+  parts.absorption = absorptionScore(chart, flow);
   const cat = catalystScore({ manual: catalyst, burns, pool, info });
   parts.catalyst = cat.pts;
 

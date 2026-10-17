@@ -966,6 +966,22 @@ await test('quiet base: volume drying up in a sideways base scores; a dead flatl
   assert.ok(sc.parts.quietBase >= 4);
 });
 
+await test('absorption base: volume rising while price holds flat scores (FLORK); dumping or sell-heavy does not', async () => {
+  const { chartFeatures, absorptionScore, quietBaseScore } = await import('../src/score.js');
+  const D = 86_400_000;
+  const cs = [{ t: 0, o: 1, h: 1, l: 1, c: 1, v: 9000 }];
+  for (let i = 1; i < 20; i++) cs.push({ t: i * D, o: 0.11, h: 0.12, l: 0.10, c: 0.11 + (i % 2) * 0.005, v: 2000 });
+  for (let i = 20; i < 24; i++) cs.push({ t: i * D, o: 0.11, h: 0.12, l: 0.105, c: 0.112, v: 3800 }); // volume up, price flat
+  const ch = chartFeatures(cs, 0.112);
+  assert.ok(ch.volTrend > 1.5, `volTrend ${ch.volTrend}`);
+  assert.ok(absorptionScore(ch, null) >= 4);
+  assert.equal(quietBaseScore(ch), 0); // not a quiet base
+  assert.equal(absorptionScore({ ...ch, weekMovePct: -40 }, null), 0); // price dumping on volume = distribution
+  assert.equal(absorptionScore(ch, { uniqueBuyers: 10, uniqueSellers: 25 }), 0); // sellers swamping buyers
+  assert.equal(absorptionScore(ch, { washLikely: true }), 0);
+  assert.ok(absorptionScore(ch, { uniqueBuyers: 30, uniqueSellers: 25 }) >= 4);
+});
+
 await test('catalysts: manual tag, buybacks and chain identity add up to +8 max', async () => {
   const { catalystScore } = await import('../src/score.js');
   const pool = { baseToken: { symbol: 'HOODCAT', name: 'Hood Cat' } };
