@@ -3,13 +3,19 @@ name: hood-scanner
 on:
   schedule:
     - cron: '*/15 * * * *' # every 15 min, around the clock (free + unlimited on a public repo)
-  workflow_dispatch: # "Run workflow" button for a manual scan
+  workflow_dispatch: # "Run workflow" button, or /scan and /check from Telegram
+    inputs:
+      ca:
+        description: 'Optional: a contract address to check on its own (leave empty for a full scan)'
+        required: false
+        default: ''
 
 permissions:
   contents: write # lets the bot commit its data folder back
 
 concurrency:
-  group: hood-scanner
+  # single-coin checks run on their own lane so they never bump a queued scan
+  group: ${{ inputs.ca != '' && inputs.ca != null && format('check-{0}', github.run_id) || 'hood-scanner' }}
   cancel-in-progress: false
 
 jobs:
@@ -26,13 +32,14 @@ jobs:
       - name: Scan Robinhood Chain
         run: node src/index.js
         env:
+          CHECK_CA: ${{ inputs.ca }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           BLOCKSCOUT_API_KEY: ${{ secrets.BLOCKSCOUT_API_KEY }}
 
       - name: Save dataset + paper trades
-        if: always()
+        if: always() && (inputs.ca == '' || inputs.ca == null)
         run: |
           git config user.name "hood-scanner-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

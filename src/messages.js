@@ -77,7 +77,9 @@ export function alertMessage(c) {
   const p = score.parts;
   const L = [];
 
-  if (tier === 'buy') {
+  if (c.headerLines) {
+    L.push(...c.headerLines);
+  } else if (tier === 'buy') {
     L.push(`🟢 BUY ZONE · $${sym} — ${score.total}/100`);
     L.push(`Passed every safety check and scored above ${CONFIG.alertScore}. Trade plan below.`);
   } else {
@@ -90,7 +92,7 @@ export function alertMessage(c) {
 
   // Size
   L.push('', '💰 SIZE');
-  L.push(bullet(`Market cap ${usd(pool.marketCap)}${pool.marketCapIsFdv ? ' (fully diluted)' : ''} · ${Math.floor(age)} days old`));
+  L.push(bullet(`Market cap ${usd(pool.marketCap)}${pool.marketCapIsFdv ? ' (fully diluted)' : ''} · ${age != null ? `${Math.floor(age)} days old` : 'age unknown'}`));
   L.push(bullet(`Liquidity ${usd(pool.liquidityUsd)} — ${liquidityNote(pool.liquidityUsd, pool.marketCap)}`));
   if (narratives.length) {
     L.push(bullet(`Theme: ${narratives.join(', ')}${rotation.active ? ` — its sector leader $${rotation.leader} is up ${pctTxt(rotation.leaderChange)} today while this one hasn't moved yet` : ''}`));
@@ -108,9 +110,13 @@ export function alertMessage(c) {
   L.push(bullet(holderTrendNote(holderChangePct)));
 
   // Wallets
-  L.push('', `🐋 WALLET SPREAD — ${spreadNote(conc.top10Pct)}`);
-  L.push(bullet(`Top 10 wallets hold ${conc.top10Pct.toFixed(1)}%${conc.source === 'estimate' ? ' (estimated)' : ''}`));
-  L.push(bullet(conc.top1Pct != null ? `Biggest single wallet holds ${conc.top1Pct.toFixed(1)}%` : 'Biggest single wallet: not checked this time'));
+  if (conc) {
+    L.push('', `🐋 WALLET SPREAD — ${spreadNote(conc.top10Pct)}`);
+    L.push(bullet(`Top 10 wallets hold ${conc.top10Pct.toFixed(1)}%${conc.source === 'estimate' ? ' (estimated)' : ''}`));
+    L.push(bullet(conc.top1Pct != null ? `Biggest single wallet holds ${conc.top1Pct.toFixed(1)}%` : 'Biggest single wallet: not checked this time'));
+  } else {
+    L.push('', '🐋 WALLET SPREAD — unavailable');
+  }
 
   // Who's buying (trade feed)
   if (flow) {
@@ -176,6 +182,25 @@ export function alertMessage(c) {
   L.push(`CA: ${pool.baseToken.address}`);
 
   return L.filter((l) => l !== null).join('\n');
+}
+
+// ── /check <CA> report ──────────────────────────────────────
+export function checkMessage(c) {
+  const sym = c.pool.baseToken.symbol;
+  const head = [`🔍 CHECK · $${sym} — ${c.score.total}/100`];
+  if (c.failed.length) {
+    head.push(`Would NOT alert — fails ${c.failed.length} of your rules:`);
+    for (const f of c.failed) head.push(`❌ ${f}`);
+  } else if (c.verdict === 'buy') {
+    head.push('✅ Passes all your rules — this would be a 🟢 BUY ZONE alert.');
+  } else if (c.verdict === 'watch') {
+    head.push(c.score.buyBlocked ? '✅ Passes your rules, but trading looks bot-driven — 👀 watch only.' : `✅ Passes all your rules — 👀 WATCH level (${CONFIG.alertScore - c.score.total} pts short of buy zone).`);
+  } else {
+    head.push(`✅ Passes your rules, but scores below the watch level (${CONFIG.watchScore}).`);
+  }
+  head.push('No paper trade opened — this is a manual check.');
+  const tier = c.verdict === 'buy' ? 'buy' : 'watch';
+  return alertMessage({ ...c, tier, headerLines: head, paperOpened: null });
 }
 
 // ── paper trade updates ─────────────────────────────────────

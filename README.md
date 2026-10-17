@@ -139,3 +139,8 @@ Without the key, the scanner still runs: holder spread is estimated from GeckoTe
 
 ## Health report
 After every scan, `data/state.json → lastRun` records coins scanned, the funnel, top cut reasons, which holder data source worked, API errors per site, Blockscout usage, and wallet-tracker counts.
+
+## 📱 Telegram commands
+Text your bot `/scan`, `/check 0x…` (or just paste an address), `/research` or `/status`.
+Free Cloudflare Worker relay — setup in **[worker/SETUP.md](worker/SETUP.md)**.
+Without it you can still run anything from **Actions → (workflow) → Run workflow**, including a single-coin check: open **hood-scanner → Run workflow** and paste an address in the box.

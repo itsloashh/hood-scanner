@@ -405,6 +405,104 @@ await test('wash trading: ROO-style churn is flagged and blocked from the buy zo
   assert.equal(wm.flowFeatures(org, { wallets: {}, seeded: {} }).washLikely, false);
 });
 
+await test('/check: full report for any coin, listing which rules it fails', async () => {
+  const { checkCoin } = await import('../src/index.js');
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    url = String(url);
+    if (url.includes('/tokens/multi/')) {
+      const c = Object.values(coins).find((x) => url.includes(x.token));
+      return ok({ data: c ? [{ attributes: { address: c.token }, relationships: { top_pools: { data: [{ id: `robinhood_${c.pool}` }] } } }] : [] });
+    }
+    return prevFetch(url);
+  };
+  const stateBefore = fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8');
+
+  printed.length = 0;
+  const good = await checkCoin(coins.good.token);
+  assert.equal(good.failed.length, 0, good.failed.join());
+  assert.match(printed.join('\n'), /🔍 CHECK · \$GOODCAT/);
+  assert.match(printed.join('\n'), /No paper trade opened/);
+
+  printed.length = 0;
+  const whale = await checkCoin(coins.whale.token);
+  assert.ok(whale.failed.includes('top wallet too big'), whale.failed.join());
+  assert.match(printed.join('\n'), /Would NOT alert — fails/);
+  assert.match(printed.join('\n'), /❌ top wallet too big/);
+
+  printed.length = 0;
+  assert.equal(await checkCoin('not-an-address'), null);
+  assert.match(printed.join('\n'), /isn't a valid contract address/);
+
+  globalThis.fetch = prevFetch;
+  assert.equal(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'), stateBefore, 'check mode must not change state');
+});
+
+await test('telegram relay: commands trigger GitHub, strangers and forged requests are ignored', async () => {
+  const worker = (await import('../worker/worker.js')).default;
+  const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_TOKEN: 'G', WEBHOOK_SECRET: 'sec_123', GITHUB_REPO: 'itsloashh/hood-scanner' };
+  const sent = [];
+  const dispatched = [];
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) {
+      sent.push({ method: url.split('/').pop(), body: JSON.parse(init.body || '{}') });
+      return new Response(JSON.stringify({ ok: true }));
+    }
+    if (url.includes('/dispatches')) {
+      dispatched.push({ wf: url.split('/workflows/')[1].split('/')[0], body: JSON.parse(init.body), auth: init.headers.authorization });
+      return new Response(null, { status: 204 });
+    }
+    if (url.includes('raw.githubusercontent.com')) {
+      return new Response(JSON.stringify({ lastRun: { at: new Date().toISOString(), scanned: 190, quickPass: 3, deepPass: 2, buy: 1, watch: 1, regime: 'neutral', wallets: { tracked: 212, smart: 0 } }, paper: { cash: 20, positions: [{ symbol: 'ROO', entryPrice: 1, lastPrice: 1.1, sizeUsd: 10 }], closed: [] } }));
+    }
+    return new Response('nope', { status: 404 });
+  };
+  const post = (text, chat = 111, secret = 'sec_123') => worker.fetch(new Request('https://bot.example.workers.dev/telegram', {
+    method: 'POST', headers: { 'content-type': 'application/json', 'x-telegram-bot-api-secret-token': secret },
+    body: JSON.stringify({ message: { chat: { id: chat }, text } }),
+  }), env);
+
+  await post('/scan');
+  assert.equal(dispatched.at(-1).wf, 'scan.yml');
+  assert.deepEqual(dispatched.at(-1).body, { ref: 'main', inputs: {} });
+  assert.equal(dispatched.at(-1).auth, 'Bearer G');
+  assert.match(sent.at(-1).body.text, /Scan started/);
+
+  const CA = '0x3458E003f6ed93df0f537b8acac6fbe08e41247f';
+  await post(`/check ${CA}`);
+  assert.deepEqual(dispatched.at(-1).body.inputs, { ca: CA.toLowerCase() });
+  await post(CA); // pasted address
+  assert.equal(dispatched.length, 3);
+  await post('/check nonsense');
+  assert.equal(dispatched.length, 3);
+  assert.match(sent.at(-1).body.text, /Send it like this/);
+
+  await post('/research');
+  assert.equal(dispatched.at(-1).wf, 'research.yml');
+
+  await post('/status');
+  assert.match(sent.at(-1).body.text, /190 coins → 3 survived/);
+  assert.match(sent.at(-1).body.text, /\$ROO: 1\.10×/);
+
+  const before = { d: dispatched.length, s: sent.length };
+  await post('/scan', 999); // stranger
+  const forged = await post('/scan', 111, 'wrong');
+  assert.equal(forged.status, 403);
+  assert.equal(dispatched.length, before.d);
+  assert.equal(sent.length, before.s);
+
+  const bad = await worker.fetch(new Request('https://bot.example.workers.dev/setup?key=wrong'), env);
+  assert.equal(bad.status, 403);
+  const good = await worker.fetch(new Request('https://bot.example.workers.dev/setup?key=sec_123'), env);
+  assert.equal(good.status, 200);
+  const hook = sent.find((x) => x.method === 'setWebhook');
+  assert.equal(hook.body.url, 'https://bot.example.workers.dev/telegram');
+  assert.equal(hook.body.secret_token, 'sec_123');
+  globalThis.fetch = prevFetch;
+});
+
 console.log = origLog;
 console.log(`\n${failures ? `${failures} test(s) failed` : 'all tests passed'} · ${calls.length} mocked API calls`);
 process.exit(failures ? 1 : 0);

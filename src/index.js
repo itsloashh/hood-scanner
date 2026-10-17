@@ -13,7 +13,7 @@ import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS } from
 import { notify } from './notify.js';
 import { httpErrors } from './http.js';
 import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
-import { alertMessage, tradeMessage, digestMessage } from './messages.js';
+import { alertMessage, tradeMessage, digestMessage, checkMessage } from './messages.js';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -165,7 +165,7 @@ async function tradeFlow(pool, w, state, now) {
   }
 }
 
-async function deepCheck(pool, state, leaders, now, w) {
+async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   const token = pool.baseToken.address;
   const info = await gecko.tokenInfo(token).catch(() => null);
   const hd = await holderData(pool, info, state, now);
@@ -186,7 +186,7 @@ async function deepCheck(pool, state, leaders, now, w) {
   const filt = deepFilter({ info, holdersCount, conc, community });
   let chart = null;
   let flow = null;
-  if (filt.ok) {
+  if (filt.ok || force) {
     try {
       chart = chartFeatures(await gecko.ohlcvDaily(pool.poolAddress, 90), pool.priceUsd);
     } catch {
@@ -204,7 +204,7 @@ async function deepCheck(pool, state, leaders, now, w) {
 
   const { tags, stockPaired } = tagNarratives(pool);
   const rotation = rotationSignal(pool, leaders);
-  const score = filt.ok
+  const score = filt.ok || force
     ? scoreCoin({
         pool, holdersCount, conc, socials: filt.socials, chart, holderChangePct, rotation, stockPaired, community, flow,
         smartBonus: { per: CONFIG.wallets.smartBonusPerWallet, max: CONFIG.wallets.smartBonusMax },
@@ -441,7 +441,44 @@ function deepRow(r) {
   };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+// /check <CA> from Telegram: full analysis of one coin, even if it fails the filters.
+// Read-only — no paper trades, no state saved.
+export async function checkCoin(ca, now = Date.now()) {
+  const addr = String(ca || '').trim().toLowerCase();
+  if (!/^0x[0-9a-f]{40}$/.test(addr)) {
+    await notify(`🔍 CHECK — "${ca}" isn't a valid contract address. Send it like:\n/check 0x1234…abcd`);
+    return null;
+  }
+  const state = loadState();
+  state.holderCache ||= {};
+  state.health = { concSource: { blockscout: 0, cached: 0, estimate: 0, none: 0 }, tradePulls: 0 };
+  const w = loadWallets();
+  const poolMap = await gecko.topPoolsFor([addr]).catch(() => ({}));
+  const poolAddr = poolMap[addr];
+  const [pool] = poolAddr ? await gecko.poolsMulti([poolAddr]).catch(() => []) : [];
+  if (!pool) {
+    await notify(`🔍 CHECK — couldn't find a trading pool for ${addr} on Robinhood Chain (GeckoTerminal). It may be too new, unlisted, or on another chain.`);
+    return null;
+  }
+  pool.allPools = [pool.poolAddress];
+  const q = quickFilter(pool, now);
+  const r = await deepCheck(pool, state, clusterLeaders([pool]), now, w, { force: true });
+  // the chart gives the true age; drop the age failure if the coin is actually old enough
+  const quickReasons = q.reasons.filter((x) => !(x.startsWith('younger than') && r.age >= CONFIG.minAgeDays));
+  const failed = [...quickReasons, ...r.filt.reasons];
+  const s = r.score?.total ?? 0;
+  const tier = failed.length ? 'none' : s >= CONFIG.alertScore && !r.score.buyBlocked ? 'buy' : s >= CONFIG.watchScore ? 'watch' : 'none';
+  await notify(checkMessage({ ...r, failed, verdict: tier, plan: planFor(pool.priceUsd), regime: { state: 'neutral' }, warnings: r.filt.warnings }));
+  return { failed, score: s, tier };
+}
+
+if (process.env.CHECK_CA && import.meta.url === pathToFileURL(process.argv[1] || '').href) {
+  checkCoin(process.env.CHECK_CA).catch(async (e) => {
+    console.error(e);
+    await notify(`🔍 CHECK failed: ${e.message.slice(0, 200)}`);
+    process.exit(1);
+  });
+} else if (import.meta.url === pathToFileURL(process.argv[1] || '').href) {
   main().catch((e) => {
     console.error(e);
     process.exit(1);
