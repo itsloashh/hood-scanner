@@ -293,7 +293,7 @@ export function ignitionSignal(base, hourly, priceNow) {
   return { fired, mult, aboveBasePct, movePct: (px / startPx - 1) * 100, price: px };
 }
 
-async function checkIgnition(state, poolByToken, candidates, runStats, now) {
+async function checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime = () => false) {
   const g = CONFIG.ignition;
   for (const [t, b] of Object.entries(state.quietBases)) if (now - b.at > g.keepDays * DAY) delete state.quietBases[t];
   for (const [t, v] of Object.entries(state.ignitionAlerts)) if (now - v.at > 3 * DAY) delete state.ignitionAlerts[t];
@@ -302,6 +302,7 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now) {
     .sort((a, b) => (b[1].score || 0) - (a[1].score || 0))
     .slice(0, g.maxChecks);
   for (const [token, base] of list) {
+    if (outOfTime()) break;
     const pool = poolByToken.get(token);
     let hourly;
     try {
@@ -428,7 +429,13 @@ export async function main() {
     log(`${quick.length} passed quick filter, deep-checking ${toCheck.length}`);
 
     // 5. Deep check + score + alert (any hour of the day)
+    const outOfTime = () => Date.now() - now > CONFIG.scan.timeBudgetMin * MIN;
     for (const pool of toCheck) {
+      if (outOfTime()) {
+        log('time budget reached — skipping the remaining deep checks');
+        state.health.outOfTime = true;
+        break;
+      }
       let r;
       try {
         r = await deepCheck(pool, state, leaders, now, w, { catalysts });
@@ -476,6 +483,7 @@ export async function main() {
       .sort((a, b) => b.p.buyers24h - a.p.buyers24h)
       .slice(0, CONFIG.scan.maxPumpChecks);
     for (const { p, f } of pumping) {
+      if (outOfTime()) break;
       const token = p.baseToken.address;
       const prev = state.pumpAlerts[token];
       if (prev && now - prev.at < CONFIG.pump.cooldownHours * HOUR) continue;
@@ -503,7 +511,7 @@ export async function main() {
 
     // 5c. 🔥 IGNITION: hourly volume exploding out of a quiet base
     const poolByToken = new Map(pools.map((p) => [p.baseToken.address, p]));
-    await checkIgnition(state, poolByToken, candidates, runStats, now);
+    if (!outOfTime()) await checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime);
 
     // 6. Funnel record + daily digest
     state.funnel24h.push({ t: now, scanned: runStats.scanned, quickPass: runStats.quickPass, deepPass: runStats.deepPass, reasons });
@@ -533,7 +541,7 @@ export async function main() {
       at: new Date(now).toISOString(), ...runStats, regime: reg.state,
       universe: Object.keys(state.universe).length, watchlist: Object.keys(state.watchlist).length,
       topCuts: Object.fromEntries(Object.entries(reasons).sort((a, b) => b[1] - a[1]).slice(0, 8)),
-      holderData: state.health.concSource, httpErrors,
+      holderData: state.health.concSource, httpErrors, outOfTime: Boolean(state.health.outOfTime), seconds: Math.round((Date.now() - now) / 1000),
       blockscout: { key: bs.hasKey(), calls: bs.usage.calls },
       quietBases: Object.keys(state.quietBases).length,
       knownTickers: Object.keys(state.knownTickers || {}).length,

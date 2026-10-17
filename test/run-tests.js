@@ -822,6 +822,21 @@ await test('paper prices: GeckoTerminal blocked → falls back to last scan pric
   await tap('pb:0xgen:5');
   const toast = sent.filter((x) => x.m === 'answerCallbackQuery').at(-1).b.text;
   assert.match(toast, /GeckoTerminal HTTP 403/);
+  // coin not in the scan list + GeckoTerminal blocked → DexPaprika finds it and prices it
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) { sent.push({ m: url.split('/').pop(), b: JSON.parse(init.body || '{}') }); return new Response('{"ok":true}'); }
+    if (url.includes('geckoterminal')) return new Response('blocked', { status: 403 });
+    if (url.includes('candidates.json')) return new Response(JSON.stringify({ coins: [] }));
+    if (url.includes('dexpaprika.com/networks/robinhood/tokens/0x' + 'a'.repeat(40))) return new Response(JSON.stringify({ symbol: 'WORM', summary: { price_usd: 0.00099, liquidity_usd: 139000, fdv: 986000 } }));
+    if (url.includes('dexpaprika.com/networks/robinhood/pools/search')) return new Response(JSON.stringify({ pools: [{ id: '0x' + 'b'.repeat(40) }] }));
+    return new Response('{}', { status: 404 });
+  };
+  const before = JSON.parse(kv.get('paper')).positions.length;
+  await tap('pb:0x' + 'a'.repeat(40) + ':p10');
+  const p = JSON.parse(kv.get('paper'));
+  assert.equal(p.positions.length, before + 1, JSON.stringify(sent.at(-1)));
+  assert.equal(p.positions.at(-1).symbol, 'WORM');
   globalThis.fetch = prevFetch;
 });
 

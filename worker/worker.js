@@ -230,6 +230,33 @@ async function gtJson(url) {
   }
 }
 
+// ── DexPaprika backup (api.dexpaprika.com, keyless, ~15 calls/min) ──
+const DP = 'https://api.dexpaprika.com/networks/robinhood';
+async function dpGet(path) {
+  try {
+    const res = await fetch(`${DP}${path}`, { headers: { accept: 'application/json' } });
+    if (!res.ok) {
+      priceErrors.push(`DexPaprika ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (e) {
+    priceErrors.push(`DexPaprika ${e.message}`.slice(0, 80));
+    return null;
+  }
+}
+export async function dpToken(token) {
+  const j = await dpGet(`/tokens/${token.toLowerCase()}`);
+  if (!j) return null;
+  return { symbol: j.symbol, price: Number(j.summary?.price_usd) || null, liq: Number(j.summary?.liquidity_usd) || null, fdv: Number(j.summary?.fdv) || null };
+}
+async function dpTopPool(token) {
+  const j = await dpGet(`/pools/search?token_address=${token.toLowerCase()}&limit=1&order_by=volume_usd`);
+  const p = (j?.pools || j?.results || [])[0];
+  const id = (p?.id || p?.address || '').toLowerCase();
+  return /^0x[0-9a-f]{40}$/.test(id) ? id : null;
+}
+
 export async function priceMap(env, items) {
   const out = {};
   const list = items.filter((x) => x?.pool);
@@ -251,6 +278,11 @@ export async function priceMap(env, items) {
       if (price > 0) out[x.pool.toLowerCase()] = { price, liq: null, mcap: null, source: 'live' };
     }
   }
+  // Backup source: DexPaprika (free, keyless, covers Robinhood Chain, separate rate limit from GeckoTerminal)
+  for (const x of list.filter((y) => !out[y.pool.toLowerCase()] && y.token).slice(0, 10)) {
+    const d = await dpToken(x.token);
+    if (d?.price > 0) out[x.pool.toLowerCase()] = { price: d.price, liq: d.liq, mcap: d.fdv, source: 'live' };
+  }
   const still = list.filter((x) => !out[x.pool.toLowerCase()]);
   if (still.length && env) {
     const cands = await candidates(env);
@@ -267,19 +299,22 @@ export async function priceMap(env, items) {
 // kept for older callers: pools only, no fallbacks
 export const poolPrices = (pools) => priceMap(null, pools.map((pool) => ({ pool })));
 
-const noPriceMsg = () => `No live price right now${priceErrors.length ? ` (${priceErrors.at(-1)})` : ''} — try again in a minute.`;
+const noPriceMsg = () => `No live price right now${priceErrors.length ? ` (${[...new Set(priceErrors.slice(-3))].join('; ')})` : ''} — try again in a minute.`;
 
 // any coin → its main pool + symbol
 async function coinInfo(env, token) {
   const cands = await candidates(env);
   const c = cands.find((x) => x.token === token);
   if (c) return c;
-  const res = await fetch(`${GT}/tokens/multi/${token}?include=top_pools`, { headers: { accept: 'application/json' } });
-  const j = res.ok ? await res.json().catch(() => null) : null;
+  const j = await gtJson(`${GT}/tokens/multi/${token}?include=top_pools`);
   const d = j?.data?.[0];
   const poolId = d?.relationships?.top_pools?.data?.[0]?.id;
-  if (!poolId) return null;
-  return { token, symbol: d.attributes?.symbol || '???', pool: poolId.split('_').slice(1).join('_').toLowerCase(), tier: 'manual' };
+  if (poolId) return { token, symbol: d.attributes?.symbol || '???', pool: poolId.split('_').slice(1).join('_').toLowerCase(), tier: 'manual' };
+  // GeckoTerminal unreachable from Cloudflare → DexPaprika
+  const dp = await dpToken(token);
+  if (!dp) return null;
+  const pool = (await dpTopPool(token)) || token; // pool unknown → prices come from the token itself
+  return { token, symbol: dp.symbol || '???', pool, tier: 'manual' };
 }
 
 export async function candidates(env) {

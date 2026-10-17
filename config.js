@@ -26,6 +26,7 @@ export const CONFIG = {
     discoverEveryMin: 120,
     discoverPages: 6, // 50 tokens per page
     universeMax: 240,
+    timeBudgetMin: 8, // stop starting new checks after 8 min so the run always saves (GitHub kills it at 12)
   },
 
   // Not memecoins: Robinhood Stock Tokens and other wrapped/real-world assets
