@@ -23,9 +23,8 @@ const log = (...a) => console.log(new Date().toISOString(), ...a);
 
 export const DEFAULT_COINS = [
   'CASHCAT:0x020bfc650a365f8bb26819deaabf3e21291018b4',
-  'PONS',
-  'FRONG',
-  'FLORK',
+  'PONS:0x39dbed3a2bd333467115de45665cc57f813c4571', // the real one — ticker search finds copycats
+  'FRONG:0x6245e67affa44a23077f0ea7f981a8dc743a0c47',
   'DIH:0x0c1ed62d7811e5b437e537ac9d0592469c119c74', // research winner (5.5x, Aug)
   '🪶:0xa870f8c7cae9705194a141b0c2964b6c79ee3742', // research winner (3.5x, Aug)
 ];
