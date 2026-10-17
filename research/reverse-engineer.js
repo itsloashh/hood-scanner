@@ -297,6 +297,64 @@ function compareLine(label, wins, duds, key, fmt) {
   return `- **${label}:** winners ${fmt(w)} vs duds ${fmt(d)}`;
 }
 
+// ── pullback statistics: what happens after a coin pumps ────
+// For every day a coin closed +50% or more, measure the 7 days after the peak:
+// how often it pulled back 30%+, how much of the move it gave back, and whether it
+// went on to make a new high within 14 days. Grouped by pump size.
+export const PUMP_BUCKETS = [
+  { key: '50-100', min: 0.5, max: 1 },
+  { key: '100-200', min: 1, max: 2 },
+  { key: '200+', min: 2, max: Infinity },
+];
+
+export function pumpEvents(candles, { mcapFactor = null, maxBaseMcap = 1_000_000 } = {}) {
+  const out = [];
+  for (let i = 1; i < candles.length - 2; i++) {
+    const base = candles[i - 1].c;
+    if (!(base > 0)) continue;
+    const gain = candles[i].c / base - 1;
+    if (gain < 0.5) continue;
+    if (mcapFactor && base * mcapFactor > maxBaseMcap) continue;
+    // peak = highest high on the pump day or the day after
+    const peakIdx = candles[i + 1] && candles[i + 1].h > candles[i].h ? i + 1 : i;
+    const peak = candles[peakIdx].h;
+    const after = candles.slice(peakIdx + 1, peakIdx + 8);
+    if (after.length < 3) continue; // too recent to judge
+    let lowIdx = 0;
+    for (let k = 1; k < after.length; k++) if (after[k].l < after[lowIdx].l) lowIdx = k;
+    const low = after[lowIdx].l;
+    const move = peak - base;
+    const retrace = move > 0 ? Math.max(0, Math.min(1.5, (peak - low) / move)) : 0;
+    const later = candles.slice(peakIdx + 1 + lowIdx + 1, peakIdx + 15);
+    const newHigh = later.some((x) => x.h > peak);
+    out.push({ t: candles[i].t, gain, peak, base, low, retrace, drop: 1 - low / peak, daysToLow: lowIdx + 1, newHigh });
+    i = peakIdx + 7; // don't double count the same pump
+  }
+  return out;
+}
+
+export function pullbackStats(events) {
+  const q = (arr, p) => {
+    const v = [...arr].sort((a, b) => a - b);
+    return v.length ? v[Math.min(v.length - 1, Math.floor(p * v.length))] : null;
+  };
+  const buckets = {};
+  for (const b of PUMP_BUCKETS) {
+    const ev = events.filter((e) => e.gain >= b.min && e.gain < b.max);
+    buckets[b.key] = {
+      n: ev.length,
+      pPullback30: ev.length ? ev.filter((e) => e.drop >= 0.3).length / ev.length : null,
+      retraceP25: q(ev.map((e) => e.retrace), 0.25),
+      retraceMedian: q(ev.map((e) => e.retrace), 0.5),
+      retraceP75: q(ev.map((e) => e.retrace), 0.75),
+      pFullRetrace: ev.length ? ev.filter((e) => e.retrace >= 1).length / ev.length : null,
+      pNewHigh14: ev.length ? ev.filter((e) => e.newHigh).length / ev.length : null,
+      medianDaysToLow: q(ev.map((e) => e.daysToLow), 0.5),
+    };
+  }
+  return buckets;
+}
+
 export async function main() {
   const now = Date.now();
   const state = loadState();
@@ -316,6 +374,7 @@ export async function main() {
 
   // steps 2–3: setups from the daily charts
   const setups = [];
+  const pumps = [];
   for (const c of coins) {
     const p = live.get(c.pool);
     if (!p?.priceUsd || !p?.marketCap) continue;
@@ -326,6 +385,7 @@ export async function main() {
       continue;
     }
     const { tags, stockPaired } = tagNarratives(p);
+    pumps.push(...pumpEvents(candles, { mcapFactor: p.marketCap / p.priceUsd }));
     for (const s of findSetups(candles, { mcapNow: p.marketCap, priceNow: p.priceUsd }, now)) {
       setups.push({ ...c, symbol: c.symbol || p.baseToken.symbol, themes: tags, stockPaired, setup: s });
     }
@@ -410,6 +470,8 @@ export async function main() {
       smartBuyers: s.smartBuyers, themes: (s.themes || []).join('|'), catalysts: s.catalysts.map((c) => c.key).join('|'),
     })));
   fs.writeFileSync(path.join(outDir, 'smart-wallets.json'), JSON.stringify({ at: new Date(now).toISOString(), wallets: smart }, null, 1));
+  const pb = pullbackStats(pumps);
+  fs.writeFileSync(path.join(outDir, 'pullbacks.json'), JSON.stringify({ at: new Date(now).toISOString(), events: pumps.length, buckets: pb }, null, 1));
   fs.writeFileSync(path.join(outDir, 'catalysts.json'), JSON.stringify({ at: new Date(now).toISOString(), wins: wins.length, duds: duds.length, lift }, null, 1));
 
   // ── report ──────────────────────────────────────────────
@@ -463,6 +525,13 @@ export async function main() {
       : ['- None in this sample yet.', '']),
     ...(moons.length ? [`## Moonshots (>10x, not used to learn)`, ...moons.map((x) => `- $${x.symbol} — ${x.setup.peakX.toFixed(0)}× from ${usdF(x.setup.mcap)} (${new Date(x.setup.t).toISOString().slice(0, 10)})`), ''] : []),
     ...(rejected.length ? [`## Thrown out by the community check`, ...rejected.slice(0, 10).map((x) => `- $${x.symbol} (${x.setup.label}) — ${x.tx.washLikely ? `wash trading (${Math.round(x.tx.overlap * 100)}% of wallets on both sides)` : `only ${x.tx.realBuyers} real buyers`}`), ''] : []),
+    `## After a pump: pullback odds (from ${pumps.length} past pumps)`,
+    ...PUMP_BUCKETS.map((b) => {
+      const x = pb[b.key];
+      if (!x.n) return `- **+${b.key.replace('-', '–')}% day:** no examples yet`;
+      return `- **+${b.key.replace('-', '–')}% day** (${x.n} examples): ${Math.round(x.pPullback30 * 100)}% pulled back 30%+ within a week · typically gave back ${Math.round(x.retraceMedian * 100)}% of the move (middle half: ${Math.round(x.retraceP25 * 100)}–${Math.round(x.retraceP75 * 100)}%) · low came after ~${x.medianDaysToLow} day(s) · ${Math.round(x.pNewHigh14 * 100)}% made a new high within 2 weeks · ${Math.round(x.pFullRetrace * 100)}% gave back the whole move`;
+    }),
+    '',
     `## Smart wallets`,
     smart.length
       ? `**${smart.length} wallet(s)** bought early into ${R.smartMinWinnerHits}+ real winners and mostly avoided duds. The live scanner flags any coin they buy.`
@@ -501,6 +570,8 @@ export async function main() {
     : analysed.length
       ? '🧠 No repeat early buyers across real winners yet.'
       : '🧠 Wallet history unavailable — check the BLOCKSCOUT_API_KEY secret.');
+  const pbLine = PUMP_BUCKETS.map((b) => pb[b.key].n ? `+${b.key.replace('-', '–')}%: ${Math.round(pb[b.key].pPullback30 * 100)}% pulled back 30%+, gave back ~${Math.round(pb[b.key].retraceMedian * 100)}%` : null).filter(Boolean);
+  if (pbLine.length) tg.push('', `📉 After pumps (${pumps.length} past examples):`, ...pbLine.map((l) => `• ${l}`));
   tg.push('', 'Full report: data/research/report.md in the repo');
   await notify(tg.join('\n'));
   log('research done');

@@ -20,6 +20,7 @@ export const CONFIG = {
     pagesPerSort: 10, // 20 pools per page (10 is the free max)
     includeTrending: true,
     maxDeepChecks: 25, // candidates that get the full holder/chart check per run
+    maxPumpChecks: 6, // pumping coins analysed for a pullback entry per run
     watchlistMax: 120, // coins that once passed the quick filter get re-checked every run, even if they drop off the top lists
     // Discovery by holder count (Blockscout) — finds established coins too quiet for the volume lists
     discoverEveryMin: 120,
@@ -63,8 +64,19 @@ export const CONFIG = {
     maxDevPct: 5,
   },
 
-  // Skip coins already mid-pump — we want bases, not tops
-  maxChange24hPct: 100,
+  // Coins up this much in 24h aren't bases — they go to the PUMP path instead:
+  // pullback odds + a limit-buy entry zone (see src/pump.js)
+  maxChange24hPct: 50,
+  pump: {
+    minChangePct: 50, // +50% in 24h = "pumping"
+    minExamples: 5, // past pumps needed before we trust chain stats (else Fibonacci 38–62% fallback)
+    stopBelowBasePct: 3, // stop just under where the pump started
+    cooldownHours: 24,
+  },
+
+  // Target band: we want 3x–10x, not lottery tickets
+  targetMinX: 3,
+  targetMaxX: 10,
 
   // ── Scoring / alerting ───────────────────────────────────
   alertScore: 65, // 🟢 BUY ZONE — opens a paper position
@@ -77,6 +89,7 @@ export const CONFIG = {
   // ── Paper trading: the $30 test ──────────────────────────
   paper: {
     enabled: true,
+    auto: false, // paper trades are placed by you from Telegram (/paper). true = old auto-trading
     startingBankroll: 30,
     positionFraction: 1 / 3, // $10 slices to start
     minPositionUsd: 2,

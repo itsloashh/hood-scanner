@@ -94,6 +94,9 @@ export function alertMessage(c) {
   L.push('', '💰 SIZE');
   L.push(bullet(`Market cap ${usd(pool.marketCap)}${pool.marketCapIsFdv ? ' (fully diluted)' : ''} · ${age != null ? `${Math.floor(age)} days old` : 'age unknown'}`));
   L.push(bullet(`Liquidity ${usd(pool.liquidityUsd)} — ${liquidityNote(pool.liquidityUsd, pool.marketCap)}`));
+  if (pool.marketCap) {
+    L.push(bullet(`🎯 Target ${CONFIG.targetMinX}–${CONFIG.targetMaxX}x = ${usd(pool.marketCap * CONFIG.targetMinX)} to ${usd(pool.marketCap * CONFIG.targetMaxX)} market cap`));
+  }
   if (narratives.length) {
     L.push(bullet(`Theme: ${narratives.join(', ')}${rotation.active ? ` — its sector leader $${rotation.leader} is up ${pctTxt(rotation.leaderChange)} today while this one hasn't moved yet` : ''}`));
   }
@@ -182,6 +185,7 @@ export function alertMessage(c) {
     for (const t of plan.takeProfits) L.push(bullet(`${t.x}x at ${px(t.price)} → sell ${t.sell * 100}%`));
     L.push(bullet(`Let the rest ride to ${CONFIG.paper.runnerTargetX}x, or exit if it drops ${CONFIG.paper.trailFromPeakPct}% from its peak`));
     if (paperOpened) L.push(`📝 Paper trade opened with ${usd(paperOpened.sizeUsd)}`);
+    else if (!CONFIG.paper.auto && !c.headerLines) L.push('📝 Tap "Paper buy" below to take this trade on paper.');
   } else {
     L.push(bullet(`Not a buy yet. If it reaches the buy zone: stop ${px(plan.stop)}, first target ${px(plan.takeProfits[0].price)} (3x)`));
   }
@@ -215,6 +219,62 @@ export function checkMessage(c) {
   return alertMessage({ ...c, tier, headerLines: head, paperOpened: null });
 }
 
+// ── coin already pumping: pullback odds + entry zone ────────
+export function pumpMessage(c) {
+  const { pool, plan, conc, community, flow, holdersCount, warnings, baseMcap } = c;
+  const sym = pool.baseToken.symbol;
+  const L = [];
+  const statusTxt = {
+    above: `Price is still ${Math.round((pool.priceUsd / plan.entryTop - 1) * 100)}% above the entry zone — wait for the pullback.`,
+    'in-zone': '⚡ Price is IN the entry zone right now.',
+    deep: '⚠️ Price is already below the deep end of the zone — the pump may be failing; only enter if it holds the stop level.',
+  }[plan.status];
+
+  L.push(`🚀 PUMPING · $${sym} — up ${Math.round(pool.change.h24)}% in 24h (peaked +${Math.round(plan.gain * 100)}%)`);
+  L.push("Don't chase. Here's where it usually pulls back to, based on past pumps.");
+  L.push(statusTxt);
+
+  L.push('', '💰 SIZE');
+  L.push(bullet(`Market cap before the pump ${usd(baseMcap)} → now ${usd(pool.marketCap)}`));
+  L.push(bullet(`Liquidity ${usd(pool.liquidityUsd)} — ${liquidityNote(pool.liquidityUsd, pool.marketCap)}`));
+
+  L.push('', `📉 PULLBACK ODDS (${plan.proven ? `${plan.n} past +${plan.key.replace('-', '–')}% pumps on Robinhood Chain` : 'not enough chain history yet — textbook 38–62% retrace'})`);
+  if (plan.proven) {
+    L.push(bullet(`${Math.round(plan.pPullback30 * 100)}% pulled back 30%+ within a week`));
+    L.push(bullet(`Typically gave back ${Math.round(plan.retraceMedian * 100)}% of the move${plan.medianDaysToLow ? `, bottoming ~${plan.medianDaysToLow} day(s) after the peak` : ''}`));
+    L.push(bullet(`${Math.round(plan.pNewHigh14 * 100)}% went on to a new high within 2 weeks · ${Math.round(plan.pFullRetrace * 100)}% gave back the whole move`));
+  } else {
+    L.push(bullet('Most pumps give back 38–62% of the move before deciding direction'));
+    L.push(bullet('Chain-specific odds will appear after the daily research builds enough history'));
+  }
+
+  L.push('', '🎯 ENTRY PLAN');
+  L.push(bullet(`Peak ${px(plan.peak)} · now ${px(plan.price)} (${Math.round(plan.offPeak * 100)}% off the peak)`));
+  L.push(bullet(`Entry zone: ${px(plan.entryTop)} → ${px(plan.entryDeep)}`));
+  L.push(bullet(`Best limit buy: ${px(plan.entryMid)} (the typical pullback)${plan.mcapEntry ? ` ≈ ${usd(plan.mcapEntry)} market cap` : ''}`));
+  L.push(bullet(`Stop: ${px(plan.stop)} — below where the pump started (risk ${Math.round(plan.riskPct)}% from the limit)`));
+  L.push(bullet(`From that entry: 3x = ${px(plan.target3x)}${plan.mcap3x ? ` (${usd(plan.mcap3x)} mc)` : ''} · 10x = ${px(plan.target10x)}${plan.mcap10x ? ` (${usd(plan.mcap10x)} mc)` : ''}`));
+
+  L.push('', '👥 IS THE PUMP REAL?');
+  L.push(bullet(`${num(holdersCount)} holders · ${pool.buyers24h} bought / ${pool.sellers24h} sold in 24h`));
+  if (conc) L.push(bullet(`Top 10 wallets hold ${conc.top10Pct.toFixed(1)}%${conc.top1Pct != null ? ` · biggest ${conc.top1Pct.toFixed(1)}%` : ''}`));
+  if (flow) {
+    L.push(bullet(`${flow.uniqueBuyers} different wallets bought in the last ${flow.windowHours}h · ${flow.netFlowUsd >= 0 ? `${usd(flow.netFlowUsd)} more bought than sold` : `${usd(-flow.netFlowUsd)} more sold than bought`}`));
+    if (flow.smartBuyers.length) L.push(bullet(`🧠 ${flow.smartBuyers.length} proven wallet(s) are in`));
+  }
+  if (community?.x) L.push(bullet(`X @${community.x} — check who's talking: https://x.com/search?q=%24${encodeURIComponent(sym)}%20filter%3Ablue_verified&f=live`));
+
+  if (warnings?.length) {
+    L.push('', '⚠️ HEADS UP');
+    for (const wn of warnings) L.push(bullet(wn));
+  }
+
+  L.push('', '🔗 LINKS');
+  L.push(`Chart: ${chartUrl(pool.poolAddress)}`);
+  L.push(`CA: ${pool.baseToken.address}`);
+  return L.filter((l) => l !== null).join('\n');
+}
+
 // ── paper trade updates ─────────────────────────────────────
 export function tradeMessage(ev) {
   if (ev.type === 'sell') {
@@ -233,6 +293,9 @@ export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch2
   L.push(`📋 HOOD SCANNER — summary (every ${CONFIG.digestEveryHours}h)`);
   if (sinceLast) L.push(`Since the last summary (${sinceLast.hours}h ago): ${sinceLast.buy} buy-zone, ${sinceLast.watch} watch alert(s)`);
 
+  if (!CONFIG.paper.auto) {
+    L.push('', '💵 PAPER TRADING — send /paper for your positions, wallet and P/L');
+  } else {
   L.push('', '💵 PAPER BANKROLL');
   L.push(bullet(`${usd(eq)} now (started with ${usd(start)}, ${pctTxt(change, 1)})`));
   L.push(bullet(`${usd(paper.cash)} cash · ${paper.positions.length} of ${CONFIG.paper.maxOpen} trades open`));
@@ -243,6 +306,7 @@ export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch2
   L.push(bullet(stats.trades
     ? `${stats.trades} closed trades · ${(stats.winRate * 100).toFixed(0)}% winners · ${stats.hit3x} hit 3x · average ${stats.avgMultiple.toFixed(2)}×`
     : 'No closed trades yet'));
+  }
 
   L.push('', '🔔 LAST 24 HOURS');
   L.push(bullet(`${buy24h} buy-zone alert(s) · ${watch24h} watch alert(s)`));

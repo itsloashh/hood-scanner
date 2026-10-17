@@ -160,7 +160,7 @@ await test('concentration ignores LP pool + burn, catches a whale wallet', () =>
 
 // ── Full scan ────────────────────────────────────────────
 let stats1;
-await test('full scan alerts on the good coin only and opens a $10 paper position', async () => {
+await test('full scan alerts on the good coin only, with paper buttons (no auto trade)', async () => {
   stats1 = await main();
   const out = printed.join('\n');
   assert.equal(stats1.buy, 1, `buy alerts ${stats1.buy}\n${out.slice(-3000)}`);
@@ -172,10 +172,13 @@ await test('full scan alerts on the good coin only and opens a $10 paper positio
   if (process.env.SHOW_ALERT) origLog(out.slice(out.indexOf('──── ALERT')));
   assert.doesNotMatch(out, /— \$WHALEINU/);
   assert.doesNotMatch(out, /— \$NEWDOG/);
+  assert.match(out, /🎯 Target 3–10x = \$540k to \$1\.80M market cap/);
+  assert.match(out, /\[buttons\] 📝 Paper buy → pc:0x0+1/);
   const state = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'));
-  assert.equal(state.paper.positions.length, 1);
-  assert.ok(Math.abs(state.paper.positions[0].sizeUsd - 10) < 0.01);
-  assert.ok(Math.abs(state.paper.cash - 20) < 0.01);
+  assert.equal(state.paper.positions.length, 0, 'auto paper trading should be off');
+  const cand = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'candidates.json'), 'utf8'));
+  assert.equal(cand.coins[0].symbol, 'GOODCAT');
+  assert.equal(cand.coins[0].tier, 'buy');
 });
 
 await test('snapshot logger wrote the research dataset', () => {
@@ -608,6 +611,62 @@ await test('burns: recent burns counted per token; supply burned adds a bonus', 
   const base = { pool, holdersCount: 800, conc: { top10Pct: 20, top1Pct: 3 }, socials: 2, chart: null, holderChangePct: null, rotation: {}, stockPaired: false, community: {} };
   assert.equal(scoreCoin({ ...base, burns: { burnedPct: 55, recent: r } }).parts.burn, 5);
   assert.equal(scoreCoin({ ...base, burns: { burnedPct: 5, recent: { count: 0 } } }).parts.burn, 0);
+});
+
+await test('pullback stats: pump events measured and bucketed', async () => {
+  const { pumpEvents, pullbackStats } = await import('../research/reverse-engineer.js');
+  const D = 86_400_000;
+  const mk = (i, c, h = c * 1.02, l = c * 0.98) => ({ t: i * D, o: c, h, l, c, v: 1000 });
+  const evs = [];
+  for (let k = 0; k < 6; k++) {
+    // flat at 1 → +80% day (peak 1.9) → pulls back to 1.4 → new high 2.0 a week later
+    const cs = [mk(0, 1), mk(1, 1), mk(2, 1.8, 1.9), mk(3, 1.6), mk(4, 1.45, 1.5, 1.4), mk(5, 1.5), mk(6, 1.6), mk(7, 1.7), mk(8, 1.8), mk(9, 1.9), mk(10, 2, 2.05), mk(11, 2), mk(12, 2)];
+    evs.push(...pumpEvents(cs));
+  }
+  assert.equal(evs.length, 6);
+  assert.ok(Math.abs(evs[0].retrace - (1.9 - 1.4) / 0.9) < 1e-9);
+  const st = pullbackStats(evs);
+  assert.equal(st['50-100'].n, 6);
+  assert.equal(st['50-100'].pPullback30, 0); // 1.9 → 1.4 is a 26% drop
+  assert.equal(st['50-100'].pNewHigh14, 1);
+  assert.equal(st['100-200'].n, 0);
+});
+
+await test('pump path: coin up 120% gets pullback odds + limit-buy entry, judged on pre-pump size', async () => {
+  const { pumpPlan } = await import('../src/pump.js');
+  const pool = { priceUsd: 2.2, marketCap: 440_000, liquidityUsd: 60_000, change: { h24: 120 } };
+  const candles = [{ h: 2.5 }, { h: 2.4 }];
+  const stats = { buckets: { '100-200': { n: 12, pPullback30: 0.75, retraceP25: 0.3, retraceMedian: 0.5, retraceP75: 0.7, pNewHigh14: 0.25, pFullRetrace: 0.1, medianDaysToLow: 3 } } };
+  const plan = pumpPlan({ pool, candles, stats });
+  assert.equal(plan.key, '100-200');
+  assert.equal(plan.proven, true);
+  assert.ok(Math.abs(plan.base - 1) < 1e-9);
+  assert.ok(Math.abs(plan.entryMid - 1.75) < 1e-9); // peak 2.5 − 50% of the 1.5 move
+  assert.ok(plan.stop < 1 && plan.stop > 0.95);
+  assert.equal(plan.status, 'above');
+  const generic = pumpPlan({ pool, candles, stats: null });
+  assert.equal(generic.proven, false);
+
+  const { pumpFilter } = await import('../src/filters.js');
+  const f = pumpFilter({ marketCap: 440_000, liquidityUsd: 60_000, createdAt: new Date(now - 40 * 86_400_000).toISOString(), buyers24h: 90, sellers24h: 60, change: { h24: 120 } }, now);
+  assert.equal(f.ok, true, f.reasons.join()); // $440k now, but $200k before the pump → fits the $333k rule
+  assert.ok(Math.abs(f.baseMcap - 200_000) < 1);
+});
+
+await test('pump path end-to-end: alert with limit-buy button', async () => {
+  fs.rmSync(path.join(process.env.DATA_DIR, 'state.json'));
+  const saved = { ...coins.good };
+  coins.good.ch24 = 120; coins.good.mcap = 396_000; // was $180k before the pump
+  printed.length = 0;
+  const r = await main();
+  Object.assign(coins.good, saved);
+  const out = printed.join('\n');
+  assert.equal(r.pump, 1, out.slice(-2500));
+  assert.match(out, /🚀 PUMPING · \$GOODCAT/);
+  assert.match(out, /Best limit buy:/);
+  assert.match(out, /Paper limit buy @ .* → pl:0x0+1/);
+  const cand = JSON.parse(fs.readFileSync(path.join(process.env.DATA_DIR, 'candidates.json'), 'utf8'));
+  assert.ok(cand.coins.find((c) => c.tier === 'pump' && c.entry?.mid > 0));
 });
 
 console.log = origLog;

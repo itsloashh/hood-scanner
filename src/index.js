@@ -4,16 +4,19 @@ import { pathToFileURL } from 'node:url';
 import { CONFIG } from '../config.js';
 import * as gecko from './gecko.js';
 import * as bs from './blockscout.js';
-import { quickFilter, deepFilter, ageDays, tally } from './filters.js';
+import { quickFilter, deepFilter, pumpFilter, ageDays, tally } from './filters.js';
+import { pumpPlan, loadPullbacks } from './pump.js';
+import fs from 'node:fs';
+import path from 'node:path';
 import { tagNarratives, clusterLeaders, rotationSignal } from './narrative.js';
 import { chartFeatures, holderTrend, scoreCoin, regime as computeRegime } from './score.js';
 import { communitySignals } from './community.js';
 import { openPosition, updatePositions, equity, stats, planFor } from './paper.js';
-import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS } from './store.js';
+import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS, DATA_DIR } from './store.js';
 import { notify } from './notify.js';
 import { httpErrors } from './http.js';
 import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
-import { alertMessage, tradeMessage, digestMessage, checkMessage } from './messages.js';
+import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage } from './messages.js';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -203,11 +206,13 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   const community = await communitySignals({ pool, info, state, now });
   const filt = deepFilter({ info, holdersCount, conc, community });
   let chart = null;
+  let candles = null;
   let flow = null;
   let burns = null;
   if (filt.ok || force) {
     try {
-      chart = chartFeatures(await gecko.ohlcvDaily(pool.poolAddress, 90), pool.priceUsd);
+      candles = await gecko.ohlcvDaily(pool.poolAddress, 90);
+      chart = chartFeatures(candles, pool.priceUsd);
     } catch {
       filt.warnings.push('chart unavailable');
     }
@@ -234,7 +239,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false } = {}) {
   if (score?.parts.inflatedHoldersPenalty) {
     filt.warnings.push(`Holder count looks padded — only ${usdOf(score.usdPerHolder)} of market cap per holder (airdropped dust wallets?)`);
   }
-  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, age, narratives: tags, stockPaired, rotation, score, community, flow, burns };
+  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, candles, age, narratives: tags, stockPaired, rotation, score, community, flow, burns };
 }
 
 const usdOf = (v) => (v == null ? '—' : `$${v.toFixed(2)}`);
@@ -258,10 +263,12 @@ export async function main() {
   }
   state.holderCache ||= {};
   state.burnCache ||= {};
+  state.pumpAlerts ||= {};
   const w = loadWallets();
   state.runs = (state.runs || 0) + 1;
   const snapshots = [];
-  const runStats = { scanned: 0, quickPass: 0, deepPass: 0, buy: 0, watch: 0 };
+  const runStats = { scanned: 0, quickPass: 0, deepPass: 0, buy: 0, watch: 0, pump: 0 };
+  const candidates = [];
   const reasons = {};
   let reg = { state: 'neutral', ratio: null };
   let prices = {};
@@ -290,7 +297,7 @@ export async function main() {
     const allPrices = Object.fromEntries(pools.filter((p) => p.priceUsd).map((p) => [p.baseToken.address, p.priceUsd]));
     const resolved = resolveOutcomes(w, allPrices, now);
     if (resolved.length) log(`wallet buys resolved: ${resolved.filter((r) => r.r === 'W').length} wins, ${resolved.filter((r) => r.r === 'L').length} losses`);
-    for (const ev of updatePositions(state.paper, prices, now)) {
+    for (const ev of CONFIG.paper.auto ? updatePositions(state.paper, prices, now) : []) {
       await notify(tradeMessage(ev));
       if (ev.type === 'closed') {
         const r = ev.record;
@@ -347,23 +354,57 @@ export async function main() {
       }
       runStats.deepPass += 1;
       const s = r.score.total;
+      candidates.push(candidateRow(r, s >= buyBar && !r.score.buyBlocked ? 'buy' : s >= watchBar ? 'watch' : 'scored', now));
       log(`✓ ${pool.baseToken.symbol}: score ${s}`);
       const token = pool.baseToken.address;
 
       if (s >= buyBar && !r.score.buyBlocked && shouldAlert(state.alerts, token, s, CONFIG.realertCooldownHours, now)) {
-        const paperOpened = openPosition(state.paper, {
-          token, symbol: pool.baseToken.symbol, pool: pool.poolAddress, price: pool.priceUsd, score: s,
-        }, now);
-        await notify(alertMessage({ ...r, tier: 'buy', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }));
+        const paperOpened = CONFIG.paper.auto
+          ? openPosition(state.paper, { token, symbol: pool.baseToken.symbol, pool: pool.poolAddress, price: pool.priceUsd, score: s }, now)
+          : null;
+        await notify(alertMessage({ ...r, tier: 'buy', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }), { buttons: paperButtons(token) });
         state.alerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.buy += 1;
         if (row) row.decision = 'BUY-ALERT';
       } else if (s >= watchBar && (s < buyBar || r.score.buyBlocked) && shouldAlert(state.watchAlerts, token, s, CONFIG.watchCooldownHours, now)) {
-        await notify(alertMessage({ ...r, tier: 'watch', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings }));
+        await notify(alertMessage({ ...r, tier: 'watch', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings }), { buttons: paperButtons(token) });
         state.watchAlerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.watch += 1;
         if (row) row.decision = 'WATCH-ALERT';
       }
+    }
+
+    // 5b. Coins already pumping: pullback odds + entry zone (don't chase)
+    const pullStats = loadPullbacks();
+    const pumping = pools
+      .map((p) => ({ p, f: pumpFilter(p, now) }))
+      .filter((x) => x.f.ok)
+      .sort((a, b) => b.p.buyers24h - a.p.buyers24h)
+      .slice(0, CONFIG.scan.maxPumpChecks);
+    for (const { p, f } of pumping) {
+      const token = p.baseToken.address;
+      const prev = state.pumpAlerts[token];
+      if (prev && now - prev.at < CONFIG.pump.cooldownHours * HOUR) continue;
+      let r;
+      try {
+        r = await deepCheck(p, state, leaders, now, w, { force: true });
+      } catch (e) {
+        log(`pump check ${p.baseToken.symbol} failed: ${e.message}`);
+        continue;
+      }
+      if (!r.filt.ok || r.flow?.washLikely) {
+        log(`✗ pump ${p.baseToken.symbol}: ${r.flow?.washLikely ? 'wash trading' : r.filt.reasons.join('; ')}`);
+        continue;
+      }
+      const plan = pumpPlan({ pool: p, candles: r.candles, stats: pullStats });
+      if (!plan) continue;
+      candidates.push({ ...candidateRow(r, 'pump', now), entry: { top: plan.entryTop, mid: plan.entryMid, deep: plan.entryDeep, stop: plan.stop } });
+      await notify(pumpMessage({ ...r, plan, baseMcap: f.baseMcap }), { buttons: [[
+        { text: `📝 Paper limit buy @ ${fmtPx(plan.entryMid)}`, data: `pl:${token}` },
+        { text: '📝 Buy now', data: `pc:${token}` },
+      ]] });
+      state.pumpAlerts[token] = { at: now, symbol: p.baseToken.symbol };
+      runStats.pump += 1;
     }
 
     // 6. Funnel record + daily digest
@@ -410,9 +451,39 @@ export async function main() {
     for (const [t, v] of Object.entries(state.holderCache)) if (now - v.at > 6 * HOUR) delete state.holderCache[t];
     for (const [t, v] of Object.entries(state.burnCache)) if (now - v.at > 24 * HOUR) delete state.burnCache[t];
     saveWallets(w, now);
+    saveCandidates(candidates, now);
+    for (const [t, v] of Object.entries(state.pumpAlerts)) if (now - v.at > 3 * DAY) delete state.pumpAlerts[t];
     saveState(state);
   }
   return runStats;
+}
+
+const fmtPx = (v) => (v == null ? '—' : v >= 1 ? `$${v.toFixed(4)}` : `$${v.toPrecision(3)}`);
+const paperButtons = (token) => [[{ text: '📝 Paper buy', data: `pc:${token}` }, { text: '📋 Paper menu', data: 'm' }]];
+
+function candidateRow(r, tier, now) {
+  const p = r.pool;
+  return {
+    token: p.baseToken.address, symbol: p.baseToken.symbol, pool: p.poolAddress, tier,
+    score: r.score?.total ?? null, price: p.priceUsd, mcap: p.marketCap, liquidity: p.liquidityUsd,
+    change24h: p.change.h24, washLikely: Boolean(r.flow?.washLikely), at: new Date(now).toISOString(),
+  };
+}
+
+// data/candidates.json — what the Telegram paper-trading menu offers under "Place trade".
+// Keeps the latest entry per coin from the last 24h.
+function saveCandidates(fresh, now) {
+  const file = path.join(DATA_DIR, 'candidates.json');
+  let prev = [];
+  try {
+    prev = JSON.parse(fs.readFileSync(file, 'utf8')).coins || [];
+  } catch { /* first run */ }
+  const byToken = new Map();
+  for (const c of [...prev, ...fresh]) if (now - Date.parse(c.at) < DAY) byToken.set(c.token, c);
+  const order = { buy: 0, pump: 1, watch: 2, scored: 3 };
+  const coins = [...byToken.values()].sort((a, b) => order[a.tier] - order[b.tier] || (b.score ?? 0) - (a.score ?? 0));
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(file, JSON.stringify({ at: new Date(now).toISOString(), coins }, null, 1));
 }
 
 function walletSummary(w) {

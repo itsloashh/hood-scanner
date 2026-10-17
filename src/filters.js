@@ -60,6 +60,16 @@ export function countSocials(info) {
   return (info.twitter ? 1 : 0) + (info.telegram ? 1 : 0) + (info.websites?.length ? 1 : 0) + (info.discord ? 1 : 0);
 }
 
+// Pumping coins: judge them on where they were BEFORE the pump (pre-pump market cap),
+// with every other rule the same. Returns ok + the pre-pump numbers.
+export function pumpFilter(pool, now = Date.now()) {
+  const ch = pool.change.h24 ?? 0;
+  if (ch < CONFIG.pump.minChangePct) return { ok: false, reasons: ['not pumping'] };
+  const baseMcap = pool.marketCap != null ? pool.marketCap / (1 + ch / 100) : null;
+  const q = quickFilter({ ...pool, marketCap: baseMcap, change: { ...pool.change, h24: 0 } }, now);
+  return { ...q, baseMcap };
+}
+
 // Funnel counter: tallies every rejection reason.
 export function tally(counter, reasons) {
   for (const r of reasons) counter[r] = (counter[r] || 0) + 1;
