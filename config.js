@@ -13,7 +13,7 @@ export const CONFIG = {
   holderCacheMin: 120,
   // Holder lists (top wallets) are slow on Blockscout, so a separate job fetches them with
   // long timeouts and writes data/holders.json; scans just read it.
-  holdersJob: { maxCoins: 30, freshHours: 6, timeoutSec: 75, budgetMin: 11 }, // re-use a coin's holder data for 2h — keeps Blockscout well inside the free 100k credits/day
+  holdersJob: { maxCoins: 30, freshHours: 6, timeoutSec: 75, budgetMin: 11, scanFallback: false }, // scanFallback: let the scan call Blockscout itself // re-use a coin's holder data for 2h — keeps Blockscout well inside the free 100k credits/day
   dexpaprika: { base: 'https://api.dexpaprika.com', network: 'robinhood', minIntervalMs: 4200 }, // keyless ≈ 15 calls/min
   infoCacheMin: 120, // token info (socials, holder count, GT score) re-used for 2h
   chartCacheMin: 60, // daily candles re-used for 1h (today's candle comes from the live pool price)

@@ -13,6 +13,7 @@ const { CONFIG } = await import('../config.js');
 CONFIG.geckoMinIntervalMs = 0;
 CONFIG.blockscoutMinIntervalMs = 0;
 CONFIG.scan.pagesPerSort = 1;
+CONFIG.holdersJob.scanFallback = true; // the offline tests mock Blockscout inside the scan
 
 const DAY = 86_400_000;
 const now = Date.now();

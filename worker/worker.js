@@ -110,7 +110,8 @@ async function status(env) {
   }
   if (r.wallets) L.push('', `🧠 Tracking ${r.wallets.tracked} wallets · ${r.wallets.smart} smart`);
   if (r.httpErrors && Object.keys(r.httpErrors).length) {
-    L.push('', `⚠️ Data source errors: ${Object.entries(r.httpErrors).map(([h, e]) => `${h.split('.')[0]} ${e.last}`).join(', ')}`);
+    const name = (h) => h.split('.').slice(-2, -1)[0] || h; // api.blockscout.com → blockscout
+    L.push('', `⚠️ Data source hiccups last scan (the scan carried on): ${Object.entries(r.httpErrors).map(([h, e]) => `${name(h)} — ${e.last}`).join('; ')}`);
   }
   return L.join('\n');
 }

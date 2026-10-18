@@ -56,7 +56,8 @@ export async function main(now = Date.now()) {
       if (!meta?.totalSupply || !list.length) throw new Error('empty holder data');
       const devAddress = state.infoCache?.[t.token]?.info?.devAddress || null;
       const conc = bs.concentration(list, meta.totalSupply, { poolAddresses: [t.pool].filter(Boolean), devAddress });
-      holders.coins[t.token] = { at: Date.now(), symbol: t.symbol, holdersCount: meta.holders, conc };
+      const recentBurns = await bs.recentBurns(t.token, now - CONFIG.burns.recentDays * 86_400_000).catch(() => null);
+      holders.coins[t.token] = { at: Date.now(), symbol: t.symbol, holdersCount: meta.holders, conc, recentBurns };
       report.ok += 1;
       console.log(`✓ ${t.symbol}: top1 ${conc.top1Pct.toFixed(1)}% top10 ${conc.top10Pct.toFixed(1)}% · ${meta.holders} holders`);
     } catch (e) {

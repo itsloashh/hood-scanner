@@ -166,8 +166,9 @@ async function holderData(pool, info, state, now) {
   // the holders job (slow Blockscout calls, every 30 min) — fresh enough within 6h
   const job = (state.holdersFile ||= loadHolders()).coins?.[token];
   if (job?.conc && now - job.at < CONFIG.holdersJob.freshHours * HOUR) return { conc: job.conc, holdersCount: job.holdersCount, cached: true, fromJob: true };
-  // Blockscout already failing this run → don't spend 20s per coin finding that out again
-  if (state.health?.bsDown) return { conc: null, holdersCount: null, cached: false };
+  // Blockscout is slow, so normally only the holders job talks to it; a coin it hasn't
+  // reached yet uses the GeckoTerminal estimate (and can't be a buy) until the next job run
+  if (!CONFIG.holdersJob.scanFallback || state.health?.bsDown) return { conc: null, holdersCount: null, cached: false };
   const [meta, holders] = await Promise.all([
     bs.tokenMeta(token).catch(() => null),
     bs.topHolders(token).catch(() => []),
@@ -185,6 +186,9 @@ async function holderData(pool, info, state, now) {
 async function burnData(token, state, now) {
   const hit = state.burnCache[token];
   if (hit && now - hit.at < CONFIG.burns.cacheHours * HOUR) return hit;
+  const job = (state.holdersFile ||= loadHolders()).coins?.[token];
+  if (job?.recentBurns && now - job.at < CONFIG.holdersJob.freshHours * HOUR) return { at: job.at, ...job.recentBurns };
+  if (!CONFIG.holdersJob.scanFallback) return null;
   try {
     const r = await bs.recentBurns(token, now - CONFIG.burns.recentDays * DAY);
     state.burnCache[token] = { at: now, ...r };
