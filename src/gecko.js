@@ -63,12 +63,22 @@ export async function trendingPools(page = 1) {
   return parsePools(await getJson(`${base()}/trending_pools?page=${page}&${Q}`, opts()));
 }
 
+// One failed batch no longer throws away the others; only if every batch fails does it throw.
 export async function poolsMulti(addresses) {
   const out = [];
+  let failed = 0;
+  let lastErr = null;
+  const batches = Math.ceil(addresses.length / 30);
   for (let i = 0; i < addresses.length; i += 30) {
     const chunk = addresses.slice(i, i + 30).join(',');
-    out.push(...parsePools(await getJson(`${base()}/pools/multi/${chunk}?${Q}`, opts())));
+    try {
+      out.push(...parsePools(await getJson(`${base()}/pools/multi/${chunk}?${Q}`, opts())));
+    } catch (e) {
+      failed += 1;
+      lastErr = e;
+    }
   }
+  if (batches && failed === batches) throw lastErr;
   return out;
 }
 

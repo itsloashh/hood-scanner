@@ -56,7 +56,13 @@ export const R = {
   smartMinWinnerHits: 2,
   smartMinPrecision: 0.5, // ≥50% of a wallet's early buys (in our sample) were winners
   sprayMaxShare: 0.5, // wallet in >50% of analysed setups = bot, not skill
+  geckoMinIntervalMs: 3000, // slower than the scan: research has an hour and must not hit 429s
+  retryWaitSec: 60, // pause before retrying failed batches
+  minChartedCoins: 40, // fewer charts than this (or…
+  minChartedShare: 0.4, // …under 40% of coins) = data problem → keep yesterday's results
 };
+
+const fmtCap = (v) => (v >= 1e6 ? `$${v / 1e6}M` : `$${Math.round(v / 1e3)}k`);
 
 // ── step 1: candidate coins ─────────────────────────────────
 async function collectCoins(state) {
@@ -364,31 +370,59 @@ export async function main() {
   const coins = await collectCoins(state);
   log(`research: ${coins.length} candidate coins`);
 
-  // current price + market cap + pair info for every coin's pool
+  // Research has an hour, so it goes slower than the scan to stay under GeckoTerminal's limit
+  CONFIG.geckoMinIntervalMs = Math.max(CONFIG.geckoMinIntervalMs, R.geckoMinIntervalMs);
+
+  // current price + market cap + pair info for every coin's pool (retried: one failed batch used to blank the whole run)
   const live = new Map();
-  try {
-    for (const p of await gecko.poolsMulti(coins.map((c) => c.pool))) live.set(p.poolAddress, p);
-  } catch (e) {
-    log('pool refresh failed:', e.message);
+  for (let pass = 0; pass < 3; pass++) {
+    const todo = coins.filter((c) => !live.has(c.pool)).map((c) => c.pool);
+    if (!todo.length) break;
+    if (pass) await new Promise((r) => setTimeout(r, R.retryWaitSec * 1000));
+    try {
+      for (const p of await gecko.poolsMulti(todo)) live.set(p.poolAddress, p);
+    } catch (e) {
+      log(`pool refresh pass ${pass + 1} failed:`, e.message);
+    }
   }
 
-  // steps 2–3: setups from the daily charts
+  // steps 2–3: setups from the daily charts (failed charts get a second pass after a pause)
   const setups = [];
   const pumps = [];
-  for (const c of coins) {
+  const chartFailed = [];
+  let charted = 0;
+  const priced = coins.filter((c) => live.get(c.pool)?.priceUsd && live.get(c.pool)?.marketCap);
+  for (let pass = 0; pass < 2; pass++) {
+    const list = pass === 0 ? priced : chartFailed.splice(0);
+    if (pass && list.length) {
+      log(`retrying ${list.length} charts after a pause`);
+      await new Promise((r) => setTimeout(r, R.retryWaitSec * 1000));
+    }
+  for (const c of list) {
     const p = live.get(c.pool);
-    if (!p?.priceUsd || !p?.marketCap) continue;
     let candles = [];
     try {
       candles = await gecko.ohlcvDaily(c.pool, R.chartDays);
     } catch {
+      if (pass === 0) chartFailed.push(c);
       continue;
     }
+    charted += 1;
     const { tags, stockPaired } = tagNarratives(p);
     pumps.push(...pumpEvents(candles, { mcapFactor: p.marketCap / p.priceUsd }));
     for (const s of findSetups(candles, { mcapNow: p.marketCap, priceNow: p.priceUsd }, now)) {
       setups.push({ ...c, symbol: c.symbol || p.baseToken.symbol, themes: tags, stockPaired, setup: s });
     }
+  }
+  }
+  log(`research: charts for ${charted} of ${coins.length} coins (${priced.length} priced)`);
+
+  // Not enough data = a data-source problem, not a market finding. Keep yesterday's results.
+  if (charted < Math.max(R.minChartedCoins, coins.length * R.minChartedShare)) {
+    const msg = `🔬 DAILY RESEARCH — skipped today\n\nOnly ${charted} of ${coins.length} coin charts loaded (GeckoTerminal rate limit), so the results would be wrong. Yesterday's research (pullback odds, signals, smart wallets) is kept as-is. It retries on the next run, or send /research.`;
+    log(msg.replace(/\n/g, ' '));
+    await notify(msg);
+    return { coins: coins.length, charted, skipped: true };
   }
   const byLabel = (l) => setups.filter((s) => s.setup.label === l);
   log(`research: ${setups.length} setups → ${byLabel('WIN').length} wins (3–10x), ${byLabel('MOON').length} moons (>10x), ${byLabel('DUD').length} duds`);
@@ -491,7 +525,7 @@ export async function main() {
     `_Generated ${new Date(now).toISOString().slice(0, 16).replace('T', ' ')} UTC from ${coins.length} coins._`,
     '',
     `## The base rate`,
-    `${setups.length} times a coin matched our rules (21+ days old, $10k–$333k, 50%+ off its high, tight base with lows holding).`,
+    `${setups.length} times a coin matched our rules (${CONFIG.minAgeDays}+ days old, ${fmtCap(CONFIG.minMarketCap)}–${fmtCap(CONFIG.maxMarketCap)}, ${R.minDrawdownPct}%+ off its high, tight base with lows holding). Charts loaded for ${charted} of ${coins.length} coins.`,
     `- **${byLabel('WIN').length} went 3–10x** within 30 days (our target)`,
     `- ${moons.length} went past 10x (outliers — listed, not used to learn)`,
     `- ${byLabel('DUD').length} never reached 3x`,
@@ -569,7 +603,9 @@ export async function main() {
     ? `🧠 ${smart.length} smart wallet(s) caught multiple real winners early. The scanner now watches them.`
     : analysed.length
       ? '🧠 No repeat early buyers across real winners yet.'
-      : '🧠 Wallet history unavailable — check the BLOCKSCOUT_API_KEY secret.');
+      : setups.length
+        ? '🧠 Wallet history unavailable this run (Blockscout) — wallet research skipped.'
+        : '🧠 No setups to check wallets on this run.');
   const pbLine = PUMP_BUCKETS.map((b) => pb[b.key].n ? `+${b.key.replace('-', '–')}%: ${Math.round(pb[b.key].pPullback30 * 100)}% pulled back 30%+, gave back ~${Math.round(pb[b.key].retraceMedian * 100)}%` : null).filter(Boolean);
   if (pbLine.length) tg.push('', `📉 After pumps (${pumps.length} past examples):`, ...pbLine.map((l) => `• ${l}`));
   tg.push('', 'Full report: data/research/report.md in the repo');

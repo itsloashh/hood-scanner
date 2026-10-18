@@ -463,10 +463,12 @@ await test('API keys never appear in error messages (public logs)', async () => 
 });
 
 await test('research job runs end-to-end and writes a report', async () => {
-  const { main: research } = await import('../research/reverse-engineer.js');
+  const { main: research, R } = await import('../research/reverse-engineer.js');
+  Object.assign(R, { retryWaitSec: 0, geckoMinIntervalMs: 0, minChartedCoins: 1, minChartedShare: 0 });
   printed.length = 0;
   const r = await research();
   assert.ok(r.coins >= 1, 'no coins');
+  assert.ok(!r.skipped);
   const report = fs.readFileSync(path.join(process.env.DATA_DIR, 'research', 'report.md'), 'utf8');
   assert.match(report, /The base rate/);
   assert.match(printed.join('\n'), /DAILY RESEARCH/);
@@ -1020,6 +1022,20 @@ await test('position updates: a message each 10% step up or down, none for small
   assert.match(W.moveText(m[0]), /🔻 \$WOOD down −2\d\.\d% \(−\$6/);
   p.settings.moveStep = 0;
   assert.equal(at(pos.entry * 2).length, 0); // off
+});
+
+await test('research: too few charts loaded (rate limit) → keeps yesterday\'s results instead of overwriting', async () => {
+  const { main: research, R } = await import('../research/reverse-engineer.js');
+  const pb = path.join(process.env.DATA_DIR, 'research', 'pullbacks.json');
+  fs.mkdirSync(path.dirname(pb), { recursive: true });
+  fs.writeFileSync(pb, JSON.stringify({ events: 31, keep: 'me' }));
+  Object.assign(R, { retryWaitSec: 0, geckoMinIntervalMs: 0, minChartedCoins: 10_000, minChartedShare: 0 });
+  printed.length = 0;
+  const r = await research();
+  assert.equal(r.skipped, true);
+  assert.equal(JSON.parse(fs.readFileSync(pb, 'utf8')).keep, 'me');
+  assert.match(printed.join('\n'), /DAILY RESEARCH — skipped today/);
+  R.minChartedCoins = 1;
 });
 
 await test('case studies: finds launch runs and later base-breakout runs, judges them against our rules', async () => {
