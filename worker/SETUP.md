@@ -51,6 +51,7 @@ You should see **"✅ Telegram is connected."** Then send `/help` to your bot.
 - `/scan` — full scan now (results ~4 min; alerts only if something qualifies)
 - `/check 0x…` — full report on one coin, even if it fails your rules. Pasting an address works too.
 - `/research` — research job now (10–30 min)
+- `/signals` — every coin the bot has called: first call time + market cap, when each watch / buy / ignition / pump signal came, and whether it's hitting the 3x goal. Tap a coin for its full timeline. Also under /paper → 📜 Signals.
 - `/status` — what the last scan found (instant)
 - `/catalyst 0x… Robinhood app listing` — tag a coin with news for +6 score for 14 days (`/catalyst 0x… remove` to untag, `/catalyst` to list)
 - `/paper` — paper trading menu:

@@ -968,6 +968,40 @@ await test('utility tags: real product evidence, not just a name', async () => {
   assert.equal(nameOnly.kind, 'meme'); // a name alone isn't evidence
 });
 
+await test('/signals: one row per coin with every signal time, call price and outcome', async () => {
+  const W = await import('../worker/worker.js');
+  const t0 = Date.UTC(2026, 9, 17, 20, 0);
+  const state = {
+    scorecard: [
+      { token: '0xa', symbol: 'WOOD', tier: 'buy', lane: 'quality', at: t0, price: 1, mcap: 3_400_000, peakX: 3.2, lowX: 0.9, lastX: 2.8, outcome: 'win', score: 68 },
+      { token: '0xa', symbol: 'WOOD', tier: 'ignition', at: t0 + 3_600_000, price: 1.1, peakX: 2.9, lowX: 1, lastX: 2.5, outcome: null, score: 70 },
+      { token: '0xb', symbol: 'DUD', tier: 'watch', at: t0 + 7_200_000, price: 1, peakX: 1.1, lowX: 0.45, lastX: 0.5, outcome: 'stopped' },
+    ],
+    alerts: { '0xc': { at: t0 - 3_600_000, symbol: 'OLD', score: 66 } },
+  };
+  const list = W.buildSignals(state, { p: { '0xb': [0.5, 50_000, 9000, '0xbpool'] } });
+  assert.deepEqual(list.map((c) => c.symbol), ['DUD', 'WOOD', 'OLD']); // newest signal first
+  const wood = list.find((c) => c.symbol === 'WOOD');
+  assert.equal(wood.status.icon, '✅');
+  assert.ok(wood.firstOf.buy && wood.firstOf.ignition && !wood.firstOf.watch);
+  assert.equal(list.find((c) => c.symbol === 'DUD').status.icon, '❌');
+  assert.equal(list.find((c) => c.symbol === 'DUD').pool, '0xbpool');
+  assert.equal(list.find((c) => c.symbol === 'OLD').status.icon, '·'); // called before tracking
+  assert.match(W.when(t0), /Oct 17, 4:00 PM/); // Toronto time
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => (String(url).includes('state.json') ? new Response(JSON.stringify(state)) : new Response('{}', { status: 404 }));
+  try {
+    const scr = await W.signalsScreen({ GITHUB_REPO: 'x/y' }, 0, 'win');
+    assert.match(scr.text, /✅ \$WOOD — first called Oct 17, 4:00 PM at \$3\.4M mc/);
+    assert.ok(!scr.text.includes('DUD'));
+    const d = await W.signalDetail({ GITHUB_REPO: 'x/y' }, '0xa');
+    assert.match(d.text, /🟢 Buy zone — Oct 17, 4:00 PM/);
+    assert.match(d.text, /🔥 Ignition — Oct 17, 5:00 PM/);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
 await test('case studies: finds launch runs and later base-breakout runs, judges them against our rules', async () => {
   const { findRuns, wouldScannerCatch } = await import('../research/case-studies.js');
   const D = 86_400_000;

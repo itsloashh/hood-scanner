@@ -38,6 +38,7 @@ const HELP = [
   '/catalyst 0x… what happened — tag a coin with news (Robinhood listing, big follow…) for +6 score for 2 weeks',
   '   /catalyst 0x… remove — untag · /catalyst — list tags',
   '/paper — paper trading: place trade · TP/SL · positions · wallet · P/L',
+  '/signals — every coin the bot has called: when, at what price, and how it\'s doing',
   '/status — what the last scan found, instantly',
   '/help — this list',
   '',
@@ -50,6 +51,7 @@ const COMMANDS = [
   { command: 'research', description: 'Run the research job now' },
   { command: 'catalyst', description: 'Tag a coin with news: /catalyst 0x… listing' },
   { command: 'paper', description: 'Paper trading menu' },
+  { command: 'signals', description: 'Every coin called + how it did' },
   { command: 'status', description: 'What the last scan found' },
   { command: 'help', description: 'List commands' },
 ];
@@ -173,6 +175,8 @@ async function handleMessage(env, msg) {
     const r = await dispatch(env, 'catalyst.yml', { ca: ca.toLowerCase(), note });
     return reply(env, chatId, r.ok ? '⚡ Saving that catalyst — confirmation in about a minute.' : `❌ Couldn't save it. ${dispatchError(r)}`);
   }
+
+  if (cmd === '/signals') return sendScreen(env, chatId, await signalsScreen(env).catch((e) => ({ text: `Couldn't load signals: ${e.message}`, kb: [] })));
 
   if (cmd === '/paper') return sendScreen(env, chatId, await mainScreen(env));
 
@@ -490,7 +494,7 @@ export async function mainScreen(env) {
   const kb = [
     [btn('🛒 Place trade', 'pt'), btn('🎯 TP / SL', 'ts')],
     [btn('📂 Positions', 'pos'), btn('💰 Wallet', 'w')],
-    [btn('📊 P/L', 'pnl')],
+    [btn('📊 P/L', 'pnl'), btn('📜 Signals', 'sg:0:all')],
   ];
   return { text, kb };
 }
@@ -663,6 +667,134 @@ async function pnlScreen(env) {
   return { text: lines.filter((l) => l !== null).join('\n'), kb: [BACK] };
 }
 
+// ════════════════════════════════════════════════════════════
+//  SIGNALS — every coin the scanner has called, in one list (/signals)
+// ════════════════════════════════════════════════════════════
+const SIG_ICON = { watch: '👀', buy: '🟢', ignition: '🔥', pump: '🚀' };
+const SIG_NAME = { watch: 'Watch', buy: 'Buy zone', ignition: 'Ignition', pump: 'Pumping' };
+const SIG_ORDER = ['watch', 'buy', 'ignition', 'pump'];
+const SIG_PER_PAGE = 6;
+const SIG_FILTERS = { all: 'All', buy: '🟢 Buy', ignition: '🔥 Ignition', watch: '👀 Watch', win: '✅ Hit 3x' };
+
+export const when = (ms) =>
+  new Date(ms).toLocaleString('en-US', { timeZone: 'America/Toronto', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+
+async function rawJson(env, file) {
+  const res = await fetch(`https://raw.githubusercontent.com/${env.GITHUB_REPO}/main/data/${file}?t=${Math.floor(Date.now() / 60000)}`, { headers: { 'cache-control': 'no-cache' } });
+  return res.ok ? res.json() : null;
+}
+
+// Did it do what we want (3x from the first call before −50%)?
+export function signalStatus(e) {
+  if (!e) return { icon: '·', text: 'price not recorded (called before tracking started)' };
+  if (e.outcome === 'win') return { icon: '✅', text: `hit 3x (peak ${e.peakX.toFixed(2)}×)` };
+  if (e.outcome === 'stopped') return { icon: '❌', text: `fell 50% before 3x (peak ${e.peakX.toFixed(2)}×)` };
+  if (e.outcome === 'expired') return { icon: '⏹', text: `30 days up, ended ${e.lastX.toFixed(2)}× (peak ${e.peakX.toFixed(2)}×)` };
+  if (e.peakX >= 2) return { icon: '🚀', text: `on track — touched ${e.peakX.toFixed(2)}×, now ${e.lastX.toFixed(2)}×` };
+  if (e.lastX >= 1.2) return { icon: '📈', text: `up — now ${e.lastX.toFixed(2)}× (peak ${e.peakX.toFixed(2)}×)` };
+  if (e.lastX <= 0.75) return { icon: '📉', text: `down — now ${e.lastX.toFixed(2)}× (low ${e.lowX.toFixed(2)}×)` };
+  return { icon: '➖', text: `flat — now ${e.lastX.toFixed(2)}× (peak ${e.peakX.toFixed(2)}×)` };
+}
+
+// state.json (+ prices.json for market caps) → one row per coin, newest signal first
+export function buildSignals(state, prices = null) {
+  const by = new Map();
+  const coin = (token, symbol) => {
+    if (!by.has(token)) by.set(token, { token, symbol, events: [] });
+    return by.get(token);
+  };
+  for (const a of state.scorecard || []) {
+    let mcap = a.mcap;
+    const row = prices?.p?.[a.token];
+    if (!mcap && row?.[0] > 0 && row[1]) mcap = (row[1] * a.price) / row[0]; // back out the cap at the call
+    coin(a.token, a.symbol).events.push({ tier: a.tier, at: a.at, price: a.price, mcap, score: a.score, entry: a, lane: a.lane, kind: a.kind });
+  }
+  // alerts from before the scorecard existed (time only)
+  for (const [store, tier] of [[state.watchAlerts, 'watch'], [state.alerts, 'buy'], [state.ignitionAlerts, 'ignition'], [state.pumpAlerts, 'pump']]) {
+    for (const [token, v] of Object.entries(store || {})) {
+      const c = coin(token, v.symbol);
+      if (!c.events.some((e) => e.tier === tier && Math.abs(e.at - v.at) < 3_600_000)) c.events.push({ tier, at: v.at, score: v.score ?? null, legacy: true });
+    }
+  }
+  const out = [];
+  for (const c of by.values()) {
+    c.events.sort((x, y) => x.at - y.at);
+    c.first = c.events.find((e) => e.price) || c.events[0]; // outcome is measured from the first PRICED call
+    c.earliest = c.events[0];
+    c.pool = c.events.find((e) => e.entry?.pool)?.entry.pool || prices?.p?.[c.token]?.[3] || null;
+    c.lastAt = c.events.at(-1).at;
+    c.firstOf = Object.fromEntries(SIG_ORDER.map((t) => [t, c.events.find((e) => e.tier === t) || null]));
+    c.status = signalStatus(c.first.entry);
+    out.push(c);
+  }
+  return out.sort((a, b) => b.lastAt - a.lastAt);
+}
+
+function filterSignals(list, f) {
+  if (f === 'win') return list.filter((c) => c.first.entry?.outcome === 'win' || c.first.entry?.peakX >= 3);
+  if (SIG_ICON[f]) return list.filter((c) => c.firstOf[f]);
+  return list;
+}
+
+async function loadSignals(env) {
+  const [state, prices] = await Promise.all([rawJson(env, 'state.json'), rawJson(env, 'prices.json').catch(() => null)]);
+  if (!state) throw new Error("couldn't read the bot's data");
+  return buildSignals(state, prices);
+}
+
+export async function signalsScreen(env, page = 0, f = 'all') {
+  const all = await loadSignals(env);
+  const list = filterSignals(all, f);
+  const pages = Math.max(1, Math.ceil(list.length / SIG_PER_PAGE));
+  page = Math.min(Math.max(0, page), pages - 1);
+  const slice = list.slice(page * SIG_PER_PAGE, (page + 1) * SIG_PER_PAGE);
+  const wins = all.filter((c) => c.first.entry?.outcome === 'win').length;
+  const tracked = all.filter((c) => c.first.entry).length;
+  const L = [`SIGNALS · 📜 ${SIG_FILTERS[f] || 'All'} — ${list.length} coin(s)`, `Goal: 3x from the first call before −50%. ✅ ${wins} of ${tracked} tracked so far.`, ''];
+  if (!slice.length) L.push('Nothing here yet.');
+  for (const c of slice) {
+    const f0 = c.first;
+    L.push(`${c.status.icon} $${c.symbol} — first called ${when(c.earliest.at)}${c.earliest === f0 && f0.price ? ` at ${money(f0.mcap)} mc` : ''}`);
+    if (c.earliest !== f0 && f0.price) L.push(`   tracked from ${when(f0.at)} at ${money(f0.mcap)} mc`);
+    const times = SIG_ORDER.filter((t) => c.firstOf[t]).map((t) => `${SIG_ICON[t]} ${when(c.firstOf[t].at)}`);
+    L.push(`   ${times.join(' · ')}`);
+    L.push(`   ${c.status.text}`);
+    L.push('');
+  }
+  L.push('Tap a coin for its full timeline.');
+  const kb = [];
+  for (let i = 0; i < slice.length; i += 2) kb.push(slice.slice(i, i + 2).map((c) => btn(`${c.status.icon} $${c.symbol}`, `sd:${c.token}`)));
+  kb.push(Object.entries(SIG_FILTERS).filter(([k]) => k !== f).slice(0, 4).map(([k, label]) => btn(label, `sg:0:${k}`)));
+  const nav = [];
+  if (page > 0) nav.push(btn('◀️ Newer', `sg:${page - 1}:${f}`));
+  nav.push(btn(`${page + 1}/${pages} 🔄`, `sg:${page}:${f}`));
+  if (page < pages - 1) nav.push(btn('Older ▶️', `sg:${page + 1}:${f}`));
+  kb.push(nav);
+  return { text: L.join('\n'), kb };
+}
+
+export async function signalDetail(env, token) {
+  const c = (await loadSignals(env)).find((x) => x.token === token);
+  if (!c) return { text: 'SIGNALS · not found\n\nThat coin has no recorded signals.', kb: [[btn('⬅️ Signals', 'sg:0:all')]] };
+  const L = [`SIGNALS · ${c.status.icon} $${c.symbol}`, ''];
+  const lane = c.events.find((e) => e.lane)?.lane;
+  const kind = c.events.find((e) => e.kind)?.kind;
+  if (lane || kind) L.push(`${lane === 'quality' ? '🏛 Quality lane' : lane === 'micro' ? '🧪 Micro lane' : ''}${kind === 'utility' ? ' · 🛠 Utility' : ''}`.trim(), '');
+  L.push(`Outcome so far: ${c.status.text}`, '', '🕒 TIMELINE (Toronto time)');
+  for (const e of c.events) {
+    const bits = [`${SIG_ICON[e.tier] || '•'} ${SIG_NAME[e.tier] || e.tier} — ${when(e.at)}`];
+    if (e.price) bits.push(`at ${price(e.price)}${e.mcap ? ` · ${money(e.mcap)} mc` : ''}`);
+    if (e.score != null) bits.push(`score ${e.score}`);
+    L.push(bits.join(' · '));
+    if (e.entry && e.entry !== c.first.entry) L.push(`   from this call: now ${e.entry.lastX.toFixed(2)}× · peak ${e.entry.peakX.toFixed(2)}×${e.entry.outcome ? ` · ${e.entry.outcome}` : ''}`);
+    if (e.legacy) L.push('   (called before price tracking started)');
+  }
+  const pool = c.pool;
+  if (pool) L.push('', `Chart: https://www.geckoterminal.com/robinhood/pools/${pool}`);
+  L.push(`CA: ${c.token}`);
+  return { text: L.join('\n'), kb: [[btn('📝 Paper buy', `pc:${c.token}`)], [btn('⬅️ Signals', 'sg:0:all')]] };
+}
+
 async function sendScreen(env, chatId, scr) {
   return tg(env, 'sendMessage', { chat_id: chatId, text: scr.text, reply_markup: { inline_keyboard: scr.kb }, disable_web_page_preview: true });
 }
@@ -677,8 +809,10 @@ export async function handleCallback(env, cq) {
   let scr = null;
   let toast = '';
 
-  const p = await loadPaper(env);
-  if (!p) {
+  const p = op === 'sg' || op === 'sd' ? null : await loadPaper(env);
+  if (op === 'sg') scr = await signalsScreen(env, Number(a) || 0, b || 'all');
+  else if (op === 'sd') scr = await signalDetail(env, a);
+  else if (!p) {
     scr = needKV;
   } else if (op === 'm') scr = await mainScreen(env);
   else if (op === 'pt') scr = await placeScreen(env);
@@ -760,7 +894,7 @@ export async function handleCallback(env, cq) {
   await tg(env, 'answerCallbackQuery', { callback_query_id: cq.id, text: toast.slice(0, 190) });
   if (!scr) return;
   // menus edit themselves in place; taps on scanner alerts open a fresh menu message
-  if ((cq.message?.text || '').startsWith('PAPER ·')) {
+  if (/^(PAPER|SIGNALS) ·/.test(cq.message?.text || '')) {
     await tg(env, 'editMessageText', { chat_id: chatId, message_id: cq.message.message_id, text: scr.text, reply_markup: { inline_keyboard: scr.kb }, disable_web_page_preview: true });
   } else {
     await sendScreen(env, chatId, scr);

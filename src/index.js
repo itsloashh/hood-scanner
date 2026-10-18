@@ -416,7 +416,7 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
     await notify(ignitionMessage({ token, base, sig, pool }), { buttons: paperButtons(token) });
     state.ignitionAlerts[token] = { at: now, symbol: base.symbol };
     state.scorecard ||= [];
-    recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score, kind: base.kind, ethTrend: eth.trend }, now);
+    recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score, kind: base.kind, ethTrend: eth.trend, mcap: pool?.marketCap ?? null, pool: base.pool }, now);
     candidates.push({
       token, symbol: base.symbol, pool: base.pool, tier: 'ignition', score: base.score ?? null, price: sig.price,
       mcap, liquidity: pool?.liquidityUsd ?? null, change24h: pool?.change.h24 ?? null, washLikely: false, lane: base.lane,
@@ -587,14 +587,14 @@ export async function main() {
           : null;
         await priceCrossCheck(r);
         await notify(alertMessage({ ...r, tier: 'buy', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }), { buttons: paperButtons(token) });
-        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'buy', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend }, now);
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'buy', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend, mcap: pool.marketCap, pool: pool.poolAddress }, now);
         state.alerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.buy += 1;
         if (row) row.decision = 'BUY-ALERT';
       } else if (s >= watchBar && (s < buyBar || r.score.buyBlocked) && shouldAlert(state.watchAlerts, token, s, CONFIG.watchCooldownHours, now)) {
         await priceCrossCheck(r);
         await notify(alertMessage({ ...r, tier: 'watch', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings }), { buttons: paperButtons(token) });
-        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'watch', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend }, now);
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'watch', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend, mcap: pool.marketCap, pool: pool.poolAddress }, now);
         state.watchAlerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.watch += 1;
         if (row) row.decision = 'WATCH-ALERT';
@@ -633,7 +633,7 @@ export async function main() {
         { text: '📝 Buy now', data: `pc:${token}` },
       ]] });
       state.pumpAlerts[token] = { at: now, symbol: p.baseToken.symbol };
-      recordAlert(state.scorecard, { token, symbol: p.baseToken.symbol, tier: 'pump', lane: r.lane, price: p.priceUsd, score: r.score?.total, kind: r.kind, ethTrend: eth.trend }, now);
+      recordAlert(state.scorecard, { token, symbol: p.baseToken.symbol, tier: 'pump', lane: r.lane, price: p.priceUsd, score: r.score?.total, kind: r.kind, ethTrend: eth.trend, mcap: p.marketCap, pool: p.poolAddress }, now);
       runStats.pump += 1;
     }
 

@@ -7,10 +7,10 @@ import { CONFIG } from '../config.js';
 
 const DAY = 86_400_000;
 
-export function recordAlert(card, { token, symbol, tier, lane, price, score, kind = null, ethTrend = null }, now = Date.now()) {
+export function recordAlert(card, { token, symbol, tier, lane, price, score, kind = null, ethTrend = null, mcap = null, pool = null }, now = Date.now()) {
   if (!price || !token) return false;
   if (card.some((a) => a.token === token && a.tier === tier && !a.outcome)) return false; // already tracking this setup
-  card.push({ token, symbol, tier, lane: lane || null, kind, ethTrend, score: score ?? null, at: now, price, peakX: 1, lowX: 1, lastX: 1, outcome: null });
+  card.push({ token, symbol, tier, lane: lane || null, kind, ethTrend, score: score ?? null, at: now, price, mcap: mcap ? Math.round(mcap) : null, pool, peakX: 1, lowX: 1, lastX: 1, outcome: null });
   if (card.length > CONFIG.scorecard.maxEntries) card.splice(0, card.length - CONFIG.scorecard.maxEntries);
   return true;
 }
