@@ -57,6 +57,8 @@ export const R = {
   smartMinPrecision: 0.5, // ≥50% of a wallet's early buys (in our sample) were winners
   sprayMaxShare: 0.5, // wallet in >50% of analysed setups = bot, not skill
   geckoMinIntervalMs: 3000, // slower than the scan: research has an hour and must not hit 429s
+  chartBudgetMin: 25, // stop loading charts after 25 min…
+  walletBudgetMin: 45, // …and wallet history after 45, so it always saves before GitHub's 60-min kill
   retryWaitSec: 60, // pause before retrying failed batches
   minChartedCoins: 40, // fewer charts than this (or…
   minChartedShare: 0.4, // …under 40% of coins) = data problem → keep yesterday's results
@@ -363,6 +365,8 @@ export function pullbackStats(events) {
 
 export async function main() {
   const now = Date.now();
+  // GitHub kills the job at 60 min, before anything is saved — so research works to a budget
+  const overBudget = (min) => Date.now() - now > min * 60_000;
   const state = loadState();
   const outDir = path.join(DATA_DIR, 'research');
   fs.mkdirSync(outDir, { recursive: true });
@@ -399,6 +403,7 @@ export async function main() {
       await new Promise((r) => setTimeout(r, R.retryWaitSec * 1000));
     }
   for (const c of list) {
+    if (overBudget(R.chartBudgetMin)) break; // keep what's loaded; wallets + saving still need time
     const p = live.get(c.pool);
     let candles = [];
     try {
@@ -435,6 +440,10 @@ export async function main() {
   let blocked = false;
   for (const s of ranked.slice(0, R.maxWalletSetups)) {
     if (blocked) break;
+    if (overBudget(R.walletBudgetMin)) {
+      notes.push(`Stopped wallet research at the ${R.walletBudgetMin}-minute mark so the run finishes and saves (the rest next run).`);
+      break;
+    }
     try {
       const diag = {};
       const transfers = await bs.tokenTransfers(s.token, {
