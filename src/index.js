@@ -9,6 +9,8 @@ import { quickFilter, deepFilter, pumpFilter, ageDays, tally, laneOf, laneChartC
 import { pumpPlan, loadPullbacks } from './pump.js';
 import { loadHolders } from './holders-job.js';
 import { recordAlert, updateScorecard, summarize } from './scorecard.js';
+import { ethPriceFrom, recordEth, ethContext, ownMove, isEthPaired } from './eth.js';
+import { classify } from './utility.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { tagNarratives, clusterLeaders, rotationSignal } from './narrative.js';
@@ -264,6 +266,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false, catalyst
   let age = ageDays(pool.createdAt, now);
   if (chart?.firstCandleAt) age = Math.max(age ?? 0, (now - chart.firstCandleAt) / DAY);
 
+  const kind = classify({ info, pool, burns });
   const { tags, stockPaired } = tagNarratives(pool);
   const rotation = rotationSignal(pool, leaders);
   const score = filt.ok || force
@@ -278,7 +281,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false, catalyst
   if (score?.parts.inflatedHoldersPenalty) {
     filt.warnings.push(`Holder count looks padded — only ${usdOf(score.usdPerHolder)} of market cap per holder (airdropped dust wallets?)`);
   }
-  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, candles, age, narratives: tags, stockPaired, rotation, score, community, flow, burns, lane };
+  return { pool, info, conc, holdersCount, holderChangePct, filt, chart, candles, age, narratives: tags, stockPaired, rotation, score, community, flow, burns, lane, kind: kind.kind, kindWhy: kind.why, eth: state.eth };
 }
 
 // Second opinion on price before alerting: DexPaprika vs GeckoTerminal
@@ -342,7 +345,7 @@ function rememberQuietBase(state, r, now) {
   state.quietBases[token] = {
     pool: r.pool.poolAddress, symbol: r.pool.baseToken.symbol, lane: r.lane, at: now,
     baseHigh: r.chart.baseHigh, baseHourVol: r.chart.baseDailyVol / 24, drawdownPct: r.chart.drawdownPct,
-    volTrend: r.chart.volTrend, score: r.score.total, type: p.absorption ? 'absorption' : 'quiet',
+    volTrend: r.chart.volTrend, score: r.score.total, type: p.absorption ? 'absorption' : 'quiet', kind: r.kind,
   };
 }
 
@@ -374,7 +377,7 @@ export function ignitionSignal(base, hourly, { priceNow = null, movePct = null }
   return { fired, mult, aboveBasePct, movePct: move, price: px };
 }
 
-async function checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime = () => false) {
+async function checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime = () => false, eth = {}) {
   const g = CONFIG.ignition;
   for (const [t, b] of Object.entries(state.quietBases)) if (now - b.at > g.keepDays * DAY) delete state.quietBases[t];
   for (const [t, v] of Object.entries(state.ignitionAlerts)) if (now - v.at > 3 * DAY) delete state.ignitionAlerts[t];
@@ -391,7 +394,7 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
     if (pool?.priceUsd) {
       try {
         const hourly = await dp.hourly(base.pool, 24);
-        sig = ignitionSignal(base, hourly, { priceNow: pool.priceUsd, movePct: pool.change.h6 ?? pool.change.h1 });
+        sig = ignitionSignal(base, hourly, { priceNow: pool.priceUsd, movePct: ownMove(pool, pool.change.h6 ?? pool.change.h1, pool.change.h6 != null ? eth.h6 : null) });
         if (sig) state.health.ignitionSource.dexpaprika += 1;
       } catch (e) {
         log(`ignition ${base.symbol} (DexPaprika) failed: ${e.message}`);
@@ -413,7 +416,7 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
     await notify(ignitionMessage({ token, base, sig, pool }), { buttons: paperButtons(token) });
     state.ignitionAlerts[token] = { at: now, symbol: base.symbol };
     state.scorecard ||= [];
-    recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score }, now);
+    recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score, kind: base.kind, ethTrend: eth.trend }, now);
     candidates.push({
       token, symbol: base.symbol, pool: base.pool, tier: 'ignition', score: base.score ?? null, price: sig.price,
       mcap, liquidity: pool?.liquidityUsd ?? null, change24h: pool?.change.h24 ?? null, washLikely: false, lane: base.lane,
@@ -457,6 +460,7 @@ export async function main() {
   const reasons = {};
   let reg = { state: 'neutral', ratio: null };
   let prices = {};
+  let lastPools = [];
 
   try {
     // 1. Discover + scan
@@ -469,7 +473,15 @@ export async function main() {
     };
     await discover(state, now);
     const pools = await scanPools(state);
+    lastPools = pools;
     runStats.scanned = pools.length;
+    // ETH context: price from WETH-paired pools (free), trend from our own history
+    const ethPx = ethPriceFrom(pools);
+    state.eth = ethContext(state, ethPx, now);
+    recordEth(state, ethPx, now);
+    const eth = state.eth;
+    // filters judge a WETH-paired coin on its OWN move — ETH ripping isn't the coin pumping
+    const ownView = (p) => (eth.h24 == null || !isEthPaired(p) ? p : { ...p, change: { ...p.change, h24: ownMove(p, p.change.h24, eth.h24) } });
     log(`scanned ${pools.length} tokens on ${CONFIG.network}`);
     if (!pools.length) throw new Error('no pools returned — API down or network id changed');
 
@@ -510,7 +522,7 @@ export async function main() {
     const known = buildKnownTickers(state.knownTickers);
     const quick = [];
     for (const p of pools) {
-      const q = quickFilter(p, now);
+      const q = quickFilter(ownView(p), now);
       const copy = copycatOf(p, known);
       if (copy) {
         q.ok = false;
@@ -575,14 +587,14 @@ export async function main() {
           : null;
         await priceCrossCheck(r);
         await notify(alertMessage({ ...r, tier: 'buy', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }), { buttons: paperButtons(token) });
-        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'buy', lane: r.lane, price: pool.priceUsd, score: s }, now);
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'buy', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend }, now);
         state.alerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.buy += 1;
         if (row) row.decision = 'BUY-ALERT';
       } else if (s >= watchBar && (s < buyBar || r.score.buyBlocked) && shouldAlert(state.watchAlerts, token, s, CONFIG.watchCooldownHours, now)) {
         await priceCrossCheck(r);
         await notify(alertMessage({ ...r, tier: 'watch', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings }), { buttons: paperButtons(token) });
-        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'watch', lane: r.lane, price: pool.priceUsd, score: s }, now);
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'watch', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend }, now);
         state.watchAlerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         runStats.watch += 1;
         if (row) row.decision = 'WATCH-ALERT';
@@ -593,7 +605,7 @@ export async function main() {
     // 5b. Coins already pumping: pullback odds + entry zone (don't chase)
     const pullStats = loadPullbacks();
     const pumping = pools
-      .map((p) => ({ p, f: pumpFilter(p, now) }))
+      .map((p) => ({ p, f: pumpFilter(ownView(p), now) }))
       .filter((x) => x.f.ok && !copycatOf(x.p, known))
       .sort((a, b) => b.p.buyers24h - a.p.buyers24h)
       .slice(0, CONFIG.scan.maxPumpChecks);
@@ -621,14 +633,14 @@ export async function main() {
         { text: '📝 Buy now', data: `pc:${token}` },
       ]] });
       state.pumpAlerts[token] = { at: now, symbol: p.baseToken.symbol };
-      recordAlert(state.scorecard, { token, symbol: p.baseToken.symbol, tier: 'pump', lane: r.lane, price: p.priceUsd, score: r.score?.total }, now);
+      recordAlert(state.scorecard, { token, symbol: p.baseToken.symbol, tier: 'pump', lane: r.lane, price: p.priceUsd, score: r.score?.total, kind: r.kind, ethTrend: eth.trend }, now);
       runStats.pump += 1;
     }
 
     mark('pumps');
     // 5c. 🔥 IGNITION: hourly volume exploding out of a quiet base
     const poolByToken = new Map(pools.map((p) => [p.baseToken.address, p]));
-    if (!outOfTime()) await checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime);
+    if (!outOfTime()) await checkIgnition(state, poolByToken, candidates, runStats, now, outOfTime, eth);
 
     mark('ignition');
     // 6. Funnel record + daily digest
@@ -647,6 +659,7 @@ export async function main() {
         funnel: { runs: recent.length, scanned: avg('scanned'), quickPass: avg('quickPass'), deepPass: avg('deepPass'), reasons: reasonSum },
         buy24h: count(state.alerts), watch24h: count(state.watchAlerts),
         scorecard: summarize(state.scorecard),
+        eth,
         sinceLast: state.lastDigestAt
           ? { hours: Math.round((now - state.lastDigestAt) / HOUR), buy: Object.values(state.alerts).filter((a) => a.at > state.lastDigestAt).length, watch: Object.values(state.watchAlerts).filter((a) => a.at > state.lastDigestAt).length }
           : null,
@@ -664,6 +677,7 @@ export async function main() {
       http: Object.fromEntries(Object.entries(httpStats).map(([h, v]) => [h.split('.').slice(-2, -1)[0] || h, { calls: v.calls, sec: Math.round(v.ms / 1000), waitSec: Math.round(v.waitMs / 1000), backoffSec: Math.round(v.backoffMs / 1000), r429: v.r429 }])),
       phases: state.health.phases,
       scorecard: summarize(state.scorecard || []),
+      eth: state.eth,
       httpErrors, outOfTime: Boolean(state.health.outOfTime), seconds: Math.round((Date.now() - now) / 1000),
       blockscout: { key: bs.hasKey(), calls: bs.usage.calls },
       quietBases: Object.keys(state.quietBases).length,
@@ -686,6 +700,7 @@ export async function main() {
     for (const [t, v] of Object.entries(state.chartCache || {})) if (now - v.at > CONFIG.chartCacheMin * MIN) delete state.chartCache[t];
     saveWallets(w, now);
     saveCandidates(candidates, now);
+    if (lastPools.length) savePrices(lastPools, now);
     for (const [t, v] of Object.entries(state.pumpAlerts)) if (now - v.at > 3 * DAY) delete state.pumpAlerts[t];
     delete state.holdersFile; // read-only copy of data/holders.json, never saved into state
     saveState(state);
@@ -701,7 +716,7 @@ function candidateRow(r, tier, now) {
   return {
     token: p.baseToken.address, symbol: p.baseToken.symbol, pool: p.poolAddress, tier,
     score: r.score?.total ?? null, price: p.priceUsd, mcap: p.marketCap, liquidity: p.liquidityUsd,
-    change24h: p.change.h24, washLikely: Boolean(r.flow?.washLikely), lane: r.lane || laneOf(p.marketCap), at: new Date(now).toISOString(),
+    change24h: p.change.h24, washLikely: Boolean(r.flow?.washLikely), lane: r.lane || laneOf(p.marketCap), kind: r.kind || null, at: new Date(now).toISOString(),
   };
 }
 
@@ -719,6 +734,17 @@ function saveCandidates(fresh, now) {
   const coins = [...byToken.values()].sort((a, b) => (order[a.tier] ?? 9) - (order[b.tier] ?? 9) || (b.score ?? 0) - (a.score ?? 0));
   fs.mkdirSync(DATA_DIR, { recursive: true });
   fs.writeFileSync(file, JSON.stringify({ at: new Date(now).toISOString(), coins }, null, 1));
+}
+
+// data/prices.json — every scanned coin's price, for the Telegram paper menu when its own
+// price lookups get rate-limited (Cloudflare's shared IPs often hit GeckoTerminal's 429)
+function savePrices(pools, now) {
+  const p = {};
+  for (const x of pools) {
+    if (x.priceUsd > 0) p[x.baseToken.address] = [x.priceUsd, Math.round(x.marketCap || 0), Math.round(x.liquidityUsd || 0), x.poolAddress];
+  }
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  fs.writeFileSync(path.join(DATA_DIR, 'prices.json'), JSON.stringify({ at: new Date(now).toISOString(), p }));
 }
 
 function walletSummary(w) {

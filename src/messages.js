@@ -88,6 +88,7 @@ export function alertMessage(c) {
       ? `Scored ${score.total}, but ${score.buyBlockedWhy || 'its trading looks bot-driven'} — watch only for now.`
       : `Passed every safety check. ${Math.max(0, CONFIG.alertScore - score.total)} points short of the buy zone (${CONFIG.alertScore}).`);
   }
+  if (c.kind === 'utility') L.push(`🛠 UTILITY TOKEN — ${c.kindWhy.join(', ')}. Still judged by the same safety rules.`);
   if (score.lane === 'quality') L.push('🏛 QUALITY LANE — established coin with a real crowd, setting up a possible second leg.');
   else if (score.lane === 'micro') L.push('🧪 MICRO LANE — small survivor bounce. Small size only.');
   if (regime.state !== 'neutral') L.push(regime.state === 'risk-on' ? 'Market is heating up — bar lowered a little.' : 'Market is cooling — bar raised a little.');
@@ -174,6 +175,11 @@ export function alertMessage(c) {
     L.push(bullet('Chart data unavailable this scan'));
   }
   L.push(bullet(`Price today: ${pctTxt(pool.change.h24)}`));
+  const e = c.eth;
+  if (e?.price && /^w?eth$/i.test(pool.quoteToken?.symbol || '')) {
+    const own = e.h24 != null && pool.change.h24 != null ? ((1 + pool.change.h24 / 100) / (1 + e.h24 / 100) - 1) * 100 : null;
+    L.push(bullet(`Paired with ETH — ETH is ${e.h24 != null ? `${pctTxt(e.h24, 1)} today` : `$${Math.round(e.price)}`}${e.d7 != null ? `, ${pctTxt(e.d7, 1)} this week` : ''}${own != null ? ` → the coin's own move today: ${pctTxt(own)}` : ''}`));
+  }
 
   // Score breakdown
   L.push('', `📊 WHY ${score.total}`);
@@ -306,7 +312,7 @@ export function tradeMessage(ev) {
 }
 
 // ── daily summary ───────────────────────────────────────────
-export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch24h, walletStats, sinceLast, scorecard }) {
+export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch24h, walletStats, sinceLast, scorecard, eth }) {
   const start = CONFIG.paper.startingBankroll;
   const change = ((eq - start) / start) * 100;
   const L = [];
@@ -332,6 +338,9 @@ export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch2
   L.push(bullet(`${buy24h} buy-zone alert(s) · ${watch24h} watch alert(s)`));
   L.push(bullet(`${funnel.runs} scans ran. A typical scan looked at ${funnel.scanned} coins → ${funnel.quickPass} survived the junk filter → ${funnel.deepPass} passed the full safety check`));
   const mood = { 'risk-on': 'heating up', 'risk-off': 'cooling off', neutral: 'normal' }[regime.state] || regime.state;
+  if (eth?.price) {
+    L.push(bullet(`ETH $${Math.round(eth.price).toLocaleString('en-US')}${eth.h24 != null ? ` · ${pctTxt(eth.h24, 1)} 24h` : ''}${eth.d7 != null ? ` · ${pctTxt(eth.d7, 1)} 7d` : ''} — ${{ strong: 'tailwind for ETH-paired coins', weak: 'headwind for ETH-paired coins', flat: 'no big ETH push either way', unknown: 'trend builds as history collects' }[eth.trend]}`));
+  }
   L.push(bullet(`Chain-wide trading is ${mood}${regime.ratio ? ` (${regime.ratio.toFixed(2)}× the usual volume)` : ''}`));
 
   if (scorecard && Object.keys(scorecard).length) {

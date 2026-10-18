@@ -288,7 +288,25 @@ export async function priceMap(env, items) {
     const d = await dpToken(x.token);
     if (d?.price > 0) out[x.pool.toLowerCase()] = { price: d.price, liq: d.liq, mcap: d.fdv, source: 'live' };
   }
-  const still = list.filter((x) => !out[x.pool.toLowerCase()]);
+  let still = list.filter((x) => !out[x.pool.toLowerCase()]);
+  // Every scan publishes all ~400 coin prices (data/prices.json) — reliable even when this
+  // Worker's own lookups are rate-limited
+  if (still.length && env) {
+    try {
+      const res = await fetch(`https://raw.githubusercontent.com/${env.GITHUB_REPO}/main/data/prices.json?t=${Math.floor(Date.now() / 60000)}`);
+      const j = res.ok ? await res.json() : null;
+      const ageMin = j?.at ? (Date.now() - Date.parse(j.at)) / 60000 : Infinity;
+      if (ageMin < 40) {
+        for (const x of still) {
+          const row = j.p[(x.token || '').toLowerCase()] || Object.values(j.p).find((r) => r[3] === x.pool.toLowerCase());
+          if (row?.[0] > 0) out[x.pool.toLowerCase()] = { price: row[0], liq: row[2] || null, mcap: row[1] || null, source: 'scan', ageMin: Math.round(ageMin) };
+        }
+      } else if (j) priceErrors.push(`last scan prices ${Math.round(ageMin)} min old`);
+    } catch (e) {
+      priceErrors.push(`scan prices unreadable (${String(e.message).slice(0, 40)})`);
+    }
+    still = list.filter((x) => !out[x.pool.toLowerCase()]);
+  }
   if (still.length && env) {
     const cands = await candidates(env);
     for (const x of still) {
@@ -504,7 +522,7 @@ async function coinScreen(env, token) {
   const lines = [
     `PAPER · 🛒 BUY $${c.symbol}`,
     '',
-    q?.price ? `Price ${price(q.price)} · market cap ${money(q.mcap ?? c.mcap)}${q.source === 'scan' ? ' (from the last scan)' : ''}` : `⚠️ ${noPriceMsg()}`,
+    q?.price ? `Price ${price(q.price)} · market cap ${money(q.mcap ?? c.mcap)}${q.source === 'scan' ? ` (from the last scan${q.ageMin != null ? `, ${q.ageMin} min ago` : ''})` : ''}` : `⚠️ ${noPriceMsg()}`,
     (q?.mcap ?? c.mcap) ? `🎯 3x = ${money((q?.mcap ?? c.mcap) * 3)} mc · 10x = ${money((q?.mcap ?? c.mcap) * 10)} mc` : null,
     c.score != null ? `Scanner: ${c.tier} · ${c.score}/100` : null,
     c.entry ? `🚀 Pumping — suggested limit buy ${price(c.entry.mid)} (zone ${price(c.entry.top)} → ${price(c.entry.deep)}), stop ${price(c.entry.stop)}` : null,

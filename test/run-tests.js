@@ -916,6 +916,58 @@ await test('paper prices: GeckoTerminal blocked → falls back to last scan pric
   globalThis.fetch = prevFetch;
 });
 
+await test('paper prices: GeckoTerminal 429 + DexPaprika 402 → price from the scan-wide price file', async () => {
+  const W = await import('../worker/worker.js');
+  const kv = new Map();
+  const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_REPO: 'x/y', PAPER: { get: async (k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null), put: async (k, v) => kv.set(k, v) } };
+  const sent = [];
+  const prevFetch = globalThis.fetch;
+  const tok = '0x' + 'c'.repeat(40);
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) { sent.push(JSON.parse(init.body || '{}')); return new Response('{"ok":true}'); }
+    if (url.includes('geckoterminal')) return new Response('slow down', { status: 429 });
+    if (url.includes('dexpaprika')) return new Response('pay', { status: 402 });
+    if (url.includes('candidates.json')) return new Response(JSON.stringify({ coins: [{ token: tok, symbol: 'WOOD', pool: '0xwp', tier: 'buy', score: 68, price: 0.0034, mcap: 3.4e6, at: new Date(Date.now() - 3 * 3_600_000).toISOString() }] }));
+    if (url.includes('prices.json')) return new Response(JSON.stringify({ at: new Date(Date.now() - 6 * 60000).toISOString(), p: { [tok]: [0.0035, 3_500_000, 340_000, '0xwp'] } }));
+    return new Response('{}', { status: 404 });
+  };
+  try {
+    const tap = (data) => W.handleCallback(env, { id: 'c', data, message: { chat: { id: 111 }, message_id: 1, text: 'PAPER · x' } });
+    await tap(`pc:${tok}`);
+    assert.match(sent.at(-1).text, /Price \$0\.00350 .*from the last scan, 6 min ago/);
+    await tap(`pb:${tok}:p10`);
+    assert.equal(JSON.parse(kv.get('paper')).positions.length, 1);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
+await test('ETH context: price from WETH pools, a coin judged on its own move, trend from history', async () => {
+  const e = await import('../src/eth.js');
+  const weth = (q) => ({ quoteToken: { symbol: 'WETH' }, quotePriceUsd: q });
+  assert.equal(e.ethPriceFrom([weth(4000), weth(4010), weth(9999), { quoteToken: { symbol: 'USDG' }, quotePriceUsd: 1 }]), 4010);
+  const p = { quoteToken: { symbol: 'WETH' } };
+  assert.ok(Math.abs(e.ownMove(p, 30, 20) - 8.33) < 0.1); // +30% while ETH +20% → ~+8% of its own
+  assert.equal(e.ownMove({ quoteToken: { symbol: 'USDG' } }, 30, 20), 30); // stable-paired: no adjustment
+  const st = {};
+  const t0 = Date.now() - 8 * 86_400_000;
+  for (let i = 0; i <= 16 * 8; i++) e.recordEth(st, 3000 + i * 5, t0 + i * 90 * 60_000);
+  const c = e.ethContext(st, 3700, t0 + 8 * 86_400_000);
+  assert.ok(c.d7 > 8 && c.trend === 'strong', JSON.stringify(c));
+});
+
+await test('utility tags: real product evidence, not just a name', async () => {
+  const { classify } = await import('../src/utility.js');
+  const u = classify({ info: { categories: ['DeFi'], description: 'A launchpad protocol: 80% of fees fund a buyback.', websites: ['https://docs.example.xyz'] }, pool: { baseToken: { name: 'Pons' } }, burns: { recent: { count: 6 } } });
+  assert.equal(u.kind, 'utility');
+  assert.ok(u.why.length >= 3);
+  const m = classify({ info: { categories: ['Meme'], description: 'The most community-driven frog on Robinhood. No utility, just vibes.', websites: ['https://frog.fun'] }, pool: { baseToken: { name: 'Frog' } }, burns: null });
+  assert.equal(m.kind, 'meme');
+  const nameOnly = classify({ info: { categories: [], description: '' }, pool: { baseToken: { name: 'Moon Finance' } }, burns: null });
+  assert.equal(nameOnly.kind, 'meme'); // a name alone isn't evidence
+});
+
 await test('case studies: finds launch runs and later base-breakout runs, judges them against our rules', async () => {
   const { findRuns, wouldScannerCatch } = await import('../research/case-studies.js');
   const D = 86_400_000;

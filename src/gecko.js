@@ -30,6 +30,7 @@ export function parsePools(json) {
       baseToken: tokens.get(baseId) || { address: addrFromId(baseId), symbol: a.name?.split(' / ')[0], name: null },
       quoteToken: tokens.get(quoteId) || { address: addrFromId(quoteId), symbol: a.name?.split(' / ')[1], name: null },
       priceUsd: num(a.base_token_price_usd),
+      quotePriceUsd: num(a.quote_token_price_usd), // = ETH price on WETH-paired pools
       marketCap: num(a.market_cap_usd) ?? num(a.fdv_usd),
       marketCapIsFdv: a.market_cap_usd == null,
       liquidityUsd: num(a.reserve_in_usd),
@@ -124,6 +125,7 @@ export async function tokenInfo(address) {
     devAddress: a.developer_address?.toLowerCase() || null,
     devPct: num(a.developer_holding_percentage),
     categories: a.categories || [],
+    description: typeof a.description === 'string' ? a.description.slice(0, 600) : null,
   };
 }
 

@@ -46,4 +46,4 @@ jobs:
 
       - name: Save dataset + paper trades
         if: always() && (inputs.ca == '' || inputs.ca == null)
-        run: scripts/save-data.sh "scan $(date -u +%Y-%m-%dT%H:%MZ)" data/state.json data/wallets.json data/candidates.json data/snapshots data/trades.csv
+        run: scripts/save-data.sh "scan $(date -u +%Y-%m-%dT%H:%MZ)" data/state.json data/wallets.json data/candidates.json data/prices.json data/snapshots data/trades.csv

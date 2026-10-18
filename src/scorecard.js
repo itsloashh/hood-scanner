@@ -7,10 +7,10 @@ import { CONFIG } from '../config.js';
 
 const DAY = 86_400_000;
 
-export function recordAlert(card, { token, symbol, tier, lane, price, score }, now = Date.now()) {
+export function recordAlert(card, { token, symbol, tier, lane, price, score, kind = null, ethTrend = null }, now = Date.now()) {
   if (!price || !token) return false;
   if (card.some((a) => a.token === token && a.tier === tier && !a.outcome)) return false; // already tracking this setup
-  card.push({ token, symbol, tier, lane: lane || null, score: score ?? null, at: now, price, peakX: 1, lowX: 1, lastX: 1, outcome: null });
+  card.push({ token, symbol, tier, lane: lane || null, kind, ethTrend, score: score ?? null, at: now, price, peakX: 1, lowX: 1, lastX: 1, outcome: null });
   if (card.length > CONFIG.scorecard.maxEntries) card.splice(0, card.length - CONFIG.scorecard.maxEntries);
   return true;
 }
@@ -37,10 +37,11 @@ export function updateScorecard(card, prices, now = Date.now()) {
   return done;
 }
 
-export function summarize(card, now = Date.now()) {
+// by = how to group: tier+lane (default), or e.g. a => a.kind / a => `ETH ${a.ethTrend}`
+export function summarize(card, by = (a) => `${a.tier}${a.lane ? `/${a.lane}` : ''}`) {
   const groups = {};
   for (const a of card) {
-    const k = `${a.tier}${a.lane ? `/${a.lane}` : ''}`;
+    const k = by(a) || 'unknown';
     const g = (groups[k] ||= { n: 0, win: 0, stopped: 0, expired: 0, open: 0, hit2x: 0, peakSum: 0 });
     g.n += 1;
     g[a.outcome || 'open'] += 1;
