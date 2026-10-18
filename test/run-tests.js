@@ -1002,6 +1002,26 @@ await test('/signals: one row per coin with every signal time, call price and ou
   }
 });
 
+await test('position updates: a message each 10% step up or down, none for small wiggles', async () => {
+  const W = await import('../worker/worker.js');
+  const p = W.freshPaper(Date.now(), 100);
+  const { pos } = W.openPosition(p, { token: '0xw', symbol: 'WOOD', pool: '0xwp', px: 1, size: 30 });
+  const at = (px) => { pos.last = px; return W.positionMoves(p, { '0xwp': { price: px } }); };
+  assert.equal(at(pos.entry * 1.05).length, 0); // +5%: quiet
+  let m = at(pos.entry * 1.12);
+  assert.equal(m.length, 1);
+  assert.match(W.moveText(m[0]), /📈 \$WOOD up \+1[12]\.\d% \(\+\$3\.\d\d\)/);
+  assert.equal(at(pos.entry * 1.15).length, 0); // same band: no repeat
+  m = at(pos.entry * 1.31);
+  assert.match(W.moveText(m[0]), /up \+31/);
+  m = at(pos.entry * 1.08);
+  assert.match(W.moveText(m[0]), /back near breakeven/);
+  m = at(pos.entry * 0.78);
+  assert.match(W.moveText(m[0]), /🔻 \$WOOD down −2\d\.\d% \(−\$6/);
+  p.settings.moveStep = 0;
+  assert.equal(at(pos.entry * 2).length, 0); // off
+});
+
 await test('case studies: finds launch runs and later base-breakout runs, judges them against our rules', async () => {
   const { findRuns, wouldScannerCatch } = await import('../research/case-studies.js');
   const D = 86_400_000;

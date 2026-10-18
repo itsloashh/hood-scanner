@@ -29,7 +29,7 @@ Telegram → a free Cloudflare Worker → GitHub Actions.
 5. **Paper wallet storage (KV):** go to **Storage & Databases → KV → Create** (name it `hood-paper`).
    Back in the Worker: **Settings → Bindings → Add → KV namespace**, set the **Variable name** to `PAPER`, pick `hood-paper`, and **Deploy**.
 6. **Clock:** go to Worker **Settings → Triggers → Cron Triggers → Add** and add both:
-   - `*/15 * * * *` (scan + paper TP/SL check every 15 min)
+   - `*/5 * * * *` (paper TP/SL + position updates every 5 min; a scan every 15 min)
    - `23 14 * * *` (daily research)
 
 ## Phone-friendly alternative to pasting code (recommended)
@@ -61,7 +61,7 @@ You should see **"✅ Telegram is connected."** Then send `/help` to your bot.
   - **💰 Wallet** — cash, money in positions, money reserved for limit orders, total vs your starting amount (reset to $30 / $100 / $1k / $10k)
   - **📊 P/L** — locked-in vs open profit, win rate, best/worst, last trades
   Every scanner alert also has **📝 Paper buy** / **📋 Paper menu** buttons. Pumping-coin alerts have **Paper limit buy @ entry**.
-  Every 15 minutes the Worker marks positions to market and runs your TP/SL/trailing stops and limit fills, messaging you on each fill.
+  Every 5 minutes the Worker marks positions to market, sends a 📈/📉 update each time a trade moves another 10% (change it under 🎯 TP / SL → Updates 5% / 10% / 20% / Off) and runs your TP/SL/trailing stops and limit fills, messaging you on each fill.
 
 Only your chat ID can use it — anyone else is silently ignored. Requests that don't carry
 your `WEBHOOK_SECRET` are rejected, so nobody can fake Telegram messages to the Worker.

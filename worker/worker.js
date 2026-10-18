@@ -190,7 +190,7 @@ async function handleMessage(env, msg) {
 //  PAPER TRADING (Telegram buttons + KV)
 // ════════════════════════════════════════════════════════════
 const GT = 'https://api.geckoterminal.com/api/v2/networks/robinhood';
-const DEFAULTS = { start: 30, sizePct: 10, sl: -50, tp1: 3, tp1Sell: 50, tp2: 5, tp2Sell: 25, runner: 10, trail: 40, slip: 3, orderHours: 48 };
+const DEFAULTS = { start: 30, moveStep: 10, sizePct: 10, sl: -50, tp1: 3, tp1Sell: 50, tp2: 5, tp2Sell: 25, runner: 10, trail: 40, slip: 3, orderHours: 48 };
 const money = (v) => {
   if (v == null || !Number.isFinite(v)) return '—';
   const a = Math.abs(v);
@@ -457,10 +457,67 @@ export async function paperTick(env, now = Date.now()) {
   const prices = await priceMap(env, [...p.positions, ...p.orders]);
   const evs = [...tickOrders(p, prices, now)];
   for (const pos of [...p.positions]) evs.push(...tickPosition(p, pos, prices[pos.pool], now));
+  const moves = positionMoves(p, prices, now);
   await savePaper(env, p);
   for (const e of evs) await reply(env, env.ALLOWED_CHAT_ID, eventText(e));
-  return evs;
+  for (const m of moves) {
+    await tg(env, 'sendMessage', { chat_id: env.ALLOWED_CHAT_ID, text: moveText(m), reply_markup: { inline_keyboard: moveButtons(m.pos.id) }, disable_web_page_preview: true });
+  }
+  return [...evs, ...moves];
 }
+
+// ── live position updates: a message each time a trade's P/L crosses another step (default 10%)
+// in either direction, so scalps and swings stay in the loop without opening the menu.
+export function positionPnl(pos) {
+  const value = posValue(pos) + pos.realized;
+  return { value, pnl: value - pos.size, pct: ((value - pos.size) / pos.size) * 100 };
+}
+
+export function positionMoves(p, prices, now = Date.now()) {
+  const step = Number(p.settings.moveStep) || 0;
+  if (!step) return [];
+  const out = [];
+  for (const pos of p.positions) {
+    if (!prices[pos.pool]?.price) continue; // no fresh price → no update
+    const { pnl, pct } = positionPnl(pos);
+    const band = Math.trunc(pct / step); // +10.3% → 1 · −24% → −2 · ±9% → 0
+    if (pos.band == null) pos.band = 0;
+    if (band !== pos.band) {
+      out.push({ pos, pct, pnl, band, prevBand: pos.band, step, held: now - pos.openedAt, source: prices[pos.pool].source, ageMin: prices[pos.pool].ageMin });
+      pos.band = band;
+    }
+  }
+  return out;
+}
+
+const heldFor = (ms) => {
+  const m = Math.max(0, Math.round(ms / 60000));
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  return h < 48 ? `${h}h ${m % 60}m` : `${Math.floor(h / 24)}d ${h % 24}h`;
+};
+
+export function moveText(m) {
+  const { pos, pct, pnl, band, prevBand } = m;
+  const up = band > prevBand;
+  let head;
+  if (band === 0) head = `${up ? '↗️' : '↘️'} $${pos.symbol} back near breakeven (${pctS(pct)}, ${signed(pnl)})`;
+  else if (pct > 0) head = `${up ? '📈' : '📉'} $${pos.symbol} ${up ? 'up' : 'pulled back to'} ${pctS(pct)} (${signed(pnl)})`;
+  else head = `${up ? '↗️' : '🔻'} $${pos.symbol} ${up ? 'recovering' : 'down'} ${pctS(pct)} (${signed(pnl)})`;
+  const stopPx = pos.entry * (1 + pos.sl / 100);
+  const lines = [
+    head,
+    `Entry ${price(pos.entry)} → now ${price(pos.last)} · ${Math.round(pos.rem * 100)}% still held, worth ${money(posValue(pos))}${pos.realized ? ` (+${money(pos.realized)} already taken)` : ''}`,
+    `Held ${heldFor(m.held)} · stop ${price(stopPx)}${pos.tps.find((t) => !t.hit) ? ` · next target ${pos.tps.find((t) => !t.hit).x}x` : ''}`,
+  ];
+  if (m.source === 'scan') lines.push(`(price from the last scan${m.ageMin != null ? `, ${m.ageMin} min ago` : ''})`);
+  return lines.join('\n');
+}
+
+const moveButtons = (id) => [
+  [btn('Sell 25%', `px:${id}:25`), btn('Sell 50%', `px:${id}:50`), btn('Sell all', `px:${id}:100`)],
+  [btn('SL → breakeven', `pS:${id}:0`), btn('📂 Position', `po:${id}`)],
+];
 
 function eventText(e) {
   if (e.type === 'filled') return `📝 Limit order filled · $${e.symbol}\nBought ${money(e.pos.size)} at ${price(e.limit)}. TP/SL are active — /paper → Positions.`;
@@ -557,6 +614,7 @@ function tpslScreen(p) {
     `Take profit 2: sell ${st.tp2Sell}% at ${st.tp2}x`,
     `Runner: rest sells at ${st.runner}x, or if it drops ${st.trail}% from its peak after TP1`,
     `Default size for limit buys: ${st.sizePct}% of cash`,
+    `Position updates: ${Number(st.moveStep) ? `every ${st.moveStep}% move (up or down)` : 'off'}`,
     '',
     'Change an open trade\'s TP/SL under 📂 Positions.',
   ].join('\n');
@@ -565,6 +623,7 @@ function tpslScreen(p) {
     [2, 3, 4].map((v) => btn(`${mark(st.tp1, v)}TP1 ${v}x`, `st:${v}`)),
     [5, 10, 20].map((v) => btn(`${mark(st.runner, v)}Runner ${v}x`, `sr:${v}`)),
     [5, 10, 25].map((v) => btn(`${mark(st.sizePct, v)}Size ${v}%`, `sz:${v}`)),
+    [...[5, 10, 20].map((v) => btn(`${mark(Number(st.moveStep), v)}Updates ${v}%`, `sm:${v}`)), btn(`${mark(Number(st.moveStep), 0)}Off`, 'sm:0')],
     BACK,
   ];
   return { text, kb };
@@ -873,8 +932,8 @@ export async function handleCallback(env, cq) {
       toast = op === 'pS' ? `Stop set to ${Number(b) === 0 ? 'breakeven' : `${b}%`}` : `TP1 set to ${b}x`;
     }
     scr = positionScreen(p, Number(a));
-  } else if (['ss', 'st', 'sr', 'sz'].includes(op)) {
-    const key = { ss: 'sl', st: 'tp1', sr: 'runner', sz: 'sizePct' }[op];
+  } else if (['ss', 'st', 'sr', 'sz', 'sm'].includes(op)) {
+    const key = { ss: 'sl', st: 'tp1', sr: 'runner', sz: 'sizePct', sm: 'moveStep' }[op];
     p.settings[key] = Number(a);
     await savePaper(env, p);
     toast = 'Saved';
@@ -904,10 +963,13 @@ export async function handleCallback(env, cq) {
 export default {
   // Cloudflare Cron Triggers — reliable clock (GitHub schedules can lag for hours)
   async scheduled(event, env, ctx) {
+    // Clock: this fires every 5 min. Paper positions (TP/SL + move updates) every 5 min;
+    // a scan every 15 min; the holder-list job every 30 min; research daily.
+    const minute = new Date(event.scheduledTime || Date.now()).getUTCMinutes();
     const job = event.cron === '23 14 * * *' ? 'research.yml' : 'scan.yml';
     if (job === 'scan.yml' && env.PAPER) ctx.waitUntil(paperTick(env).catch(() => {}));
-    // every 30 min: the slow Blockscout holder-list job (GitHub's own schedule is unreliable)
-    const minute = new Date(event.scheduledTime || Date.now()).getUTCMinutes();
+    // older 15-min cron setups dispatch every time; the 5-min cron only on quarter hours
+    if (job === 'scan.yml' && event.cron === '*/5 * * * *' && minute % 15 >= 5) return;
     if (job === 'scan.yml' && minute % 30 < 15) ctx.waitUntil(dispatch(env, 'holders.yml').catch(() => {}));
     ctx.waitUntil(
       dispatch(env, job).then(async (r) => {

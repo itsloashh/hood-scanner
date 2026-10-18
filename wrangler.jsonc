@@ -13,7 +13,7 @@
   },
   // The bot's clock: scan + paper TP/SL every 15 min, research daily ~10:23 AM Toronto
   "triggers": {
-    "crons": ["*/15 * * * *", "23 14 * * *"]
+    "crons": ["*/5 * * * *", "23 14 * * *"]
   },
   // Paper wallet storage (KV namespace "hood-paper")
   "kv_namespaces": [
