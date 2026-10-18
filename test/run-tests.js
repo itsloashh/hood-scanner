@@ -1038,6 +1038,25 @@ await test('research: too few charts loaded (rate limit) → keeps yesterday\'s 
   R.minChartedCoins = 1;
 });
 
+await test('research history: runs add up instead of replacing each other; wallet data survives a Blockscout-less day', async () => {
+  const { mergeHistory, loadHistory } = await import('../research/reverse-engineer.js');
+  const h = loadHistory('/nonexistent');
+  const D = 86_400_000;
+  const mk = (token, day, label, extra = {}) => ({ token, symbol: token.toUpperCase(), themes: [], setup: { t: day * D, label, peakX: label === 'WIN' ? 4 : 1.2, volRatio: 1 }, ...extra });
+  const tx = { covered: true, realBuyers: 40, buyerGrowthPct: 80, washLikely: false, overlap: 0.1, burnsPre: 0, burnsDuring: 0, wallets: new Map() };
+  let r = mergeHistory(h, [mk('a', 1, 'WIN', { tx }), mk('b', 2, 'DUD')], [{ token: 'a', t: 5, gain: 1 }]);
+  assert.deepEqual(r, { setups: 2, pumps: 1 });
+  // a rate-limited day: only one coin loaded, no wallet data
+  r = mergeHistory(h, [mk('a', 1, 'WIN')], [{ token: 'a', t: 5, gain: 1 }, { token: 'c', t: 9, gain: 2 }]);
+  assert.deepEqual(r, { setups: 0, pumps: 1 });
+  assert.equal(Object.keys(h.setups).length, 2); // b is still there
+  const a = Object.values(h.setups).find((x) => x.token === 'a');
+  assert.equal(a.tx.realBuyers, 40); // kept from the earlier run
+  assert.ok(a.catalysts.some((c) => c.key === 'buyerSurge'));
+  assert.equal(Object.keys(h.pumps).length, 2);
+  assert.equal(h.runs, 2);
+});
+
 await test('case studies: finds launch runs and later base-breakout runs, judges them against our rules', async () => {
   const { findRuns, wouldScannerCatch } = await import('../research/case-studies.js');
   const D = 86_400_000;

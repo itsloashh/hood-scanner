@@ -60,8 +60,8 @@ export const R = {
   chartBudgetMin: 25, // stop loading charts after 25 min…
   walletBudgetMin: 45, // …and wallet history after 45, so it always saves before GitHub's 60-min kill
   retryWaitSec: 60, // pause before retrying failed batches
-  minChartedCoins: 40, // fewer charts than this (or…
-  minChartedShare: 0.4, // …under 40% of coins) = data problem → keep yesterday's results
+  minChartedCoins: 10, // fewer charts than this (or…
+  minChartedShare: 0.1, // …under 10% of coins) = data problem → skip (partial days just add to the history)
 };
 
 const fmtCap = (v) => (v >= 1e6 ? `$${v / 1e6}M` : `$${Math.round(v / 1e3)}k`);
@@ -363,6 +363,52 @@ export function pullbackStats(events) {
   return buckets;
 }
 
+// ── research history (data/research/history.json) ──────────────────────────
+// Setups keyed token:date and pumps keyed token:time, so reruns update and partial
+// (rate-limited) days only add. Wallet summaries survive days when Blockscout is down.
+const readJson = (file) => {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+};
+export const loadHistory = (outDir) => {
+  const h = readJson(path.join(outDir, 'history.json')) || {};
+  return { setups: h.setups || {}, pumps: h.pumps || {}, runs: h.runs || 0 };
+};
+export const saveHistory = (outDir, h) => fs.writeFileSync(path.join(outDir, 'history.json'), JSON.stringify(h));
+const dayKey = (t) => new Date(t).toISOString().slice(0, 10);
+export const txSummary = (tx) =>
+  tx ? { covered: tx.covered, realBuyers: tx.realBuyers, buyerGrowthPct: tx.buyerGrowthPct, washLikely: tx.washLikely, overlap: tx.overlap, burnsPre: tx.burnsPre, burnsDuring: tx.burnsDuring } : null;
+
+export function mergeHistory(h, setups, pumps, now = Date.now()) {
+  let newSetups = 0;
+  let newPumps = 0;
+  for (const s of setups) {
+    const k = `${s.token}:${dayKey(s.setup.t)}`;
+    const prev = h.setups[k];
+    if (!prev) newSetups += 1;
+    const tx = txSummary(s.tx) || prev?.tx || null; // keep wallet data from an earlier run
+    const burnedPctNow = s.burnedPctNow ?? prev?.burnedPctNow ?? null;
+    const smartBuyers = s.smartBuyers || prev?.smartBuyers || 0;
+    h.setups[k] = {
+      token: s.token, symbol: s.symbol, themes: s.themes || [], stockPaired: Boolean(s.stockPaired),
+      setup: JSON.parse(JSON.stringify(s.setup)), tx, burnedPctNow, smartBuyers,
+      catalysts: catalysts(s.setup, tx, { smartBuyers, burnedPctNow, stockPaired: s.stockPaired, themes: s.themes }),
+      firstSeen: prev?.firstSeen || now, lastSeen: now,
+    };
+  }
+  for (const p of pumps) {
+    const k = `${p.token}:${p.t}`;
+    if (!h.pumps[k]) newPumps += 1;
+    h.pumps[k] = p;
+  }
+  h.runs = (h.runs || 0) + 1;
+  return { setups: newSetups, pumps: newPumps };
+}
+export const fromRecord = (r) => ({ ...r });
+
 export async function main() {
   const now = Date.now();
   // GitHub kills the job at 60 min, before anything is saved — so research works to a budget
@@ -414,7 +460,7 @@ export async function main() {
     }
     charted += 1;
     const { tags, stockPaired } = tagNarratives(p);
-    pumps.push(...pumpEvents(candles, { mcapFactor: p.marketCap / p.priceUsd }));
+    pumps.push(...pumpEvents(candles, { mcapFactor: p.marketCap / p.priceUsd }).map((e) => ({ ...e, token: c.token, symbol: c.symbol || p.baseToken.symbol })));
     for (const s of findSetups(candles, { mcapNow: p.marketCap, priceNow: p.priceUsd }, now)) {
       setups.push({ ...c, symbol: c.symbol || p.baseToken.symbol, themes: tags, stockPaired, setup: s });
     }
@@ -492,10 +538,18 @@ export async function main() {
     s.smartBuyers = s.tx ? [...s.tx.wallets.keys()].filter((a) => smartSet.has(a)).length : 0;
     s.catalysts = catalysts(s.setup, s.tx, { smartBuyers: s.smartBuyers, burnedPctNow: s.burnedPctNow, stockPaired: s.stockPaired, themes: s.themes });
   }
-  const wins = pool.filter((s) => s.setup.label === 'WIN');
-  const moons = setups.filter((s) => s.setup.label === 'MOON');
-  const duds = pool.filter((s) => s.setup.label === 'DUD');
+  // ── running history: today's findings are ADDED to everything found before ──
+  const history = loadHistory(outDir);
+  const added = mergeHistory(history, setups, pumps, now);
+  const all = Object.values(history.setups).map(fromRecord);
+  const allPumps = Object.values(history.pumps);
+  log(`history: ${all.length} setups (+${added.setups} new), ${allPumps.length} pumps (+${added.pumps} new)`);
+  const pool2 = all.filter((s) => !s.tx || isViable(s.tx));
+  const wins = pool2.filter((s) => s.setup.label === 'WIN');
+  const moons = all.filter((s) => s.setup.label === 'MOON');
+  const duds = pool2.filter((s) => s.setup.label === 'DUD');
   const lift = catalystLift(wins, duds);
+  const allRejected = all.filter((s) => s.tx && !isViable(s.tx));
 
   // ── files ───────────────────────────────────────────────
   const csvPath = path.join(outDir, 'setups.csv');
@@ -504,7 +558,7 @@ export async function main() {
   appendCsv('research/setups.csv',
     ['date', 'symbol', 'token', 'label', 'peakX', 'daysTo3x', 'mcap', 'ageDays', 'drawdownPct', 'baseRange', 'volRatio', 'runVolX',
       'realBuyers', 'buyerGrowthPct', 'washLikely', 'viable', 'burnsPre', 'burnsDuring', 'burnedPctNow', 'smartBuyers', 'themes', 'catalysts'],
-    setups.map((s) => ({
+    all.sort((a, b) => a.setup.t - b.setup.t).map((s) => ({
       date: new Date(s.setup.t).toISOString().slice(0, 10), symbol: s.symbol, token: s.token, label: s.setup.label,
       peakX: f(s.setup.peakX), daysTo3x: s.setup.daysTo3x, mcap: Math.round(s.setup.mcap), ageDays: f(s.setup.ageDays, 0),
       drawdownPct: f(s.setup.drawdownPct, 0), baseRange: f(s.setup.baseRange), volRatio: f(s.setup.volRatio), runVolX: f(s.setup.runVolX, 1),
@@ -512,9 +566,17 @@ export async function main() {
       viable: s.tx ? isViable(s.tx) : '', burnsPre: s.tx?.burnsPre, burnsDuring: s.tx?.burnsDuring, burnedPctNow: f(s.burnedPctNow, 1),
       smartBuyers: s.smartBuyers, themes: (s.themes || []).join('|'), catalysts: s.catalysts.map((c) => c.key).join('|'),
     })));
-  fs.writeFileSync(path.join(outDir, 'smart-wallets.json'), JSON.stringify({ at: new Date(now).toISOString(), wallets: smart }, null, 1));
-  const pb = pullbackStats(pumps);
-  fs.writeFileSync(path.join(outDir, 'pullbacks.json'), JSON.stringify({ at: new Date(now).toISOString(), events: pumps.length, buckets: pb }, null, 1));
+  // smart wallets: today's finds merged with earlier ones (a quiet day doesn't erase them)
+  const prevSmart = readJson(path.join(outDir, 'smart-wallets.json'))?.wallets || [];
+  const smartAll = [...smart, ...prevSmart.filter((w) => !smart.some((x) => x.addr === w.addr))];
+  fs.writeFileSync(path.join(outDir, 'smart-wallets.json'), JSON.stringify({ at: new Date(now).toISOString(), wallets: smartAll }, null, 1));
+  // pullback odds from every pump in the history; never replace a bigger sample with a smaller one
+  const pb = pullbackStats(allPumps);
+  const prevPb = readJson(path.join(outDir, 'pullbacks.json'));
+  if (!prevPb || allPumps.length >= (prevPb.events || 0)) {
+    fs.writeFileSync(path.join(outDir, 'pullbacks.json'), JSON.stringify({ at: new Date(now).toISOString(), events: allPumps.length, buckets: pb }, null, 1));
+  }
+  saveHistory(outDir, history);
   fs.writeFileSync(path.join(outDir, 'catalysts.json'), JSON.stringify({ at: new Date(now).toISOString(), wins: wins.length, duds: duds.length, lift }, null, 1));
 
   // ── report ──────────────────────────────────────────────
@@ -534,12 +596,12 @@ export async function main() {
     `_Generated ${new Date(now).toISOString().slice(0, 16).replace('T', ' ')} UTC from ${coins.length} coins._`,
     '',
     `## The base rate`,
-    `${setups.length} times a coin matched our rules (${CONFIG.minAgeDays}+ days old, ${fmtCap(CONFIG.minMarketCap)}–${fmtCap(CONFIG.maxMarketCap)}, ${R.minDrawdownPct}%+ off its high, tight base with lows holding). Charts loaded for ${charted} of ${coins.length} coins.`,
+    `${all.length} times a coin matched our rules — every setup found since research began, ${added.setups} new today (${CONFIG.minAgeDays}+ days old, ${fmtCap(CONFIG.minMarketCap)}–${fmtCap(CONFIG.maxMarketCap)}, ${R.minDrawdownPct}%+ off its high, tight base with lows holding). Charts loaded for ${charted} of ${coins.length} coins.`,
     `- **${byLabel('WIN').length} went 3–10x** within 30 days (our target)`,
     `- ${moons.length} went past 10x (outliers — listed, not used to learn)`,
     `- ${byLabel('DUD').length} never reached 3x`,
     analysed.length
-      ? `- Community check: ${rejected.length} of ${analysed.length} wallet-checked setups were thrown out (fewer than ${R.minRealBuyers} real buyers, or wash trading).`
+      ? `- Community check: ${allRejected.length} of ${all.filter((s) => s.tx).length} wallet-checked setups were thrown out (fewer than ${R.minRealBuyers} real buyers, or wash trading).`
       : '- Community check skipped (no wallet data this run).',
     '',
     `**Hit rate on real setups: ${hitRate.toFixed(0)}%** (${wins.length} wins / ${wins.length + duds.length}). Any parameter is only worth adding if coins with it beat this.`,
@@ -568,7 +630,7 @@ export async function main() {
       : ['- None in this sample yet.', '']),
     ...(moons.length ? [`## Moonshots (>10x, not used to learn)`, ...moons.map((x) => `- $${x.symbol} — ${x.setup.peakX.toFixed(0)}× from ${usdF(x.setup.mcap)} (${new Date(x.setup.t).toISOString().slice(0, 10)})`), ''] : []),
     ...(rejected.length ? [`## Thrown out by the community check`, ...rejected.slice(0, 10).map((x) => `- $${x.symbol} (${x.setup.label}) — ${x.tx.washLikely ? `wash trading (${Math.round(x.tx.overlap * 100)}% of wallets on both sides)` : `only ${x.tx.realBuyers} real buyers`}`), ''] : []),
-    `## After a pump: pullback odds (from ${pumps.length} past pumps)`,
+    `## After a pump: pullback odds (from ${allPumps.length} past pumps)`,
     ...PUMP_BUCKETS.map((b) => {
       const x = pb[b.key];
       if (!x.n) return `- **+${b.key.replace('-', '–')}% day:** no examples yet`;
@@ -590,7 +652,7 @@ export async function main() {
 
   // ── Telegram summary ────────────────────────────────────
   const tg = ['🔬 DAILY RESEARCH — why coins pumped', ''];
-  tg.push(`${setups.length} times a coin matched your rules → ${byLabel('WIN').length} went 3–10x, ${moons.length} went 10x+, ${byLabel('DUD').length} didn't.`);
+  tg.push(`${all.length} setups on record (${added.setups} new today) → ${all.filter((s) => s.setup.label === 'WIN').length} went 3–10x, ${moons.length} went 10x+, ${all.filter((s) => s.setup.label === 'DUD').length} didn't.`);
   if (analysed.length) tg.push(`${rejected.length} were thrown out as fake or thin (wash trading / under ${R.minRealBuyers} real buyers).`);
   tg.push(`Hit rate on real setups: ${hitRate.toFixed(0)}% — the number every signal has to beat.`);
   const preLift = lift.filter((r) => r.when === 'pre' && r.winners > 0).slice(0, 4);
@@ -616,7 +678,7 @@ export async function main() {
         ? '🧠 Wallet history unavailable this run (Blockscout) — wallet research skipped.'
         : '🧠 No setups to check wallets on this run.');
   const pbLine = PUMP_BUCKETS.map((b) => pb[b.key].n ? `+${b.key.replace('-', '–')}%: ${Math.round(pb[b.key].pPullback30 * 100)}% pulled back 30%+, gave back ~${Math.round(pb[b.key].retraceMedian * 100)}%` : null).filter(Boolean);
-  if (pbLine.length) tg.push('', `📉 After pumps (${pumps.length} past examples):`, ...pbLine.map((l) => `• ${l}`));
+  if (pbLine.length) tg.push('', `📉 After pumps (${allPumps.length} past examples):`, ...pbLine.map((l) => `• ${l}`));
   tg.push('', 'Full report: data/research/report.md in the repo');
   await notify(tg.join('\n'));
   log('research done');

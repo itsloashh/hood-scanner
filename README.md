@@ -144,6 +144,8 @@ Every alert now has a **Who's buying** section: how many different wallets bough
 
 **Accuracy tracking.** Every alert (buy, watch, pump, ignition) is followed for 30 days from its alert price: ✅ reached 3x, ❌ fell 50% first, or ⏹ expired. The scorecard shows in the 4-hour summary and in /status, split by tier and lane — this is how parameters get tuned, by what actually ran. Alert prices are also double-checked against DexPaprika; a >10% disagreement is flagged. Coins only reach the buy zone when their biggest wallet was actually checked (top-wallet lists come from a separate `holders` job every 30 min, because Blockscout is slow).
 
+**Running history.** Every setup and pump research finds is kept in `data/research/history.json` and updated on later runs, so the sample only grows: a rate-limited day adds what it could load instead of replacing yesterday's results, and wallet data from earlier runs is kept when Blockscout is down.
+
 Results: `data/research/report.md`, `setups.csv` and `smart-wallets.json`, plus a Telegram summary. Run it any time: **Actions → research → Run workflow**.
 
 ### Free Blockscout key (needed for holder lists + wallet research)
