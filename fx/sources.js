@@ -96,7 +96,9 @@ export function parseCot(rows) {
 }
 
 export async function cot(market) {
-  return parseCot(JSON.parse(await fetchText(FX.cotUrl(market), { name: `cot:${market.split(' - ')[0]}` })));
+  // the CFTC site is slow — give it longer, and one retry
+  const get = () => fetchText(FX.cotUrl(market), { name: `cot:${market.split(' - ')[0]}`, timeoutMs: 45_000 });
+  return parseCot(JSON.parse(await get().catch(get)));
 }
 
 // ── US rates (FRED, keyless CSV) → [{ t, v }] oldest → newest, missing days skipped
