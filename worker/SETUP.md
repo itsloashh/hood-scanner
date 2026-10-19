@@ -53,6 +53,7 @@ You should see **"✅ Telegram is connected."** Then send `/help` to your bot.
 - ➕ Add bill: type `Rent 1200 on the 1st`, `Phone $85.50 15th`… (keeps listening so you can add several; tap Done)
 - 💵 I got paid: type the amount (or `/paid 1850`). It sorts the cheque: bills due before your next payday get fully covered first, later bills get their share so they're ready by their due date, then monthly essentials, then the rest splits into 🛍 spending / 🎉 leisure / 📈 investing.
 - 🛒 Essentials (monthly: groceries, gas…), ⚖️ split % (40/30/30, 50/30/20…), 📅 pay schedule (weekly / every 2 weeks / twice a month / monthly), 📜 history.
+- 💸 Log spending: tap a bucket and type the amount, or `/spent 40 drinks` (bucket picked from the words: groceries/gas → essentials, drinks/dinner/movies → leisure, TFSA/stocks → investing, else spending). Buckets count down, ↩️ undo, and history lists it.
 - 9 AM reminders for bills due today and in 3 days, and a note when a bill's due date passes (paid from what was set aside).
 Send `/menu` once to get a permanent button bar at the bottom of the chat: 🌍 FX desk · 📅 FX calendar · 📜 Signals · 📋 Paper · 📍 Status · 🚀 Scan now.
 

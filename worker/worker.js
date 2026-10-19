@@ -51,6 +51,7 @@ const HELP = [
   '/budget — bills, set-asides and buckets (buttons)',
   '/paid 1850 — log a paycheque and sort it',
   '/bill Rent 1200 on the 1st — add a monthly bill',
+  '/spent 40 drinks — log spending (bucket picked from the words, or tap one)',
   '/help — this list',
   '',
   'Alerts only arrive when a coin qualifies — a quiet scan sends nothing.',
@@ -74,6 +75,7 @@ const COMMANDS = [
   { command: 'status', description: 'What the last scan found' },
   { command: 'budget', description: 'Budget: bills, paycheques, buckets' },
   { command: 'paid', description: 'Log a paycheque: /paid 1850' },
+  { command: 'spent', description: 'Log spending: /spent 40 drinks' },
   { command: 'fx', description: 'Gold + CAD/JPY lean and levels' },
   { command: 'fxcal', description: 'This week\'s USD/CAD/JPY releases' },
   { command: 'fxbrief', description: 'Full FX brief now' },
@@ -411,6 +413,22 @@ async function handleMessage(env, msg) {
   }
 
   if (cmd === '/signals') return sendScreen(env, chatId, await signalsScreen(env).catch((e) => ({ text: `Couldn't load signals: ${e.message}`, kb: [] })));
+
+  if (cmd === '/spent' || cmd === '/spend') {
+    if (!env.PAPER) return reply(env, chatId, needKV.text);
+    const b = await BG.loadBudget(env);
+    const sp = args.length ? BG.parseSpend(args.join(' ')) : null;
+    let scr;
+    if (sp) {
+      scr = BG.spentScreen(b, BG.logSpend(b, sp));
+      b.awaiting = null;
+    } else {
+      b.awaiting = 'spend';
+      scr = BG.spendPickScreen(b);
+    }
+    await BG.saveBudget(env, b);
+    return sendScreen(env, chatId, scr);
+  }
 
   if (cmd === '/budget' || cmd === '/paid' || cmd === '/bill') {
     if (!env.PAPER) return reply(env, chatId, needKV.text);

@@ -41,7 +41,7 @@ export function freshBudget() {
     split: { spending: 40, leisure: 30, investing: 30 },
     pay: { freq: 'biweekly', last: null },
     balances: { essentials: 0, spending: 0, leisure: 0, investing: 0 },
-    history: [], log: [], awaiting: null, nextId: 1,
+    history: [], log: [], spends: [], awaiting: null, nextId: 1,
   };
 }
 
@@ -175,6 +175,9 @@ export function homeScreen(b, on = today()) {
   L.push(`🧾 Set aside for bills: ${money(set)}`);
   L.push(`🛒 Essentials: ${money(b.balances.essentials)}`);
   for (const [k, label] of Object.entries(BUCKETS)) L.push(`${label}: ${money(b.balances[k])}`);
+  const since = b.pay.last || '0000';
+  const spent = (b.spends || []).filter((e) => e.on >= since).reduce((s2, e) => s2 + e.amount, 0);
+  if (spent) L.push(`💸 Spent since last payday: ${money(spent)}`);
   if (b.bills.length) {
     L.push('', 'NEXT BILLS');
     for (const x of [...b.bills].sort((p, q) => (p.nextDue < q.nextDue ? -1 : 1)).slice(0, 6)) {
@@ -188,7 +191,8 @@ export function homeScreen(b, on = today()) {
   return {
     text: L.join('\n'),
     kb: [
-      [btn('💵 I got paid', 'bgp'), btn('➕ Add bill', 'bga')],
+      [btn('💵 I got paid', 'bgp'), btn('💸 Log spending', 'bgw')],
+      [btn('➕ Add bill', 'bga')],
       [btn('🧾 Bills', 'bgb'), btn('🛒 Essentials', 'bge')],
       [btn('⚖️ Split %', 'bgs'), btn('📅 Pay schedule', 'bgf')],
       [btn('📜 History', 'bgh'), btn('🔄', 'bg')],
@@ -275,6 +279,10 @@ export function historyScreen(b) {
   const L = ['BUDGET · 📜 HISTORY', ''];
   if (!b.history.length && !b.log.length) L.push('Nothing yet.');
   for (const h of b.history.slice(0, 8)) L.push(`💵 ${nice(h.on)} — ${money(h.amount)}: bills ${money(h.bills.reduce((s, x) => s + x.give, 0))} · essentials ${money(h.essentials)} · spend ${money(h.spending)} · leisure ${money(h.leisure)} · invest ${money(h.investing)}${h.short ? ` · ⚠️ short ${money(h.short)}` : ''}`);
+  if (b.spends?.length) {
+    L.push('', 'SPENDING');
+    for (const e of b.spends.slice(0, 12)) L.push(`💸 ${nice(e.on)} ${money(e.amount)} · ${ALL_BUCKETS[e.bucket]}${e.note ? ` — ${e.note}` : ''}`);
+  }
   if (b.log.length) {
     L.push('', 'BILLS PAID');
     for (const p of b.log.slice(0, 8)) L.push(`🧾 ${nice(p.due)} ${p.name} ${money(p.amount)}${p.short ? ` — ⚠️ ${money(p.short)} wasn't set aside` : ' ✅'}`);
@@ -282,10 +290,56 @@ export function historyScreen(b) {
   return { text: L.join('\n'), kb: [HOME] };
 }
 
+// ── spending: "40 leisure drinks" · "/spent 85 groceries" ─────────
+const ALL_BUCKETS = { essentials: '🛒 Essentials', ...BUCKETS };
+const BUCKET_WORDS = [
+  ['essentials', /essential|grocer|food|gas\b|fuel|transit|uber|bus|pharmac|household|toiletr|laundry/i],
+  ['leisure', /leisure|fun|bar|drink|beer|restaurant|dinner|movie|concert|game|trip|travel|date|party/i],
+  ['investing', /invest|stock|crypto|etf|tfsa|rrsp|savings|save/i],
+  ['spending', /spend|shop|clothes|amazon|misc|other/i],
+];
+export function parseSpend(text, bucket = null) {
+  const amount = parseAmount(text);
+  if (!(amount > 0)) return null;
+  let b = bucket;
+  if (!b) for (const [k, re] of BUCKET_WORDS) if (re.test(text)) { b = k; break; }
+  const note = String(text).replace(AMOUNT, ' ').replace(/\b(essentials?|spending|leisure|investing|invest|on|for|at|spent)\b/gi, ' ').replace(/\s+/g, ' ').trim();
+  return { amount: r2(amount), bucket: b || 'spending', note: note.slice(0, 40) };
+}
+
+export function logSpend(b, sp, on = today()) {
+  b.spends ||= [];
+  b.balances[sp.bucket] = r2((b.balances[sp.bucket] || 0) - sp.amount);
+  const entry = { id: b.nextId++, on, ...sp };
+  b.spends.unshift(entry);
+  b.spends = b.spends.slice(0, 100);
+  return entry;
+}
+
+export function spentScreen(b, e) {
+  const left = b.balances[e.bucket];
+  return {
+    text: `BUDGET · 💸 Logged ${money(e.amount)} from ${ALL_BUCKETS[e.bucket]}${e.note ? ` — ${e.note}` : ''}\n\n${ALL_BUCKETS[e.bucket]} left: ${money(left)}${left < 0 ? `\n⚠️ That's ${money(-left)} over — it'll come out of the next paycheque's ${e.bucket === 'essentials' ? 'essentials' : 'split'} unless you move money.` : ''}\n\nSend another amount for this bucket, or tap Done.`,
+    kb: [[btn('↩️ Undo', `bgu:${e.id}`), btn('✔️ Done', 'bg')]],
+  };
+}
+
+export function spendPickScreen(b) {
+  return {
+    text: `BUDGET · 💸 LOG SPENDING — which bucket?\n\n${Object.entries(ALL_BUCKETS).map(([k, l]) => `${l}: ${money(b.balances[k] || 0)} left`).join('\n')}\n\nOr just type it, e.g. "40 drinks" or "85 groceries" — I'll pick the bucket.`,
+    kb: [
+      [btn(ALL_BUCKETS.essentials, 'bgw:essentials'), btn(ALL_BUCKETS.spending, 'bgw:spending')],
+      [btn(ALL_BUCKETS.leisure, 'bgw:leisure'), btn(ALL_BUCKETS.investing, 'bgw:investing')],
+      HOME,
+    ],
+  };
+}
+
 export const ASK = {
   pay: 'BUDGET · 💵 How much did you get paid? Send the amount, e.g. 1850 or $1,850.25',
   bill: 'BUDGET · ➕ Send the bill like:\nRent 1200 on the 1st\nPhone $85.50 15th\nCar insurance 210 due 28',
   essential: 'BUDGET · ➕ Send a monthly essential like:\nGroceries 400\nGas 160',
+  spend: (k) => `BUDGET · 💸 How much from ${ALL_BUCKETS[k]}? (${'e.g.'} 40 or "40 coffee")`,
 };
 
 // Handle a typed reply while the assistant is waiting for one. Returns a screen, or null if not handled.
@@ -313,6 +367,11 @@ export function handleText(b, text, on = today()) {
     b.bills.push({ id: b.nextId++, ...p, nextDue: nextDue(p.day, on), saved: 0 });
     return { text: `BUDGET · ✅ Added ${p.name} — ${money(p.amount)} on the ${ordinal(p.day)} (next ${nice(nextDue(p.day, on))}).\n\nSend another bill, or tap Done.`, kb: [[btn('✔️ Done', 'bgb')]] };
   }
+  if (kind === 'spend' || kind.startsWith('spend:')) {
+    const sp = parseSpend(t, kind.includes(':') ? kind.split(':')[1] : null);
+    if (!sp) return { text: `BUDGET · 💸 Couldn't read an amount in "${t}". Send e.g. 40 or "40 drinks".`, kb: [HOME] };
+    return spentScreen(b, logSpend(b, sp, on)); // stays listening on this bucket
+  }
   if (kind === 'essential') {
     const p = parseEssential(t);
     if (!p) return { text: `${ASK.essential}\n\n(Couldn't read "${t}")`, kb: [HOME] };
@@ -325,11 +384,26 @@ export function handleText(b, text, on = today()) {
 // Button taps (ops start with "bg")
 export function handleTap(b, op, a, c, d, on = today()) {
   rollBills(b, on);
-  if (op === 'bg') return homeScreen(b, on);
+  if (op === 'bg') {
+    b.awaiting = null; // Done / home stops listening for typed replies
+    return homeScreen(b, on);
+  }
   if (op === 'bgp') { b.awaiting = 'pay'; return { text: ASK.pay, kb: [HOME] }; }
   if (op === 'bga') { b.awaiting = 'bill'; return { text: ASK.bill, kb: [HOME] }; }
   if (op === 'bgn') { b.awaiting = 'essential'; return { text: ASK.essential, kb: [HOME] }; }
+  if (op === 'bgw') {
+    b.awaiting = a ? `spend:${a}` : 'spend';
+    return a ? { text: ASK.spend(a), kb: [HOME] } : spendPickScreen(b);
+  }
   b.awaiting = null;
+  if (op === 'bgu') {
+    const e = (b.spends || []).find((x) => x.id === Number(a));
+    if (e) {
+      b.balances[e.bucket] = r2((b.balances[e.bucket] || 0) + e.amount);
+      b.spends = b.spends.filter((x) => x.id !== e.id);
+    }
+    return homeScreen(b, on);
+  }
   if (op === 'bgb') return billsScreen(b, on);
   if (op === 'bgi') return billItemScreen(b, Number(a));
   if (op === 'bgx') {

@@ -1251,6 +1251,11 @@ await test('budget: reads bills and amounts the way you type them', async () => 
   assert.equal(B.parseBill('Rent'), null);
   assert.equal(B.parseAmount('$1,850.25'), 1850.25);
   assert.deepEqual(B.parseEssential('Groceries 400'), { name: 'Groceries', monthly: 400 });
+  assert.equal(B.parseSpend('40 drinks').bucket, 'leisure');
+  assert.equal(B.parseSpend('85 groceries').bucket, 'essentials');
+  assert.equal(B.parseSpend('200 TFSA').bucket, 'investing');
+  assert.equal(B.parseSpend('25 hoodie').bucket, 'spending');
+  assert.equal(B.parseSpend('19.99', 'leisure').amount, 19.99);
   assert.equal(B.nextDue(31, '2026-11-05'), '2026-11-30'); // short month → last day
   assert.equal(B.nextDue(1, '2026-10-19'), '2026-11-01');
 });
@@ -1326,6 +1331,20 @@ await test('budget: buttons + typed replies in Telegram (add bill, log paycheque
     assert.match(sent.at(-1).b.text, /PAYCHEQUE \$500\.00/);
     await tap('bgv:50:30:20');
     assert.deepEqual(JSON.parse(kv.get('budget')).split, { spending: 50, leisure: 30, investing: 20 });
+    await say('/spent 40 drinks at the bar');
+    assert.match(sent.at(-1).b.text, /Logged \$40\.00 from 🎉 Leisure/);
+    await tap('bgw:essentials');
+    await say('85.20');
+    assert.match(sent.at(-1).b.text, /Logged \$85\.20 from 🛒 Essentials/);
+    const before = JSON.parse(kv.get('budget')).balances.essentials;
+    const undoId = JSON.parse(kv.get('budget')).spends[0].id;
+    await tap(`bgu:${undoId}`);
+    assert.equal(JSON.parse(kv.get('budget')).balances.essentials, Math.round((before + 85.2) * 100) / 100);
+    await tap('bgh');
+    assert.match(sent.at(-1).b.text, /SPENDING/);
+    await tap('bgw:leisure');
+    await tap('bg'); // Done
+    assert.equal(JSON.parse(kv.get('budget')).awaiting, null);
     await tap('bgq:weekly');
     assert.equal(JSON.parse(kv.get('budget')).pay.freq, 'weekly');
   } finally {
