@@ -1111,7 +1111,7 @@ await test('FX: watch alerts — event heads-up, level break, driver shock, brea
     pairs: { XAUUSD: { bias: { price: 2412, levels: { prevDayHigh: 2405, prevDayLow: 2380, prevWeekHigh: 2450, prevWeekLow: 2350, atr: 30 }, daily: {} }, hourly } },
     drivers: { OIL: { d1: -4.2, d5: -6 } },
     events: [{ title: 'CPI m/m', country: 'USD', impact: 'High', at: now + 20 * 60000, forecast: '0.3%', previous: '0.4%' }],
-    headlines: [{ title: 'Japan warns of yen intervention as currency slides', at: now - 600000, pairs: ['CAD/JPY'], source: 'Reuters' }],
+    headlines: [{ title: 'Japan warns of yen intervention as currency slides', at: now - 600000, pairs: ['CAD/JPY'], source: 'Reuters', confirmed: 2 }, { title: 'Gold crash rumour spreads', at: now - 600000, pairs: ['Gold (XAU/USD)'], source: 'Reuters', confirmed: 1 }],
   };
   const state = { alerted: {}, lastPrice: { XAUUSD: 2401 }, primed: true };
   const out = R.watchAlerts(snap, state, now);
@@ -1120,6 +1120,8 @@ await test('FX: watch alerts — event heads-up, level break, driver shock, brea
   assert.match(all, /broke ABOVE the previous day high \(2405\.0\)/);
   assert.match(all, /WTI crude oil −4\.20% today/);
   assert.match(all, /yen intervention/);
+  assert.ok(!/crash rumour/.test(all)); // one outlet only — waits for confirmation
+  assert.match(all, /YEN INTERVENTION WATCH/);
   assert.equal(R.watchAlerts(snap, state, now + 60000).length, 0); // nothing repeats
   // first ever run: existing headlines are remembered, not blasted
   const fresh = { alerted: {}, lastPrice: {} };
@@ -1151,6 +1153,44 @@ await test('FX: headlines keep trusted outlets + central banks only, matched to 
   } finally {
     globalThis.fetch = prevFetch;
   }
+});
+
+await test('FX: rates from FRED, Stooq spot check, release results from the news, lean track record', async () => {
+  const S = await import('../fx/sources.js');
+  const A = await import('../fx/analysis.js');
+  const R = await import('../fx/run.js');
+  const fredRows = S.parseFredCsv('DATE,DFII10\n2026-10-09,1.80\n2026-10-12,.\n2026-10-13,1.82\n2026-10-14,1.85\n2026-10-15,1.90\n2026-10-16,1.95\n2026-10-19,1.97');
+  assert.equal(fredRows.length, 6); // "." = missing day, skipped
+  const m = A.macroMove(fredRows);
+  assert.equal(Math.round(m.d1bp), 2);
+  assert.equal(Math.round(m.d5bp), 17);
+  assert.equal(S.parseStooqQuote('Symbol,Date,Time,Open,High,Low,Close\nXAUUSD,2026-10-19,01:00:00,4190,4200,4185,4193.4').price, 4193.4);
+  // release result found in the news after the number is out
+  const now = Date.UTC(2026, 9, 20, 12, 45);
+  const e = { title: 'CPI m/m', country: 'CAD', impact: 'High', at: Date.UTC(2026, 9, 20, 12, 30), forecast: '0.2%', previous: '0.1%' };
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => (String(url).includes('news.google.com') && decodeURIComponent(String(url)).includes('Canada CPI')
+    ? new Response(`<rss><channel><item><title>Canada's annual inflation rate rises to 2.4% in September - Reuters</title><link>https://r.test/x</link><pubDate>${new Date(now - 5 * 60000).toUTCString()}</pubDate><source url="https://reuters.com">Reuters</source></item></channel></rss>`)
+    : new Response('', { status: 404 }));
+  try {
+    const state = { alerted: {} };
+    const out = await R.releaseResults({ events: [e] }, state, now);
+    assert.equal(out.length, 1);
+    assert.match(out[0], /RELEASED — 🇨🇦 CAD CPI m\/m/);
+    assert.match(out[0], /inflation rate rises to 2\.4%/);
+    assert.equal((await R.releaseResults({ events: [e] }, state, now + 60000)).length, 0); // once
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+  // track record: a bullish lean is right if price is higher the next day
+  const day = 86_400_000;
+  const snapA = { pairs: { XAUUSD: { bias: { label: 'Bullish lean', score: 4, price: 4000 } }, CADJPY: { bias: { label: 'Mixed / no clear lean', score: 1, price: 110 } } } };
+  const log = R.trackLeans([], snapA, 0, { record: true });
+  assert.equal(log.length, 2);
+  R.trackLeans(log, { pairs: { XAUUSD: { bias: { price: 4050 } }, CADJPY: { bias: { price: 111 } } } }, day);
+  const rec = R.trackRecord(log);
+  assert.deepEqual(rec.XAUUSD, { dayRight: 1, dayN: 1, weekRight: 0, weekN: 0 });
+  assert.equal(rec.CADJPY.dayN, 0); // mixed lean isn't a call
 });
 
 await test('FX: market hours + Telegram clock (brief 6:45 weekdays, weekly Sunday 6 PM, watch every 15 min)', async () => {

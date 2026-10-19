@@ -14,7 +14,7 @@ function pairBlock(key, s) {
   const b = s.bias;
   const L = [];
   L.push(`${leanIcon(b)} ${P.name} — ${fmt(key, b.price)} (${sgn(s.dayChange)} today)`);
-  L.push(`Lean: ${b.label} (${b.score > 0 ? '+' : ''}${b.score} of ±${b.max})`);
+  L.push(`Lean: ${b.label} (${b.score > 0 ? '+' : ''}${b.score} of ±${b.max})${b.source && !b.source.includes('(spot)') ? ` · price: ${b.source}` : ''}`);
   const top = [...b.factors].sort((x, y) => y.weight - x.weight);
   for (const x of top.slice(0, 7)) L.push(`  ${x.dir > 0 ? '▲' : '▼'} ${x.why}`);
   const lv = b.levels;
@@ -42,6 +42,10 @@ export function briefMessage(snap, { weekly = false } = {}) {
   }
   const d = snap.drivers;
   const dl = Object.entries(FX.drivers).filter(([k]) => d[k]).map(([k, v]) => `${arrow(d[k].d1)} ${v.name} ${sgn(d[k].d1)} (5d ${sgn(d[k].d5)})`);
+  for (const [k, M] of Object.entries(FX.macro)) {
+    const m = snap.macro?.[k];
+    if (m) dl.push(`${arrow(m.d1bp)} ${M.name} ${m.v.toFixed(2)}% (${m.d1bp >= 0 ? '+' : '−'}${Math.abs(m.d1bp).toFixed(0)} bp · 5d ${m.d5bp >= 0 ? '+' : '−'}${Math.abs(m.d5bp).toFixed(0)} bp)`);
+  }
   if (dl.length) L.push('📊 DRIVERS', ...dl.map((x) => `• ${x}`), '');
   if (snap.cot) {
     const c = snap.cot;
@@ -58,8 +62,12 @@ export function briefMessage(snap, { weekly = false } = {}) {
   else L.push(snap.calendarOk === false ? '⚠️ calendar unavailable this run' : 'No high/medium-impact releases.');
   if (snap.headlines?.length) {
     L.push('', '📰 HEADLINES');
-    for (const h of snap.headlines.slice(0, 8)) L.push(`• ${h.title}${h.source ? ` — ${h.source}` : ''}`);
+    for (const h of snap.headlines.slice(0, 8)) L.push(`• ${h.title}${h.source ? ` — ${h.source}` : ''}${h.confirmed >= 2 ? ` (+${h.confirmed - 1} more outlet${h.confirmed > 2 ? 's' : ''})` : ''}`);
   }
+  const rec = snap.record || {};
+  const recLines = Object.entries(rec).filter(([, r]) => r.dayN).map(([k, r]) => `• ${FX.pairs[k].name}: next day ${r.dayRight}/${r.dayN} right${r.weekN ? ` · one week ${r.weekRight}/${r.weekN}` : ''}`);
+  if (recLines.length) L.push('', '🎯 LEAN TRACK RECORD (bullish/bearish leans only)', ...recLines);
+  if (snap.priceNotes?.length) L.push('', ...snap.priceNotes.map((n) => `⚠️ ${n}`));
   const bad = Object.entries(snap.health || {}).filter(([, v]) => !v.ok).map(([k]) => k);
   if (bad.length) L.push('', `⚠️ Sources down this run: ${bad.slice(0, 6).join(', ')}`);
   return L.join('\n');
@@ -100,4 +108,19 @@ export function driverShockMessage(key, m) {
 
 export function headlineMessage(h, pairs) {
   return `📰 ${pairs.join(' · ')} — ${h.title}\n${h.source ? `${h.source} · ` : ''}${h.at ? local(h.at) : ''}${h.link ? `\n${h.link}` : ''}`;
+}
+
+export function eventNewsResultMessage(e, h) {
+  return [
+    `📢 RELEASED — ${flag[e.country] || ''} ${e.country} ${e.title}${e.forecast ? ` (forecast ${e.forecast}${e.previous ? `, previous ${e.previous}` : ''})` : ''}`,
+    `${h.title}`,
+    `— ${h.source || 'news'}${h.link ? `\n${h.link}` : ''}`,
+  ].join('\n');
+}
+
+export function interventionMessage(uj, warn) {
+  const L = [`🇯🇵 YEN INTERVENTION WATCH${uj?.price ? ` — USD/JPY ${uj.price.toFixed(2)} (${sgn(uj.d5)} in 5 days)` : ''}`];
+  if (warn) L.push(`Officials/press: "${warn.title}" — ${warn.source || ''}`);
+  L.push('Japan has stepped in before after fast yen drops. An intervention can knock CAD/JPY down 2–4% in minutes.');
+  return L.join('\n');
 }

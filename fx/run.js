@@ -7,7 +7,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { FX } from './config.js';
 import * as src from './sources.js';
-import { bias, driverMove, pct, cadjpyCot } from './analysis.js';
+import { bias, driverMove, macroMove, pct, cadjpyCot } from './analysis.js';
 import * as msg from './messages.js';
 import { notify } from '../src/notify.js';
 import { DATA_DIR } from '../src/store.js';
@@ -39,9 +39,51 @@ const hash = (s) => {
   return String(h >>> 0);
 };
 
+// Prices for a pair: spot first; for gold, futures shifted to spot if spot candles are missing.
+// A second spot source (Stooq) checks the price; disagreement is noted in the brief.
+async function pairCandles(key, P, snap) {
+  const get = async (sym) => ({
+    daily: await src.candles(sym, { range: '1y', interval: '1d' }).catch(() => []),
+    hourly: await src.candles(sym, { range: '10d', interval: '1h' }).catch(() => []),
+  });
+  let { daily, hourly } = await get(P.yahoo);
+  let source = `${P.yahoo} (spot)`;
+  let check = null;
+  if (P.stooq) {
+    try {
+      check = (await src.stooqQuote(P.stooq))?.price ?? null;
+    } catch {
+      /* second opinion unavailable */
+    }
+  }
+  if ((!daily.length || !hourly.length) && P.futures) {
+    const fut = await get(P.futures);
+    if (fut.daily.length) {
+      const basis = check ? check - (fut.hourly.at(-1) || fut.daily.at(-1)).c : 0;
+      const shift = (k) => ({ ...k, o: k.o + basis, h: k.h + basis, l: k.l + basis, c: k.c + basis });
+      daily = daily.length ? daily : fut.daily.map(shift);
+      hourly = hourly.length ? hourly : fut.hourly.map(shift);
+      source = basis ? `${P.futures} futures shifted ${basis >= 0 ? '+' : ''}${basis.toFixed(1)} to spot` : `${P.futures} futures (spot unavailable — may differ from your chart by a few dollars)`;
+    }
+  }
+  const price = (hourly.at(-1) || daily.at(-1))?.c;
+  if (check && price) {
+    const diff = Math.abs(price / check - 1) * 100;
+    if (diff > FX.priceCheckMaxDiffPct) snap.priceNotes.push(`${P.name}: sources disagree by ${diff.toFixed(2)}% (${price.toFixed(P.decimals)} vs ${check.toFixed(P.decimals)}) — double-check your chart`);
+  }
+  return { daily, hourly, source };
+}
+
 // Pull every source; anything that fails is recorded in health and left out
 export async function snapshot(now = Date.now(), { withCot = true, withNews = true } = {}) {
-  const snap = { at: now, pairs: {}, drivers: {}, events: [], headlines: [], cot: null, health: src.health };
+  const snap = { at: now, pairs: {}, drivers: {}, macro: {}, events: [], headlines: [], cot: null, health: src.health, priceNotes: [] };
+  for (const [key, M] of Object.entries(FX.macro)) {
+    try {
+      snap.macro[key] = macroMove(await src.fred(M.fred));
+    } catch (e) {
+      log(`macro ${key} failed: ${e.message}`);
+    }
+  }
   for (const [key, D] of Object.entries(FX.drivers)) {
     try {
       snap.drivers[key] = driverMove(await src.candles(D.yahoo, { range: '1mo', interval: '1d' }));
@@ -66,10 +108,10 @@ export async function snapshot(now = Date.now(), { withCot = true, withNews = tr
   }
   for (const [key, P] of Object.entries(FX.pairs)) {
     try {
-      const daily = await src.candles(P.yahoo, { range: '1y', interval: '1d' });
-      const hourly = await src.candles(P.yahoo, { range: '10d', interval: '1h' });
+      const { daily, hourly, source } = await pairCandles(key, P, snap);
       if (!daily.length) throw new Error('no daily candles');
-      const b = bias(key, { daily, hourly, drivers: snap.drivers, cot: cot[key] });
+      const b = bias(key, { daily, hourly, drivers: snap.drivers, macro: snap.macro, cot: cot[key] });
+      b.source = source;
       const prevClose = daily.length >= 2 ? daily[daily.length - 2].c : null;
       snap.pairs[key] = { bias: b, dayChange: pct(b.price, prevClose), hourly: hourly.slice(-48) };
     } catch (e) {
@@ -101,7 +143,7 @@ export async function headlines(now = Date.now()) {
       log(`feed ${j.name} failed: ${e.message}`);
     }
   }
-  const kept = []; // word sets of stories already kept — same story from another outlet is skipped
+  const kept = []; // [{ words, story }] — the same story from another outlet adds to that story's outlet count
   const out = [];
   const words = (t) => new Set(t.toLowerCase().replace(/ - [^-]+$/, '').replace(/[^a-z0-9% ]/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !['the', 'and', 'for', 'says', 'with', 'from', 'reuters', 'after'].includes(w)));
   const sameStory = (a, b) => {
@@ -112,12 +154,23 @@ export async function headlines(now = Date.now()) {
   for (const h of all.filter((x) => !x.at || now - x.at < 36 * HOUR).sort((a, b) => (b.at || 0) - (a.at || 0))) {
     if (/^(opinion|analysis|editorial|letters?)\b[:\s]/i.test(h.title)) continue;
     const w = words(h.title);
-    if (!w.size || kept.some((k) => sameStory(w, k))) continue;
-    kept.push(w);
+    if (!w.size) continue;
+    const trusted = h.official || FX.trustedSources.test(h.source || '');
+    const dup = kept.find((k) => sameStory(w, k.words));
+    if (dup) {
+      if (trusted && dup.story) dup.story.outlets.add(h.source || '?');
+      continue;
+    }
     h.pairs = pairsFor(h);
     h.title = h.title.replace(/ - [^-]{2,60}$/, ''); // Google appends " - Publisher"
-    const trusted = h.official || FX.trustedSources.test(h.source || '');
-    if (trusted && (h.pairs.length || h.official)) out.push(h);
+    h.outlets = new Set(trusted ? [h.source || '?'] : []);
+    const keep = trusted && (h.pairs.length || h.official);
+    kept.push({ words: w, story: keep ? h : null });
+    if (keep) out.push(h);
+  }
+  for (const h of out) {
+    h.confirmed = h.outlets.size;
+    h.outlets = [...h.outlets];
   }
   return out;
 }
@@ -140,7 +193,8 @@ export function watchAlerts(snap, state, now = Date.now()) {
   // 1. high-impact releases coming up / just released
   for (const e of snap.events || []) {
     const mins = Math.round((e.at - now) / 60000);
-    if (FX.calendar.alertImpact.includes(e.impact) && mins > 0 && mins <= FX.calendar.warnMinutes) {
+    const speech = FX.calendar.speeches.test(e.title) && (e.impact === 'High' || e.impact === 'Medium');
+    if ((FX.calendar.alertImpact.includes(e.impact) || speech) && mins > 0 && mins <= FX.calendar.warnMinutes) {
       once(`ev:${e.country}:${e.title}:${e.at}`, 48, msg.eventSoonMessage(e, mins));
     }
     if (e.actual && e.at <= now && now - e.at < 2 * HOUR && (e.impact === 'High' || FX.calendar.goldKeywords.test(e.title))) {
@@ -177,13 +231,20 @@ export function watchAlerts(snap, state, now = Date.now()) {
   for (const [key, m] of Object.entries(snap.drivers)) {
     if (m?.d1 != null && Math.abs(m.d1) >= FX.drivers[key].shockPct) once(`drv:${key}:${day}:${Math.sign(m.d1)}`, 20, msg.driverShockMessage(key, m));
   }
+  // 4b. yen intervention watch: fast USD/JPY rise + official warning language in the news
+  const uj = snap.drivers.USDJPY;
+  const warn = state.primed ? (snap.headlines || []).find((h) => FX.intervention.words.test(h.title) && /yen|jpy|japan/i.test(h.title) && (!h.at || now - h.at < 6 * HOUR)) : null;
+  if (warn || (uj?.d5 != null && uj.d5 >= FX.intervention.fastRisePct)) {
+    once(`intv:${day}`, 20, msg.interventionMessage(uj, warn));
+  }
+
   // 5. breaking headlines (new ones only)
   let sent = 0;
   for (const h of snap.headlines || []) {
     const k = `news:${hash(h.title.toLowerCase())}`;
     if (state.alerted[k]) continue;
     const fresh = !h.at || now - h.at < 3 * HOUR;
-    const important = FX.breaking.test(h.title) || (h.official && fresh);
+    const important = (FX.breaking.test(h.title) && (h.confirmed >= FX.confirmOutlets || h.official)) || (h.official && fresh);
     if (!state.primed) {
       state.alerted[k] = now; // first run: remember what's already out there, don't flood
       continue;
@@ -200,6 +261,92 @@ export function watchAlerts(snap, state, now = Date.now()) {
   return out;
 }
 
+// ── release results: shortly after a high-impact release, find the published number in the news ──
+// how newsrooms word the same release
+const SYN = [
+  [/cpi|consumer price/i, ['inflation', 'consumer price']],
+  [/non-farm|nfp|employment change/i, ['payroll', 'jobs', 'hiring', 'employment']],
+  [/unemployment/i, ['jobless', 'unemployment']],
+  [/gdp/i, ['economy', 'growth', 'gdp']],
+  [/retail sales/i, ['retail', 'consumer spending']],
+  [/pce/i, ['pce', 'inflation']],
+  [/ppi/i, ['producer price', 'wholesale']],
+  [/rate statement|policy rate|rate decision|monetary policy/i, ['rate', 'rates']],
+];
+const synonyms = (t) => SYN.filter(([re]) => re.test(t)).flatMap(([, w]) => w);
+const cleanTitle = (t) => t.replace(/\b(m\/m|y\/y|q\/q|3m\/3m)\b/gi, '').replace(/\s+/g, ' ').trim();
+export async function releaseResults(snap, state, now = Date.now()) {
+  const out = [];
+  const [minA, minB] = FX.calendar.resultSearchMinutes;
+  for (const e of snap.events || []) {
+    const mins = (now - e.at) / 60000;
+    const matters = e.impact === 'High' || (e.country === 'USD' && FX.calendar.goldKeywords.test(e.title));
+    if (!matters || mins < minA || mins > minB || FX.calendar.speeches.test(e.title)) continue;
+    const key = `res:${e.country}:${e.title}:${e.at}`;
+    if (state.alerted[key]) continue;
+    if (e.actual) {
+      state.alerted[key] = now;
+      out.push(msg.eventResultMessage(e));
+      continue;
+    }
+    const q = `${FX.calendar.countryName[e.country] || e.country} ${cleanTitle(e.title)}`;
+    let items = [];
+    try {
+      items = await src.feed(`result:${q}`, FX.googleNews(q).replace('when:1d', 'when:2h'));
+    } catch {
+      continue;
+    }
+    const words = [...cleanTitle(e.title).toLowerCase().split(/\s+/).filter((w) => w.length > 2), ...synonyms(e.title)];
+    const hit = items
+      .filter((h) => FX.trustedSources.test(h.source || '') && (!h.at || h.at >= e.at - 10 * 60000))
+      .find((h) => words.some((w) => h.title.toLowerCase().includes(w)) && /\d/.test(h.title));
+    if (hit) {
+      state.alerted[key] = now;
+      out.push(msg.eventNewsResultMessage(e, hit));
+    }
+  }
+  return out;
+}
+
+// ── accuracy: was each lean right? (next session close and ~1 week later) ──
+export function trackLeans(log, snap, now = Date.now(), { record = false } = {}) {
+  const DAYMS = 86_400_000;
+  for (const x of log) {
+    const p = snap.pairs[x.pair]?.bias?.price;
+    if (!p) continue;
+    if (x.dayRight == null && now - x.at >= 20 * 3_600_000) x.dayRight = rightWay(x, p);
+    if (x.weekRight == null && now - x.at >= 6.5 * DAYMS) x.weekRight = rightWay(x, p);
+  }
+  if (record) {
+    for (const [pair, s] of Object.entries(snap.pairs)) {
+      const b = s.bias;
+      const today = new Date(now).toISOString().slice(0, 10);
+      if (log.some((x) => x.pair === pair && x.day === today)) continue;
+      log.push({ at: now, day: today, pair, lean: b.label, score: b.score, price: b.price, dayRight: null, weekRight: null });
+    }
+  }
+  while (log.length > 500) log.shift();
+  return log;
+}
+// mixed leans aren't calls; a bullish lean is right if price is higher, bearish if lower
+const rightWay = (x, p) => (x.lean.startsWith('Bullish') ? p > x.price : x.lean.startsWith('Bearish') ? p < x.price : null);
+
+export function trackRecord(log) {
+  const out = {};
+  for (const x of log) {
+    const r = (out[x.pair] ||= { dayRight: 0, dayN: 0, weekRight: 0, weekN: 0 });
+    if (x.dayRight != null) {
+      r.dayN += 1;
+      if (x.dayRight) r.dayRight += 1;
+    }
+    if (x.weekRight != null) {
+      r.weekN += 1;
+      if (x.weekRight) r.weekRight += 1;
+    }
+  }
+  return out;
+}
+
 // Compact snapshot for the Telegram /fx and /fxcal commands
 export function latestFor(snap) {
   return {
@@ -207,9 +354,12 @@ export function latestFor(snap) {
     pairs: Object.fromEntries(Object.entries(snap.pairs).map(([k, s]) => [k, {
       name: FX.pairs[k].name, price: s.bias.price, dayChange: s.dayChange, lean: s.bias.label, score: s.bias.score, max: s.bias.max,
       reasons: s.bias.factors.map((f) => `${f.dir > 0 ? '▲' : '▼'} ${f.why}`), levels: s.bias.levels, decimals: FX.pairs[k].decimals,
-      daily: s.bias.daily?.describe, hourly: s.bias.hourly?.describe,
+      daily: s.bias.daily?.describe, hourly: s.bias.hourly?.describe, source: s.bias.source || null,
     }])),
     drivers: Object.fromEntries(Object.entries(snap.drivers).filter(([, m]) => m).map(([k, m]) => [k, { name: FX.drivers[k].name, ...m }])),
+    macro: Object.fromEntries(Object.entries(snap.macro || {}).filter(([, m]) => m).map(([k, m]) => [k, { name: FX.macro[k].name, ...m }])),
+    record: snap.record || null,
+    priceNotes: snap.priceNotes || [],
     events: (snap.events || []).filter((e) => e.impact === 'High' || e.impact === 'Medium').map((e) => ({ ...e })),
     headlines: (snap.headlines || []).slice(0, 10).map((h) => ({ title: h.title, source: h.source, at: h.at, pairs: h.pairs })),
   };
@@ -226,6 +376,9 @@ export async function main(mode = process.env.FX_MODE || 'watch', now = Date.now
     return { mode, skipped: 'closed' };
   }
   const snap = await snapshot(now, { withCot: mode !== 'watch', withNews: true });
+  const leanFile = path.join(FX_DIR(), 'leans.json');
+  const leans = trackLeans(readJson(leanFile, []), snap, now, { record: mode === 'brief' || mode === 'weekly' });
+  snap.record = trackRecord(leans);
   let sent = 0;
   if (mode === 'brief' || mode === 'weekly') {
     await notify(msg.briefMessage(snap, { weekly: mode === 'weekly' }));
@@ -233,7 +386,7 @@ export async function main(mode = process.env.FX_MODE || 'watch', now = Date.now
     // seed price memory + headline memory so the next watch run only reports changes
     for (const [k, s] of Object.entries(snap.pairs)) state.lastPrice[k] = s.bias.price;
   } else if (mode === 'watch') {
-    for (const text of watchAlerts(snap, state, now)) {
+    for (const text of [...watchAlerts(snap, state, now), ...(await releaseResults(snap, state, now))]) {
       await notify(text);
       sent += 1;
     }
@@ -241,6 +394,7 @@ export async function main(mode = process.env.FX_MODE || 'watch', now = Date.now
   fs.writeFileSync(path.join(FX_DIR(), 'latest.json'), JSON.stringify(latestFor(snap)));
   fs.writeFileSync(path.join(FX_DIR(), 'health.json'), JSON.stringify({ at: new Date(now).toISOString(), mode, sources: src.health }, null, 1));
   fs.writeFileSync(stateFile, JSON.stringify(state));
+  fs.writeFileSync(leanFile, JSON.stringify(leans));
   const bad = Object.entries(src.health).filter(([, v]) => !v.ok).length;
   log(`FX ${mode}: ${Object.keys(snap.pairs).length} pairs, ${snap.events.length} events, ${snap.headlines.length} headlines, ${sent} message(s), ${bad} source(s) down`);
   return { mode, sent, pairs: Object.keys(snap.pairs).length, events: snap.events.length, headlines: snap.headlines.length, down: bad };

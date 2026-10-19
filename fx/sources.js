@@ -98,3 +98,34 @@ export function parseCot(rows) {
 export async function cot(market) {
   return parseCot(JSON.parse(await fetchText(FX.cotUrl(market), { name: `cot:${market.split(' - ')[0]}` })));
 }
+
+// ── US rates (FRED, keyless CSV) → [{ t, v }] oldest → newest, missing days skipped
+export function parseFredCsv(text) {
+  return String(text)
+    .trim()
+    .split(/\r?\n/)
+    .slice(1)
+    .map((line) => {
+      const [d, v] = line.split(',');
+      return { t: Date.parse(d), v: Number(v) };
+    })
+    .filter((x) => Number.isFinite(x.t) && Number.isFinite(x.v));
+}
+
+export async function fred(id) {
+  return parseFredCsv(await fetchText(FX.fredUrl(id), { name: `fred:${id}` }));
+}
+
+// ── Stooq live quote (keyless CSV) → { price, at } — second opinion on spot prices
+export function parseStooqQuote(text) {
+  const [head, row] = String(text).trim().split(/\r?\n/);
+  if (!head || !row) return null;
+  const cols = head.toLowerCase().split(',');
+  const v = row.split(',');
+  const close = Number(v[cols.indexOf('close')]);
+  return Number.isFinite(close) && close > 0 ? { price: close } : null;
+}
+
+export async function stooqQuote(sym) {
+  return parseStooqQuote(await fetchText(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlc&h&e=csv`, { name: `stooq:${sym}` }));
+}

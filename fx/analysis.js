@@ -76,7 +76,14 @@ export function driverMove(daily) {
 }
 
 // Directional lean: every factor is +1 / −1 (×weight) with a plain-English reason
-export function bias(pairKey, { daily, hourly, drivers = {}, cot = null }) {
+// A FRED rate series' move in basis points: today vs previous, and over ~5 sessions
+export function macroMove(series) {
+  if (!series?.length || series.length < 6) return null;
+  const v = last(series).v;
+  return { v, d1bp: (v - series[series.length - 2].v) * 100, d5bp: (v - series[series.length - 6].v) * 100, asOf: last(series).t };
+}
+
+export function bias(pairKey, { daily, hourly, drivers = {}, macro = {}, cot = null }) {
   const P = FX.pairs[pairKey];
   const f = [];
   const add = (dir, weight, why) => dir && f.push({ dir: Math.sign(dir), weight, why });
@@ -98,6 +105,14 @@ export function bias(pairKey, { daily, hourly, drivers = {}, cot = null }) {
     if (!meaningful) continue;
     const dir = Math.sign(m.d5) * sign;
     add(dir, 1, `${FX.drivers[key].name} ${m.d5 >= 0 ? 'up' : 'down'} ${Math.abs(m.d5).toFixed(1)}% this week → usually ${dir > 0 ? 'supports' : 'weighs on'} ${P.name}`);
+  }
+
+  for (const [key, sign] of Object.entries(P.macro || {})) {
+    const m = macro[key];
+    const M = FX.macro[key];
+    if (!sign || !m || m.d5bp == null || Math.abs(m.d5bp) < M.shockBp / 2) continue;
+    const dir = Math.sign(m.d5bp) * sign;
+    add(dir, 1, `${M.name} ${m.d5bp >= 0 ? 'up' : 'down'} ${Math.abs(m.d5bp).toFixed(0)} bp this week (now ${m.v.toFixed(2)}%) → usually ${dir > 0 ? 'supports' : 'weighs on'} ${P.name}`);
   }
 
   if (cot?.length >= 2) {
