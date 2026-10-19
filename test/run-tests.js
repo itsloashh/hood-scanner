@@ -1326,6 +1326,39 @@ await test('budget: leisure priorities get their % of the leisure money in order
   assert.equal(c.bills[0].nextDue, '2026-11-16');
 });
 
+await test('budget: next payday from a date you set, every 2 weeks; undo a test paycheque exactly', async () => {
+  const B = await import('../worker/budget.js');
+  const on = '2026-10-19';
+  for (const [t, want] of [['Oct 23', '2026-10-23'], ['friday october 23rd, 2026', '2026-10-23'], ['2026-10-23', '2026-10-23'], ['10/23', '2026-10-23'], ['Friday', '2026-10-23'], ['23 October', '2026-10-23'], ['tomorrow', '2026-10-20']]) {
+    assert.equal(B.parseDate(t, on), want, t);
+  }
+  assert.equal(B.parseDate('Oct 2', on), '2027-10-02'); // already passed this year → next year
+  const b = B.freshBudget();
+  b.pay.anchor = '2026-10-23';
+  assert.equal(B.nextPayAfter(b, on, true), '2026-10-23');
+  assert.equal(B.nextPayAfter(b, '2026-10-23'), '2026-11-06');
+  assert.equal(B.nextPayAfter(b, '2026-11-10'), '2026-11-20');
+  assert.equal(B.isPayday(b, '2026-11-06'), true);
+  assert.equal(B.isPayday(b, '2026-11-07'), false);
+  assert.match(B.dailyReminders(b, '2026-11-06').join('\n'), /PAYDAY TODAY/);
+  // a paycheque on Oct 23 plans bills up to Nov 6
+  b.bills.push({ id: 1, name: 'Rent', amount: 1200, freq: 'monthly', day: 1, nextDue: '2026-11-01', saved: 0 });
+  b.fun.push({ id: 2, name: 'Golf', pct: 50, balance: 0 });
+  const a = B.allocate(b, 2000, '2026-10-23');
+  assert.equal(a.nextPay, '2026-11-06');
+  assert.equal(a.bills[0].give, 1200);
+  const before = JSON.parse(JSON.stringify(b));
+  B.applyPaycheque(b, a);
+  assert.equal(b.pay.last, '2026-10-23');
+  const h = B.undoLastPay(b);
+  assert.equal(h.amount, 2000);
+  assert.equal(b.history.length, 0);
+  assert.equal(b.pay.last, null);
+  assert.deepEqual(b.balances, before.balances);
+  assert.equal(b.bills[0].saved, 0);
+  assert.equal(b.fun[0].balance, 0);
+});
+
 await test('budget: buttons + typed replies in Telegram (add bill, log paycheque), stored privately in KV', async () => {
   const W = await import('../worker/worker.js');
   const kv = new Map();
@@ -1386,6 +1419,14 @@ await test('budget: buttons + typed replies in Telegram (add bill, log paycheque
     assert.equal(JSON.parse(kv.get('budget')).fun[0].pct, 50);
     await say('/spent 30 golf range');
     assert.match(sent.at(-1).b.text, /From: 🎉 Golf/);
+    await tap('bgh');
+    assert.match(JSON.stringify(sent.at(-1).b.reply_markup), /Undo last paycheque/);
+    const n0 = JSON.parse(kv.get('budget')).history.length;
+    await tap('bgj');
+    assert.equal(JSON.parse(kv.get('budget')).history.length, n0 - 1);
+    await say('/payday Oct 23');
+    assert.match(sent.at(-1).b.text, /PAY SCHEDULE/);
+    assert.ok(JSON.parse(kv.get('budget')).pay.anchor.endsWith('-10-23'));
     await tap('bgq:weekly');
     assert.equal(JSON.parse(kv.get('budget')).pay.freq, 'weekly');
   } finally {

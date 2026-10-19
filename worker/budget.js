@@ -38,6 +38,68 @@ export function nextDue(day, from) {
   }
   return null;
 }
+// ── paydays: anchored to a date you set ("next payday Fri Oct 23"), then every interval ──
+const STEP = { weekly: 7, biweekly: 14 };
+// first payday strictly after `d` (or on/after with inclusive)
+export function nextPayAfter(b, d, inclusive = false) {
+  const freq = b.pay.freq;
+  const anchor = b.pay.anchor;
+  if (anchor) {
+    if (STEP[freq]) {
+      const step = STEP[freq];
+      const diff = daysBetween(anchor, d);
+      let k = Math.floor(diff / step);
+      let cand = addDays(anchor, k * step);
+      while (inclusive ? cand < d : cand <= d) cand = addDays(anchor, ++k * step);
+      return cand;
+    }
+    const day = Number(anchor.slice(8));
+    if (freq === 'monthly') return nextDue(day, inclusive ? d : addDays(d, 1));
+    // twice a month: the anchor day and 15 days later, each month
+    const a = nextDue(day, inclusive ? d : addDays(d, 1));
+    const second = ((day + 14) % 31) + 1;
+    const c = nextDue(second, inclusive ? d : addDays(d, 1));
+    return a < c ? a : c;
+  }
+  const base = b.pay.last && b.pay.last <= d ? b.pay.last : d;
+  let cand = addDays(base, Math.round(PAY_DAYS[freq] || 14));
+  while (inclusive ? cand < d : cand <= d) cand = addDays(cand, Math.round(PAY_DAYS[freq] || 14));
+  return cand;
+}
+export const isPayday = (b, d) => Boolean(b.pay.anchor) && nextPayAfter(b, d, true) === d;
+
+// "Oct 23" · "October 23rd, 2026" · "2026-10-23" · "10/23" · "Friday" · "tomorrow"
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+export function parseDate(text, on = today()) {
+  const t = String(text).toLowerCase().replace(/(\d)(st|nd|rd|th)\b/g, '$1');
+  const pad = (n) => String(n).padStart(2, '0');
+  const yNow = Number(on.slice(0, 4));
+  const fix = (y, m, d) => {
+    if (!(m >= 1 && m <= 12 && d >= 1 && d <= 31)) return null;
+    let iso = `${y}-${pad(m)}-${pad(d)}`;
+    if (!y || iso < addDays(on, -1)) iso = `${(y || yNow) + (iso < on ? 1 : 0)}-${pad(m)}-${pad(d)}`;
+    return iso;
+  };
+  let m = t.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+  m = t.match(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+(\d{1,2})(?:,?\s+(\d{4}))?/);
+  if (m) return m[3] ? `${m[3]}-${pad(MONTHS.indexOf(m[1]) + 1)}-${pad(m[2])}` : fix(yNow, MONTHS.indexOf(m[1]) + 1, Number(m[2]));
+  m = t.match(/\b(\d{1,2})\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*(?:,?\s+(\d{4}))?/);
+  if (m) return m[3] ? `${m[3]}-${pad(MONTHS.indexOf(m[2]) + 1)}-${pad(m[1])}` : fix(yNow, MONTHS.indexOf(m[2]) + 1, Number(m[1]));
+  m = t.match(/\b(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\b/);
+  if (m) return m[3] ? `${m[3].length === 2 ? `20${m[3]}` : m[3]}-${pad(m[1])}-${pad(m[2])}` : fix(yNow, Number(m[1]), Number(m[2]));
+  if (/\btoday\b/.test(t)) return on;
+  if (/\btomorrow\b/.test(t)) return addDays(on, 1);
+  m = t.match(/\b(sun|mon|tue|wed|thu|fri|sat)[a-z]*/);
+  if (m) {
+    const target = WEEKDAYS.indexOf(m[1]);
+    const cur = new Date(toMs(on)).getUTCDay();
+    return addDays(on, (target - cur + 7) % 7);
+  }
+  return null;
+}
+
 // the due date after this one
 const followingDue = (bill) => (bill.freq === 'weekly' ? addDays(bill.nextDue, 7) : bill.freq === 'biweekly' ? addDays(bill.nextDue, 14) : nextDue(bill.day, addDays(bill.nextDue, 1)));
 const monthlyCost = (bill) => (bill.freq === 'weekly' ? (bill.amount * 52) / 12 : bill.freq === 'biweekly' ? (bill.amount * 26) / 12 : bill.amount);
@@ -128,7 +190,7 @@ export function parseFun(text) {
 // 4) leisure then feeds your priorities in order (Golf 40%…); what's left stays general leisure.
 export function allocate(b, amount, on = today()) {
   const interval = PAY_DAYS[b.pay.freq] || 14;
-  const nextPay = addDays(on, Math.round(interval));
+  const nextPay = nextPayAfter(b, on);
   let left = r2(amount);
   const bills = [];
   for (const bill of [...b.bills].sort((x, y) => (x.nextDue < y.nextDue ? -1 : 1))) {
@@ -179,9 +241,33 @@ export function applyPaycheque(b, a) {
   b.balances.spending = r2(b.balances.spending + a.spending);
   b.balances.leisure = r2(b.balances.leisure + (a.leisureGeneral ?? a.leisure));
   b.balances.investing = r2(b.balances.investing + a.investing);
+  const prevLast = b.pay.last || null;
   b.pay.last = a.on;
-  b.history.unshift({ on: a.on, amount: a.amount, bills: a.bills.map((x) => ({ name: x.name, give: x.give })), essentials: a.essentials, spending: a.spending, leisure: a.leisure, fun: (a.fun || []).map((x) => ({ name: x.name, give: x.give })), investing: a.investing, short: a.short });
+  b.history.unshift({ on: a.on, amount: a.amount, prevLast, bills: a.bills.map((x) => ({ id: x.id, name: x.name, give: x.give })), essentials: a.essentials, spending: a.spending, leisure: a.leisure, leisureGeneral: a.leisureGeneral ?? a.leisure, fun: (a.fun || []).map((x) => ({ id: x.id, name: x.name, give: x.give })), investing: a.investing, short: a.short });
   b.history = b.history.slice(0, 30);
+}
+
+// Take back the most recent paycheque exactly as it was sorted (for a test or a typo)
+export function undoLastPay(b) {
+  const h = b.history[0];
+  if (!h) return null;
+  const find = (list, x) => list.find((y) => (x.id != null && y.id === x.id)) || list.find((y) => y.name === x.name);
+  for (const x of h.bills || []) {
+    const bill = find(b.bills, x);
+    if (bill) bill.saved = r2(Math.max(0, (bill.saved || 0) - x.give));
+  }
+  for (const x of h.fun || []) {
+    const f = find(b.fun, x);
+    if (f) f.balance = r2((f.balance || 0) - x.give);
+  }
+  const funTotal = (h.fun || []).reduce((s, x) => s + x.give, 0);
+  b.balances.essentials = r2(b.balances.essentials - h.essentials);
+  b.balances.spending = r2(b.balances.spending - h.spending);
+  b.balances.leisure = r2(b.balances.leisure - (h.leisureGeneral ?? h.leisure - funTotal));
+  b.balances.investing = r2(b.balances.investing - h.investing);
+  b.history.shift();
+  b.pay.last = h.prevLast !== undefined ? h.prevLast : b.history[0]?.on || null;
+  return h;
 }
 
 // Bills whose due date passed: paid from their set-aside money, rolled to the next due date
@@ -213,7 +299,7 @@ export const saveBudget = (env, b) => env.PAPER.put('budget', JSON.stringify(b))
 // ── screens (every one starts "BUDGET ·" so taps edit in place) ──
 const btn = (text, data) => ({ text, callback_data: data });
 const HOME = [btn('💰 Budget home', 'bg')];
-const nextPayOf = (b) => (b.pay.last ? addDays(b.pay.last, Math.round(PAY_DAYS[b.pay.freq])) : null);
+const nextPayOf = (b, on = today()) => (b.pay.anchor || b.pay.last ? nextPayAfter(b, on, true) : null);
 const dueTag = (on, d) => {
   const n = daysBetween(on, d);
   return n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`;
@@ -221,9 +307,11 @@ const dueTag = (on, d) => {
 
 export function homeScreen(b, on = today()) {
   const L = ['BUDGET · 💰 BUDGET', ''];
-  const np = nextPayOf(b);
+  const np = nextPayOf(b, on);
   L.push(`📅 Paid ${PAY_NAMES[b.pay.freq]}`);
-  if (b.pay.last) L.push(`• Last payday: ${nice(b.pay.last)}`, `• Next payday: ≈ ${nice(np)}`);
+  if (b.pay.last) L.push(`• Last payday: ${nice(b.pay.last)}`);
+  if (np) L.push(`• Next payday: ${b.pay.anchor ? '' : '≈ '}${nice(np)}${np === on ? ' (today!)' : ` (${dueTag(on, np)})`}`);
+  else L.push('• Next payday: not set — 📅 Pay schedule → Set next payday');
   L.push('', '💼 WHERE YOUR MONEY IS');
   L.push(`• 🧾 Set aside for bills: ${money(b.bills.reduce((s, x) => s + (x.saved || 0), 0))}`);
   L.push(`• 🛒 Essentials: ${money(b.balances.essentials)}`);
@@ -354,10 +442,20 @@ export function splitScreen(b) {
   };
 }
 
-export function payScreen(b) {
+export function payScreen(b, on = today()) {
+  const np = nextPayOf(b, on);
+  const upcoming = [];
+  if (b.pay.anchor) {
+    let d = np;
+    for (let i = 0; i < 4 && d; i++) {
+      upcoming.push(nice(d));
+      d = nextPayAfter(b, d);
+    }
+  }
   return {
-    text: `BUDGET · 📅 HOW OFTEN DO YOU GET PAID?\n\n• Now: ${PAY_NAMES[b.pay.freq]}\n\nThis sets how much each paycheque puts aside for bills and essentials.`,
+    text: `BUDGET · 📅 PAY SCHEDULE\n\n• Paid: ${PAY_NAMES[b.pay.freq]}\n• Next payday: ${np ? nice(np) : 'not set'}${upcoming.length > 1 ? `\n• Then: ${upcoming.slice(1).join(' · ')}` : ''}\n\nThis sets how much each paycheque puts aside for bills and essentials. Tap how often you're paid, and set your next payday so the dates are exact.`,
     kb: [
+      [btn('📅 Set next payday', 'bgd')],
       Object.keys(PAY_NAMES).slice(0, 2).map((k) => btn(`${b.pay.freq === k ? '✅ ' : ''}${PAY_NAMES[k]}`, `bgq:${k}`)),
       Object.keys(PAY_NAMES).slice(2).map((k) => btn(`${b.pay.freq === k ? '✅ ' : ''}${PAY_NAMES[k]}`, `bgq:${k}`)),
       HOME,
@@ -380,7 +478,10 @@ export function historyScreen(b) {
     L.push('', '🧾 BILLS PAID');
     for (const p of b.log.slice(0, 8)) L.push(`• ${nice(p.due)} ${p.name} ${money(p.amount)}${p.short ? ` — ⚠️ ${money(p.short)} wasn't set aside` : ' ✅'}`);
   }
-  return { text: L.join('\n'), kb: [HOME] };
+  const kb = [];
+  if (b.history.length) kb.push([btn(`↩️ Undo last paycheque (${money(b.history[0].amount)})`, 'bgj')]);
+  kb.push(HOME);
+  return { text: L.join('\n'), kb };
 }
 
 // ── spending: "40 drinks" · "/spent 60 golf" ─────────────────
@@ -459,6 +560,7 @@ export function spendPickScreen(b) {
 }
 
 export const ASK = {
+  payday: 'BUDGET · 📅 When is your next payday?\n\nSend a date, e.g. Oct 23 · Friday · 2026-10-23',
   pay: 'BUDGET · 💵 How much did you get paid?\n\nSend the amount, e.g. 1850 or $1,850.25',
   bill: 'BUDGET · ➕ Send bills like this (one or several at once):\n\n• Rent 1200 on the 1st\n• Phone $85.50 15th\n• Car insurance 210 due 28\n• Credit card 150 every 2 weeks',
   essential: 'BUDGET · ➕ Send a monthly essential like:\n\n• Groceries 400\n• Gas 160',
@@ -475,6 +577,13 @@ export function handleText(b, text, on = today()) {
   if (/^(cancel|stop|nevermind|never mind|done)$/i.test(t)) {
     b.awaiting = null;
     return homeScreen(b, on);
+  }
+  if (kind === 'payday') {
+    const d = parseDate(t, on);
+    if (!d) return { text: `${ASK.payday}\n\n(Couldn't read a date in "${t}")`, kb: [HOME] };
+    b.awaiting = null;
+    b.pay.anchor = d;
+    return payScreen(b, on);
   }
   if (kind === 'pay') {
     const amount = parseAmount(t);
@@ -583,10 +692,15 @@ export function handleTap(b, op, a, c, d, on = today()) {
     b.split = { spending: Number(a), leisure: Number(c), investing: Number(d) };
     return splitScreen(b);
   }
-  if (op === 'bgf') return payScreen(b);
+  if (op === 'bgf') return payScreen(b, on);
+  if (op === 'bgd') { b.awaiting = 'payday'; return { text: ASK.payday, kb: [HOME] }; }
+  if (op === 'bgj') {
+    const h = undoLastPay(b);
+    return { ...historyScreen(b), text: `${h ? `BUDGET · ↩️ Took back the ${money(h.amount)} paycheque from ${nice(h.on)} — every bill, bucket and priority is back where it was.` : 'BUDGET · Nothing to undo.'}\n\n${historyScreen(b).text.replace(/^BUDGET · /, '')}` };
+  }
   if (op === 'bgq') {
     if (PAY_NAMES[a]) b.pay.freq = a;
-    return payScreen(b);
+    return payScreen(b, on);
   }
   if (op === 'bgh') return historyScreen(b);
   return homeScreen(b, on);
@@ -596,7 +710,9 @@ export function handleTap(b, op, a, c, d, on = today()) {
 export function dailyReminders(b, on = today()) {
   normalize(b);
   const paid = rollBills(b, on);
-  const msgs = paid.map((p) => `🧾 ${p.name} ${money(p.amount)} was due ${nice(p.due)} — ${p.short ? `⚠️ only ${money(p.covered)} was set aside` : 'paid from what you set aside ✅'}`);
+  const payday = isPayday(b, on) && b.pay.last !== on ? [`💵 PAYDAY TODAY — tap 💵 I got paid (or send /paid 1850) and I'll sort it.`] : [];
+  const msgs = payday;
+  msgs.push(...paid.map((p) => `🧾 ${p.name} ${money(p.amount)} was due ${nice(p.due)} — ${p.short ? `⚠️ only ${money(p.covered)} was set aside` : 'paid from what you set aside ✅'}`));
   for (const x of b.bills) {
     const n = daysBetween(on, x.nextDue);
     if (n === 0 || n === 3) {

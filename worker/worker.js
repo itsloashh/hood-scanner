@@ -51,6 +51,7 @@ const HELP = [
   '/budget — bills, set-asides and buckets (buttons)',
   '/paid 1850 — log a paycheque and sort it',
   '/bill Rent 1200 on the 1st — add a monthly bill',
+  '/payday Oct 23 — set your next payday (then it repeats on your schedule)',
   '/spent 40 drinks — log spending (bucket picked from the words, or tap one)',
   '/help — this list',
   '',
@@ -426,6 +427,15 @@ async function handleMessage(env, msg) {
       b.awaiting = 'spend';
       scr = BG.spendPickScreen(b);
     }
+    await BG.saveBudget(env, b);
+    return sendScreen(env, chatId, scr);
+  }
+
+  if (cmd === '/payday') {
+    if (!env.PAPER) return reply(env, chatId, needKV.text);
+    const b = await BG.loadBudget(env);
+    b.awaiting = 'payday';
+    const scr = args.length ? BG.handleText(b, args.join(' ')) : { text: BG.ASK.payday, kb: [[{ text: '💰 Budget home', callback_data: 'bg' }]] };
     await BG.saveBudget(env, b);
     return sendScreen(env, chatId, scr);
   }
