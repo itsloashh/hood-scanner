@@ -417,7 +417,7 @@ async function handleMessage(env, msg) {
   if (cmd === '/spent' || cmd === '/spend') {
     if (!env.PAPER) return reply(env, chatId, needKV.text);
     const b = await BG.loadBudget(env);
-    const sp = args.length ? BG.parseSpend(args.join(' ')) : null;
+    const sp = args.length ? BG.parseSpend(args.join(' '), null, b) : null;
     let scr;
     if (sp) {
       scr = BG.spentScreen(b, BG.logSpend(b, sp));

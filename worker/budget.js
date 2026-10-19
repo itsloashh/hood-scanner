@@ -1,15 +1,19 @@
 // ════════════════════════════════════════════════════════════
-//  BUDGET ASSISTANT — bills with due dates, paycheque sorting, reminders.
-//  Stored in the Worker's private KV (key "budget") — never in the public repo.
+//  BUDGET ASSISTANT — bills with due dates, paycheque sorting, leisure priorities,
+//  spending log, reminders. Stored in the Worker's private KV (key "budget") —
+//  never in the public repo.
 // ════════════════════════════════════════════════════════════
 const TZ = 'America/Toronto';
 const DAY = 86_400_000;
 const PAY_DAYS = { weekly: 7, biweekly: 14, semimonthly: 15.22, monthly: 30.44 };
 const PAY_NAMES = { weekly: 'every week', biweekly: 'every 2 weeks', semimonthly: 'twice a month', monthly: 'once a month' };
+const BILL_FREQ = { monthly: 'every month', biweekly: 'every 2 weeks', weekly: 'every week' };
 const BUCKETS = { spending: '🛍 Spending', leisure: '🎉 Leisure', investing: '📈 Investing' };
+const ALL_BUCKETS = { essentials: '🛒 Essentials', ...BUCKETS };
 
 export const money = (v) => `${v < 0 ? '−' : ''}$${Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const r2 = (v) => Math.round(v * 100) / 100;
+const cap = (s) => s.replace(/^\p{L}/u, (c) => c.toUpperCase());
 
 // ── dates in Toronto time, as YYYY-MM-DD strings ─────────────
 export function today(ms = Date.now()) {
@@ -34,18 +38,30 @@ export function nextDue(day, from) {
   }
   return null;
 }
+// the due date after this one
+const followingDue = (bill) => (bill.freq === 'weekly' ? addDays(bill.nextDue, 7) : bill.freq === 'biweekly' ? addDays(bill.nextDue, 14) : nextDue(bill.day, addDays(bill.nextDue, 1)));
+const monthlyCost = (bill) => (bill.freq === 'weekly' ? (bill.amount * 52) / 12 : bill.freq === 'biweekly' ? (bill.amount * 26) / 12 : bill.amount);
+const billWhen = (x) => (x.freq && x.freq !== 'monthly' ? BILL_FREQ[x.freq] : `on the ${ordinal(x.day)}`);
 
 export function freshBudget() {
   return {
-    bills: [], essentials: [],
+    bills: [], essentials: [], fun: [],
     split: { spending: 40, leisure: 30, investing: 30 },
     pay: { freq: 'biweekly', last: null },
     balances: { essentials: 0, spending: 0, leisure: 0, investing: 0 },
     history: [], log: [], spends: [], awaiting: null, nextId: 1,
   };
 }
+// older saved budgets → current shape
+function normalize(b) {
+  const f = freshBudget();
+  for (const k of Object.keys(f)) if (b[k] === undefined) b[k] = f[k];
+  for (const x of b.bills) x.freq ||= 'monthly';
+  for (const x of b.fun) x.balance ||= 0;
+  return b;
+}
 
-// ── parsing what you type ─────────────────────────────────────
+// ── reading what you type ─────────────────────────────────────
 const AMOUNT = /\$?\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?/g;
 const num = (m) => Number(`${m[1].replace(/,/g, '')}${m[2] ? `.${m[2]}` : ''}`);
 
@@ -54,48 +70,62 @@ export function parseAmount(text) {
   return m.length ? num(m[0]) : null;
 }
 
-// "Rent 1200 on the 1st" · "Phone $85.50 15th" · "Car insurance 210 due 28"
-export function parseBill(text) {
-  let t = String(text).trim();
-  const ord = t.match(/\b(?:on\s+the\s+|on\s+|due\s+(?:on\s+)?(?:the\s+)?)?(\d{1,2})(st|nd|rd|th)\b/i) || t.match(/\b(?:on\s+the\s+|on\s+|due\s+(?:on\s+)?(?:the\s+)?)(\d{1,2})\b/i);
-  let day = null;
-  if (ord) {
-    day = Number(ord[1]);
-    t = t.replace(ord[0], ' ');
-  }
-  const nums = [...t.matchAll(AMOUNT)];
-  if (!nums.length) return null;
-  let amtMatch = nums.find((m) => m[0].includes('$') || m[2]) || nums[0];
-  if (day == null) {
-    // two plain numbers: the one ≤31 that isn't the amount is the day
-    const other = nums.find((m) => m !== amtMatch && num(m) >= 1 && num(m) <= 31);
-    if (other) {
-      day = num(other);
-      t = t.replace(other[0], ' ');
-    } else if (nums.length >= 2) {
-      amtMatch = nums[0];
+const FREQ_RE = /(every\s+(?:2|two|other)\s+weeks?|every\s+other\s+week|bi-?weekly|every\s+week|weekly|every\s+month|monthly|a\s+month|per\s+month)/i;
+const freqOf = (s) => (!s ? null : /2|two|other|bi/i.test(s) ? 'biweekly' : /week/i.test(s) ? 'weekly' : 'monthly');
+// one bill = name, amount, then a day of month and/or how often — several can come in one message
+const BILL_RE = new RegExp(
+  String.raw`([\p{L}][\p{L}&'\- ]*?)\s*\$?\s?(\d{1,3}(?:,\d{3})+|\d+)(?:\.(\d{1,2}))?` + // name + amount
+    String.raw`(?:\s*${FREQ_RE.source})?` + // optional "every 2 weeks"
+    String.raw`(?:\s*(?:due\s+)?(?:on\s+)?(?:the\s+)?(\d{1,2})(?:st|nd|rd|th)?(?![\d.,]))?`, // optional day of month
+  'giu'
+);
+const STOP = /\b(bill|bills|due|on|the|is|for|of|and|my|a|it|payment\s+of)\b/gi;
+
+// "Rent 1200 1st, car insurance 110 15th hydro 75 21st" · "credit card 150 every 2 weeks"
+export function parseBills(text) {
+  const out = [];
+  const parts = String(text).replace(/\s+and\s+/gi, '\n').split(/[\n;]+|,(?!\d{3})/); // "$1,050" stays one number
+  for (const part of parts) {
+    for (const m of part.matchAll(BILL_RE)) {
+      const name = cap(m[1].replace(STOP, ' ').replace(/\s+/g, ' ').trim());
+      const amount = r2(Number(`${m[2].replace(/,/g, '')}${m[3] ? `.${m[3]}` : ''}`));
+      const freq = freqOf(m[4]) || 'monthly';
+      const day = m[5] ? Number(m[5]) : null;
+      if (!name || !(amount > 0)) continue;
+      if (freq === 'monthly' && !(day >= 1 && day <= 31)) continue;
+      out.push({ name, amount, freq, day: day && day <= 31 ? day : null });
     }
   }
-  const amount = num(amtMatch);
-  t = t.replace(amtMatch[0], ' ');
-  const name = t.replace(/\b(bill|due|on|the|every|month|monthly|is|for|of|a)\b/gi, ' ').replace(/[^\p{L}\p{N}&' -]/gu, ' ').replace(/\s+/g, ' ').trim();
-  if (!name || !(amount > 0) || !(day >= 1 && day <= 31)) return null;
-  return { name: name.replace(/^\w/, (c) => c.toUpperCase()), amount: r2(amount), day };
+  return out;
 }
+export const parseBill = (text) => {
+  const b = parseBills(text)[0];
+  return b ? { name: b.name, amount: b.amount, day: b.day } : null;
+};
 
 // "Groceries 400" — monthly essential
 export function parseEssential(text) {
   const amount = parseAmount(text);
   const name = String(text).replace(AMOUNT, ' ').replace(/\b(a|per|every|month|monthly|\/mo|mo)\b/gi, ' ').replace(/[^\p{L}\p{N}&' -]/gu, ' ').replace(/\s+/g, ' ').trim();
   if (!name || !(amount > 0)) return null;
-  return { name: name.replace(/^\w/, (c) => c.toUpperCase()), monthly: r2(amount) };
+  return { name: cap(name), monthly: r2(amount) };
+}
+
+// "Golf 40%" or "Golf 40" — a leisure priority taking 40% of each cheque's leisure money
+export function parseFun(text) {
+  const m = String(text).match(/^\s*([\p{L}][\p{L}\p{N}&' -]*?)\s+(\d{1,3})\s*%?\s*$/u);
+  if (!m) return null;
+  const pct = Number(m[2]);
+  if (!(pct > 0 && pct <= 100)) return null;
+  return { name: cap(m[1].trim()), pct };
 }
 
 // ── the paycheque sort ────────────────────────────────────────
-// 1) bills: each bill gets its share so it's fully funded by its due date — bills due
-//    before the next payday get everything they still need. Earliest due first.
+// 1) bills: each gets its share so it's fully funded by its due date — bills due before
+//    the next payday get everything they still need. Earliest due first.
 // 2) essentials: monthly total ÷ paycheques per month.
 // 3) the rest splits into spending / leisure / investing by your percentages.
+// 4) leisure then feeds your priorities in order (Golf 40%…); what's left stays general leisure.
 export function allocate(b, amount, on = today()) {
   const interval = PAY_DAYS[b.pay.freq] || 14;
   const nextPay = addDays(on, Math.round(interval));
@@ -120,8 +150,20 @@ export function allocate(b, amount, on = today()) {
   const spending = r2((left * (pct.spending || 0)) / total);
   const leisure = r2((left * (pct.leisure || 0)) / total);
   const investing = r2(left - spending - leisure);
+  // leisure priorities, top first, never more than 100% of the leisure money
+  const fun = [];
+  let pctLeft = 100;
+  let funTotal = 0;
+  for (const f of b.fun || []) {
+    const p = Math.min(f.pct, pctLeft);
+    pctLeft -= p;
+    const give = r2((leisure * p) / 100);
+    funTotal = r2(funTotal + give);
+    fun.push({ id: f.id, name: f.name, pct: p, wanted: f.pct, give });
+  }
+  const leisureGeneral = r2(leisure - funTotal);
   const short = r2(bills.reduce((s, x) => s + (x.want - x.give), 0) + (essWant - essentials));
-  return { amount: r2(amount), on, nextPay, bills, essentials, essWant, spending, leisure, investing, short: short > 0.005 ? short : 0 };
+  return { amount: r2(amount), on, nextPay, bills, essentials, essWant, spending, leisure, leisureGeneral, fun, investing, short: short > 0.005 ? short : 0 };
 }
 
 export function applyPaycheque(b, a) {
@@ -129,22 +171,29 @@ export function applyPaycheque(b, a) {
     const bill = b.bills.find((y) => y.id === x.id);
     if (bill) bill.saved = r2((bill.saved || 0) + x.give);
   }
+  for (const x of a.fun || []) {
+    const f = b.fun.find((y) => y.id === x.id);
+    if (f) f.balance = r2((f.balance || 0) + x.give);
+  }
   b.balances.essentials = r2(b.balances.essentials + a.essentials);
-  for (const k of Object.keys(BUCKETS)) b.balances[k] = r2(b.balances[k] + a[k]);
+  b.balances.spending = r2(b.balances.spending + a.spending);
+  b.balances.leisure = r2(b.balances.leisure + (a.leisureGeneral ?? a.leisure));
+  b.balances.investing = r2(b.balances.investing + a.investing);
   b.pay.last = a.on;
-  b.history.unshift({ on: a.on, amount: a.amount, bills: a.bills.map((x) => ({ name: x.name, give: x.give })), essentials: a.essentials, spending: a.spending, leisure: a.leisure, investing: a.investing, short: a.short });
+  b.history.unshift({ on: a.on, amount: a.amount, bills: a.bills.map((x) => ({ name: x.name, give: x.give })), essentials: a.essentials, spending: a.spending, leisure: a.leisure, fun: (a.fun || []).map((x) => ({ name: x.name, give: x.give })), investing: a.investing, short: a.short });
   b.history = b.history.slice(0, 30);
 }
 
-// Bills whose due date passed: paid from their set-aside money, rolled to next month
+// Bills whose due date passed: paid from their set-aside money, rolled to the next due date
 export function rollBills(b, on = today()) {
   const paid = [];
   for (const bill of b.bills) {
-    while (bill.nextDue && bill.nextDue < on) {
+    let guard = 0;
+    while (bill.nextDue && bill.nextDue < on && guard++ < 60) {
       const covered = Math.min(bill.saved || 0, bill.amount);
       paid.push({ name: bill.name, amount: bill.amount, due: bill.nextDue, covered: r2(covered), short: r2(bill.amount - covered) });
       bill.saved = r2((bill.saved || 0) - covered);
-      bill.nextDue = nextDue(bill.day, addDays(bill.nextDue, 1));
+      bill.nextDue = followingDue(bill);
     }
   }
   if (paid.length) {
@@ -157,45 +206,50 @@ export function rollBills(b, on = today()) {
 // ── KV ────────────────────────────────────────────────────────
 export async function loadBudget(env) {
   if (!env.PAPER) return null;
-  const b = (await env.PAPER.get('budget', 'json')) || freshBudget();
-  return b;
+  return normalize((await env.PAPER.get('budget', 'json')) || freshBudget());
 }
 export const saveBudget = (env, b) => env.PAPER.put('budget', JSON.stringify(b));
 
 // ── screens (every one starts "BUDGET ·" so taps edit in place) ──
 const btn = (text, data) => ({ text, callback_data: data });
 const HOME = [btn('💰 Budget home', 'bg')];
+const nextPayOf = (b) => (b.pay.last ? addDays(b.pay.last, Math.round(PAY_DAYS[b.pay.freq])) : null);
+const dueTag = (on, d) => {
+  const n = daysBetween(on, d);
+  return n === 0 ? 'today' : n === 1 ? 'tomorrow' : `in ${n} days`;
+};
 
 export function homeScreen(b, on = today()) {
   const L = ['BUDGET · 💰 BUDGET', ''];
-  const set = b.bills.reduce((s, x) => s + (x.saved || 0), 0);
-  const due30 = b.bills.filter((x) => daysBetween(on, x.nextDue) <= 30);
-  L.push(`Paid ${PAY_NAMES[b.pay.freq]}${b.pay.last ? ` · last payday ${nice(b.pay.last)} · next ≈ ${nice(addDays(b.pay.last, Math.round(PAY_DAYS[b.pay.freq])))}` : ''}`);
-  L.push('');
-  L.push(`🧾 Set aside for bills: ${money(set)}`);
-  L.push(`🛒 Essentials: ${money(b.balances.essentials)}`);
-  for (const [k, label] of Object.entries(BUCKETS)) L.push(`${label}: ${money(b.balances[k])}`);
+  const np = nextPayOf(b);
+  L.push(`📅 Paid ${PAY_NAMES[b.pay.freq]}`);
+  if (b.pay.last) L.push(`• Last payday: ${nice(b.pay.last)}`, `• Next payday: ≈ ${nice(np)}`);
+  L.push('', '💼 WHERE YOUR MONEY IS');
+  L.push(`• 🧾 Set aside for bills: ${money(b.bills.reduce((s, x) => s + (x.saved || 0), 0))}`);
+  L.push(`• 🛒 Essentials: ${money(b.balances.essentials)}`);
+  L.push(`• 🛍 Spending: ${money(b.balances.spending)}`);
+  const funTotal = b.fun.reduce((s, f) => s + (f.balance || 0), 0);
+  L.push(`• 🎉 Leisure: ${money(b.balances.leisure + funTotal)}`);
+  for (const f of b.fun) L.push(`    ◦ ${f.name}: ${money(f.balance || 0)}`);
+  if (b.fun.length) L.push(`    ◦ General: ${money(b.balances.leisure)}`);
+  L.push(`• 📈 Investing: ${money(b.balances.investing)}`);
   const since = b.pay.last || '0000';
-  const spent = (b.spends || []).filter((e) => e.on >= since).reduce((s2, e) => s2 + e.amount, 0);
-  if (spent) L.push(`💸 Spent since last payday: ${money(spent)}`);
-  if (b.bills.length) {
-    L.push('', 'NEXT BILLS');
-    for (const x of [...b.bills].sort((p, q) => (p.nextDue < q.nextDue ? -1 : 1)).slice(0, 6)) {
-      const d = daysBetween(on, x.nextDue);
-      L.push(`${(x.saved || 0) >= x.amount ? '✅' : d <= 7 ? '⚠️' : '◻️'} ${x.name} ${money(x.amount)} — ${nice(x.nextDue)}${d === 0 ? ' (today)' : d === 1 ? ' (tomorrow)' : ` (${d}d)`} · ${money(x.saved || 0)} set aside`);
-    }
-  } else {
-    L.push('', 'No bills yet — tap ➕ Add bill.');
+  const spent = (b.spends || []).filter((e) => e.on >= since).reduce((s, e) => s + e.amount, 0);
+  if (spent) L.push(`• 💸 Spent since last payday: ${money(spent)}`);
+  L.push('', '🧾 NEXT BILLS');
+  if (!b.bills.length) L.push('• None yet — tap ➕ Add bill');
+  for (const x of [...b.bills].sort((p, q) => (p.nextDue < q.nextDue ? -1 : 1)).slice(0, 6)) {
+    const ready = (x.saved || 0) >= x.amount;
+    L.push(`${ready ? '✅' : daysBetween(on, x.nextDue) <= 7 ? '⚠️' : '•'} ${x.name} — ${money(x.amount)}`, `    ${nice(x.nextDue)} (${dueTag(on, x.nextDue)}) · ${money(x.saved || 0)} set aside`);
   }
-  if (!due30.length && b.bills.length) L.push('Nothing due in the next 30 days.');
   return {
     text: L.join('\n'),
     kb: [
       [btn('💵 I got paid', 'bgp'), btn('💸 Log spending', 'bgw')],
-      [btn('➕ Add bill', 'bga')],
-      [btn('🧾 Bills', 'bgb'), btn('🛒 Essentials', 'bge')],
+      [btn('🧾 Bills', 'bgb'), btn('➕ Add bill', 'bga')],
+      [btn('🎉 Leisure priorities', 'bgl'), btn('🛒 Essentials', 'bge')],
       [btn('⚖️ Split %', 'bgs'), btn('📅 Pay schedule', 'bgf')],
-      [btn('📜 History', 'bgh'), btn('🔄', 'bg')],
+      [btn('📜 History', 'bgh'), btn('🔄 Refresh', 'bg')],
     ],
   };
 }
@@ -203,29 +257,32 @@ export function homeScreen(b, on = today()) {
 export function paidScreen(b, a) {
   const L = [`BUDGET · 💵 PAYCHEQUE ${money(a.amount)} — SORTED`, ''];
   if (a.bills.length) {
-    L.push('🧾 BILLS (put aside)');
-    for (const x of a.bills) L.push(`• ${x.name}: ${money(x.give)} → due ${nice(x.due)}${x.fullyFunded ? ' ✅ fully covered' : x.give < x.want ? ` ⚠️ short ${money(x.want - x.give)}` : ''}`);
-    L.push(`  Total: ${money(a.bills.reduce((s, x) => s + x.give, 0))}`, '');
+    L.push(`🧾 BILLS — ${money(a.bills.reduce((s, x) => s + x.give, 0))}`);
+    for (const x of a.bills) L.push(`• ${x.name}: ${money(x.give)}`, `    due ${nice(x.due)}${x.fullyFunded ? ' · ✅ fully covered' : x.give < x.want ? ` · ⚠️ short ${money(x.want - x.give)}` : ''}`);
+    L.push('');
   }
-  L.push(`🛒 ESSENTIALS: ${money(a.essentials)}${a.essentials < a.essWant ? ` (needed ${money(a.essWant)})` : ''}`, '');
+  L.push(`🛒 ESSENTIALS — ${money(a.essentials)}${a.essentials < a.essWant ? ` (needed ${money(a.essWant)})` : ''}`, '');
   L.push('✨ WHAT\'S LEFT');
-  L.push(`${BUCKETS.spending}: ${money(a.spending)}`, `${BUCKETS.leisure}: ${money(a.leisure)}`, `${BUCKETS.investing}: ${money(a.investing)}`);
+  L.push(`• 🛍 Spending: ${money(a.spending)}`);
+  L.push(`• 🎉 Leisure: ${money(a.leisure)}`);
+  for (const f of a.fun || []) L.push(`    ◦ ${f.name} (${f.pct}%): ${money(f.give)}${f.pct < f.wanted ? ' — capped, higher priorities used the rest' : ''}`);
+  if (a.fun?.length) L.push(`    ◦ General: ${money(a.leisureGeneral)}`);
+  L.push(`• 📈 Investing: ${money(a.investing)}`);
   if (a.short) L.push('', `⚠️ This paycheque came up ${money(a.short)} short of what bills + essentials need before the next one. Bills were covered first, earliest due first.`);
-  L.push('', `Next payday ≈ ${nice(a.nextPay)}`);
+  L.push('', `📅 Next payday ≈ ${nice(a.nextPay)}`);
   return { text: L.join('\n'), kb: [HOME] };
 }
 
 export function billsScreen(b, on = today()) {
-  const L = ['BUDGET · 🧾 BILLS (monthly)', ''];
-  if (!b.bills.length) L.push('No bills yet.');
-  const total = b.bills.reduce((s, x) => s + x.amount, 0);
-  for (const x of [...b.bills].sort((p, q) => p.day - q.day)) {
-    L.push(`${(x.saved || 0) >= x.amount ? '✅' : '◻️'} ${x.name} — ${money(x.amount)} on the ${ordinal(x.day)} · next ${nice(x.nextDue)} · ${money(x.saved || 0)} set aside`);
+  const L = ['BUDGET · 🧾 BILLS', ''];
+  if (!b.bills.length) L.push('• None yet.');
+  const list = [...b.bills].sort((p, q) => (p.nextDue < q.nextDue ? -1 : 1));
+  for (const x of list) {
+    L.push(`${(x.saved || 0) >= x.amount ? '✅' : '•'} ${x.name} — ${money(x.amount)} ${billWhen(x)}`, `    next ${nice(x.nextDue)} (${dueTag(on, x.nextDue)}) · ${money(x.saved || 0)} set aside`);
   }
-  if (b.bills.length) L.push('', `Total bills: ${money(total)} / month`);
+  if (b.bills.length) L.push('', `Total ≈ ${money(b.bills.reduce((s, x) => s + monthlyCost(x), 0))} a month`);
   L.push('', 'Tap a bill to remove it or mark it paid early.');
   const kb = [];
-  const list = [...b.bills].sort((p, q) => p.day - q.day);
   for (let i = 0; i < list.length; i += 2) kb.push(list.slice(i, i + 2).map((x) => btn(`${x.name} ${money(x.amount)}`, `bgi:${x.id}`)));
   kb.push([btn('➕ Add bill', 'bga'), ...HOME]);
   return { text: L.join('\n'), kb };
@@ -235,28 +292,61 @@ export function billItemScreen(b, id) {
   const x = b.bills.find((y) => y.id === id);
   if (!x) return billsScreen(b);
   return {
-    text: `BUDGET · 🧾 ${x.name}\n\n${money(x.amount)} due on the ${ordinal(x.day)} of every month\nNext: ${nice(x.nextDue)} · ${money(x.saved || 0)} set aside`,
-    kb: [[btn('✅ Paid it (this month)', `bgk:${id}`), btn('🗑 Remove', `bgx:${id}`)], [btn('⬅️ Bills', 'bgb'), ...HOME]],
+    text: `BUDGET · 🧾 ${x.name}\n\n• ${money(x.amount)} ${billWhen(x)}\n• Next due: ${nice(x.nextDue)}\n• Set aside: ${money(x.saved || 0)}`,
+    kb: [[btn('✅ Paid it', `bgk:${id}`), btn('🗑 Remove', `bgx:${id}`)], [btn('⬅️ Bills', 'bgb'), ...HOME]],
   };
 }
 
 export function essentialsScreen(b) {
-  const L = ['BUDGET · 🛒 ESSENTIALS (monthly)', 'Groceries, gas, transit, phone top-ups… anything you need every month that isn\'t a fixed bill.', ''];
-  if (!b.essentials.length) L.push('None yet.');
+  const L = ['BUDGET · 🛒 ESSENTIALS (monthly)', 'Anything you need every month that isn\'t a fixed bill — groceries, gas, transit…', ''];
+  if (!b.essentials.length) L.push('• None yet.');
   for (const e of b.essentials) L.push(`• ${e.name}: ${money(e.monthly)} / month`);
   const total = b.essentials.reduce((s, e) => s + e.monthly, 0);
-  if (b.essentials.length) L.push('', `Total ${money(total)} / month → about ${money(total / (30.44 / PAY_DAYS[b.pay.freq]))} from each paycheque`);
+  if (b.essentials.length) L.push('', `Total ${money(total)} / month`, `≈ ${money(total / (30.44 / PAY_DAYS[b.pay.freq]))} from each paycheque`);
   const kb = [];
   for (let i = 0; i < b.essentials.length; i += 2) kb.push(b.essentials.slice(i, i + 2).map((e) => btn(`🗑 ${e.name}`, `bgy:${e.id}`)));
   kb.push([btn('➕ Add essential', 'bgn'), ...HOME]);
   return { text: L.join('\n'), kb };
 }
 
+// ── leisure priorities ────────────────────────────────────────
+export function funScreen(b) {
+  const L = ['BUDGET · 🎉 LEISURE PRIORITIES', `Each paycheque's leisure money (${b.split.leisure}% of what's left) is shared out top to bottom; anything left stays as general leisure.`, ''];
+  if (!b.fun.length) L.push('• None yet — add one, e.g. "Golf 40%".');
+  let used = 0;
+  b.fun.forEach((f, i) => {
+    const p = Math.min(f.pct, 100 - used);
+    used += p;
+    L.push(`${i + 1}. ${f.name} — ${f.pct}% of leisure${p < f.pct ? ` (gets ${p}% — higher priorities use the rest)` : ''}`, `    ${money(f.balance || 0)} saved up`);
+  });
+  if (b.fun.length) L.push('', `• General leisure: ${Math.max(0, 100 - used)}% · ${money(b.balances.leisure)}`);
+  L.push('', 'Tap one to change its %, move it up, or remove it.');
+  const kb = b.fun.map((f, i) => [btn(`${i + 1}. ${f.name} · ${f.pct}%`, `bgo:${f.id}`)]);
+  kb.push([btn('➕ Add priority', 'bgm'), ...HOME]);
+  return { text: L.join('\n'), kb };
+}
+
+export function funItemScreen(b, id) {
+  const i = b.fun.findIndex((f) => f.id === id);
+  if (i < 0) return funScreen(b);
+  const f = b.fun[i];
+  const opts = [10, 20, 25, 30, 40, 50, 60, 75, 100];
+  return {
+    text: `BUDGET · 🎉 ${f.name}\n\n• Priority #${i + 1}\n• Gets ${f.pct}% of each paycheque's leisure money\n• Saved up: ${money(f.balance || 0)}\n\nPick a new %:`,
+    kb: [
+      opts.slice(0, 5).map((p) => btn(`${f.pct === p ? '✅ ' : ''}${p}%`, `bgr:${id}:${p}`)),
+      opts.slice(5).map((p) => btn(`${f.pct === p ? '✅ ' : ''}${p}%`, `bgr:${id}:${p}`)),
+      [...(i > 0 ? [btn('⬆️ Higher priority', `bgt:${id}`)] : []), btn('🗑 Remove', `bgz:${id}`)],
+      [btn('⬅️ Priorities', 'bgl'), ...HOME],
+    ],
+  };
+}
+
 const SPLITS = [[40, 30, 30], [50, 30, 20], [50, 20, 30], [60, 20, 20], [34, 33, 33], [30, 30, 40]];
 export function splitScreen(b) {
   const s = b.split;
   return {
-    text: `BUDGET · ⚖️ WHAT'S LEFT GETS SPLIT\n\nAfter bills and essentials, the rest of each paycheque goes:\n${BUCKETS.spending} ${s.spending}% · ${BUCKETS.leisure} ${s.leisure}% · ${BUCKETS.investing} ${s.investing}%\n\nPick a split (spending / leisure / investing):`,
+    text: `BUDGET · ⚖️ WHAT'S LEFT GETS SPLIT\n\nAfter bills and essentials, the rest of each paycheque goes:\n• 🛍 Spending ${s.spending}%\n• 🎉 Leisure ${s.leisure}%\n• 📈 Investing ${s.investing}%\n\nPick a split (spending / leisure / investing):`,
     kb: [
       ...[0, 3].map((i) => SPLITS.slice(i, i + 3).map(([a, c, d]) => btn(`${s.spending === a && s.leisure === c ? '✅ ' : ''}${a}/${c}/${d}`, `bgv:${a}:${c}:${d}`))),
       HOME,
@@ -266,7 +356,7 @@ export function splitScreen(b) {
 
 export function payScreen(b) {
   return {
-    text: `BUDGET · 📅 HOW OFTEN DO YOU GET PAID?\n\nNow: ${PAY_NAMES[b.pay.freq]}. This sets how much each paycheque puts aside for bills and essentials.`,
+    text: `BUDGET · 📅 HOW OFTEN DO YOU GET PAID?\n\n• Now: ${PAY_NAMES[b.pay.freq]}\n\nThis sets how much each paycheque puts aside for bills and essentials.`,
     kb: [
       Object.keys(PAY_NAMES).slice(0, 2).map((k) => btn(`${b.pay.freq === k ? '✅ ' : ''}${PAY_NAMES[k]}`, `bgq:${k}`)),
       Object.keys(PAY_NAMES).slice(2).map((k) => btn(`${b.pay.freq === k ? '✅ ' : ''}${PAY_NAMES[k]}`, `bgq:${k}`)),
@@ -277,77 +367,112 @@ export function payScreen(b) {
 
 export function historyScreen(b) {
   const L = ['BUDGET · 📜 HISTORY', ''];
-  if (!b.history.length && !b.log.length) L.push('Nothing yet.');
-  for (const h of b.history.slice(0, 8)) L.push(`💵 ${nice(h.on)} — ${money(h.amount)}: bills ${money(h.bills.reduce((s, x) => s + x.give, 0))} · essentials ${money(h.essentials)} · spend ${money(h.spending)} · leisure ${money(h.leisure)} · invest ${money(h.investing)}${h.short ? ` · ⚠️ short ${money(h.short)}` : ''}`);
+  if (!b.history.length && !b.log.length && !b.spends?.length) L.push('• Nothing yet.');
+  if (b.history.length) L.push('💵 PAYCHEQUES');
+  for (const h of b.history.slice(0, 6)) {
+    L.push(`• ${nice(h.on)} — ${money(h.amount)}`, `    bills ${money(h.bills.reduce((s, x) => s + x.give, 0))} · essentials ${money(h.essentials)} · spend ${money(h.spending)} · leisure ${money(h.leisure)} · invest ${money(h.investing)}${h.short ? ` · ⚠️ short ${money(h.short)}` : ''}`);
+  }
   if (b.spends?.length) {
-    L.push('', 'SPENDING');
-    for (const e of b.spends.slice(0, 12)) L.push(`💸 ${nice(e.on)} ${money(e.amount)} · ${ALL_BUCKETS[e.bucket]}${e.note ? ` — ${e.note}` : ''}`);
+    L.push('', '💸 SPENDING');
+    for (const e of b.spends.slice(0, 12)) L.push(`• ${nice(e.on)} ${money(e.amount)} — ${bucketName(b, e.bucket)}${e.note ? ` · ${e.note}` : ''}`);
   }
   if (b.log.length) {
-    L.push('', 'BILLS PAID');
-    for (const p of b.log.slice(0, 8)) L.push(`🧾 ${nice(p.due)} ${p.name} ${money(p.amount)}${p.short ? ` — ⚠️ ${money(p.short)} wasn't set aside` : ' ✅'}`);
+    L.push('', '🧾 BILLS PAID');
+    for (const p of b.log.slice(0, 8)) L.push(`• ${nice(p.due)} ${p.name} ${money(p.amount)}${p.short ? ` — ⚠️ ${money(p.short)} wasn't set aside` : ' ✅'}`);
   }
   return { text: L.join('\n'), kb: [HOME] };
 }
 
-// ── spending: "40 leisure drinks" · "/spent 85 groceries" ─────────
-const ALL_BUCKETS = { essentials: '🛒 Essentials', ...BUCKETS };
+// ── spending: "40 drinks" · "/spent 60 golf" ─────────────────
 const BUCKET_WORDS = [
   ['essentials', /essential|grocer|food|gas\b|fuel|transit|uber|bus|pharmac|household|toiletr|laundry/i],
   ['leisure', /leisure|fun|bar|drink|beer|restaurant|dinner|movie|concert|game|trip|travel|date|party/i],
   ['investing', /invest|stock|crypto|etf|tfsa|rrsp|savings|save/i],
   ['spending', /spend|shop|clothes|amazon|misc|other/i],
 ];
-export function parseSpend(text, bucket = null) {
+const bucketName = (b, k) => {
+  if (String(k).startsWith('fun:')) {
+    const f = b.fun.find((x) => x.id === Number(k.slice(4)));
+    return `🎉 ${f ? f.name : 'Leisure'}`;
+  }
+  return ALL_BUCKETS[k] || k;
+};
+const balanceOf = (b, k) => (String(k).startsWith('fun:') ? b.fun.find((x) => x.id === Number(k.slice(4)))?.balance ?? 0 : b.balances[k] ?? 0);
+
+export function parseSpend(text, bucket = null, b = null) {
   const amount = parseAmount(text);
   if (!(amount > 0)) return null;
-  let b = bucket;
-  if (!b) for (const [k, re] of BUCKET_WORDS) if (re.test(text)) { b = k; break; }
+  let k = bucket;
+  if (!k && b?.fun?.length) {
+    const f = b.fun.find((x) => new RegExp(`\\b${x.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text));
+    if (f) k = `fun:${f.id}`;
+  }
+  if (!k) for (const [key, re] of BUCKET_WORDS) if (re.test(text)) { k = key; break; }
   const note = String(text).replace(AMOUNT, ' ').replace(/\b(essentials?|spending|leisure|investing|invest|on|for|at|spent)\b/gi, ' ').replace(/\s+/g, ' ').trim();
-  return { amount: r2(amount), bucket: b || 'spending', note: note.slice(0, 40) };
+  return { amount: r2(amount), bucket: k || 'spending', note: note.slice(0, 40) };
 }
 
 export function logSpend(b, sp, on = today()) {
   b.spends ||= [];
-  b.balances[sp.bucket] = r2((b.balances[sp.bucket] || 0) - sp.amount);
+  if (String(sp.bucket).startsWith('fun:')) {
+    const f = b.fun.find((x) => x.id === Number(sp.bucket.slice(4)));
+    if (f) f.balance = r2((f.balance || 0) - sp.amount);
+    else sp.bucket = 'leisure';
+  }
+  if (!String(sp.bucket).startsWith('fun:')) b.balances[sp.bucket] = r2((b.balances[sp.bucket] || 0) - sp.amount);
   const entry = { id: b.nextId++, on, ...sp };
   b.spends.unshift(entry);
   b.spends = b.spends.slice(0, 100);
   return entry;
 }
 
+function undoSpend(b, id) {
+  const e = (b.spends || []).find((x) => x.id === id);
+  if (!e) return;
+  if (String(e.bucket).startsWith('fun:')) {
+    const f = b.fun.find((x) => x.id === Number(e.bucket.slice(4)));
+    if (f) f.balance = r2((f.balance || 0) + e.amount);
+  } else b.balances[e.bucket] = r2((b.balances[e.bucket] || 0) + e.amount);
+  b.spends = b.spends.filter((x) => x.id !== id);
+}
+
 export function spentScreen(b, e) {
-  const left = b.balances[e.bucket];
+  const left = balanceOf(b, e.bucket);
   return {
-    text: `BUDGET · 💸 Logged ${money(e.amount)} from ${ALL_BUCKETS[e.bucket]}${e.note ? ` — ${e.note}` : ''}\n\n${ALL_BUCKETS[e.bucket]} left: ${money(left)}${left < 0 ? `\n⚠️ That's ${money(-left)} over — it'll come out of the next paycheque's ${e.bucket === 'essentials' ? 'essentials' : 'split'} unless you move money.` : ''}\n\nSend another amount for this bucket, or tap Done.`,
+    text: `BUDGET · 💸 Logged ${money(e.amount)}${e.note ? ` — ${e.note}` : ''}\n\n• From: ${bucketName(b, e.bucket)}\n• Left: ${money(left)}${left < 0 ? `\n\n⚠️ ${money(-left)} over — top it up from the next paycheque.` : ''}\n\nSend another amount, or tap Done.`,
     kb: [[btn('↩️ Undo', `bgu:${e.id}`), btn('✔️ Done', 'bg')]],
   };
 }
 
 export function spendPickScreen(b) {
-  return {
-    text: `BUDGET · 💸 LOG SPENDING — which bucket?\n\n${Object.entries(ALL_BUCKETS).map(([k, l]) => `${l}: ${money(b.balances[k] || 0)} left`).join('\n')}\n\nOr just type it, e.g. "40 drinks" or "85 groceries" — I'll pick the bucket.`,
-    kb: [
-      [btn(ALL_BUCKETS.essentials, 'bgw:essentials'), btn(ALL_BUCKETS.spending, 'bgw:spending')],
-      [btn(ALL_BUCKETS.leisure, 'bgw:leisure'), btn(ALL_BUCKETS.investing, 'bgw:investing')],
-      HOME,
-    ],
-  };
+  const L = ['BUDGET · 💸 LOG SPENDING — which bucket?', ''];
+  for (const [k, l] of Object.entries(ALL_BUCKETS)) L.push(`• ${l}: ${money(b.balances[k] || 0)} left`);
+  for (const f of b.fun) L.push(`    ◦ ${f.name}: ${money(f.balance || 0)} left`);
+  L.push('', 'Or just type it — "40 drinks", "85 groceries", "60 golf" — and I\'ll pick the bucket.');
+  const kb = [
+    [btn(ALL_BUCKETS.essentials, 'bgw:essentials'), btn(ALL_BUCKETS.spending, 'bgw:spending')],
+    [btn(ALL_BUCKETS.leisure, 'bgw:leisure'), btn(ALL_BUCKETS.investing, 'bgw:investing')],
+  ];
+  for (let i = 0; i < b.fun.length; i += 3) kb.push(b.fun.slice(i, i + 3).map((f) => btn(`🎉 ${f.name}`, `bgw:fun-${f.id}`)));
+  kb.push(HOME);
+  return { text: L.join('\n'), kb };
 }
 
 export const ASK = {
-  pay: 'BUDGET · 💵 How much did you get paid? Send the amount, e.g. 1850 or $1,850.25',
-  bill: 'BUDGET · ➕ Send the bill like:\nRent 1200 on the 1st\nPhone $85.50 15th\nCar insurance 210 due 28',
-  essential: 'BUDGET · ➕ Send a monthly essential like:\nGroceries 400\nGas 160',
-  spend: (k) => `BUDGET · 💸 How much from ${ALL_BUCKETS[k]}? (${'e.g.'} 40 or "40 coffee")`,
+  pay: 'BUDGET · 💵 How much did you get paid?\n\nSend the amount, e.g. 1850 or $1,850.25',
+  bill: 'BUDGET · ➕ Send bills like this (one or several at once):\n\n• Rent 1200 on the 1st\n• Phone $85.50 15th\n• Car insurance 210 due 28\n• Credit card 150 every 2 weeks',
+  essential: 'BUDGET · ➕ Send a monthly essential like:\n\n• Groceries 400\n• Gas 160',
+  fun: 'BUDGET · 🎉 Send a leisure priority and its share of the leisure money:\n\n• Golf 40%\n• Concerts 20%\n\nThe first one you add is top priority — you can reorder later.',
+  spend: (b, k) => `BUDGET · 💸 How much from ${bucketName(b, k)}?\n\ne.g. 40 or "40 green fees"`,
 };
 
-// Handle a typed reply while the assistant is waiting for one. Returns a screen, or null if not handled.
+// Typed reply while the assistant is waiting for one. Returns a screen, or null if not handled.
 export function handleText(b, text, on = today()) {
+  normalize(b);
   const t = String(text).trim();
   const kind = b.awaiting;
   if (!kind) return null;
-  if (/^(cancel|stop|nevermind|never mind)$/i.test(t)) {
+  if (/^(cancel|stop|nevermind|never mind|done)$/i.test(t)) {
     b.awaiting = null;
     return homeScreen(b, on);
   }
@@ -361,16 +486,16 @@ export function handleText(b, text, on = today()) {
     return paidScreen(b, a);
   }
   if (kind === 'bill') {
-    const p = parseBill(t);
-    if (!p) return { text: `${ASK.bill}\n\n(Couldn't read a name, amount and day in "${t}")`, kb: [HOME] };
-    b.awaiting = 'bill'; // stay ready for the next one
-    b.bills.push({ id: b.nextId++, ...p, nextDue: nextDue(p.day, on), saved: 0 });
-    return { text: `BUDGET · ✅ Added ${p.name} — ${money(p.amount)} on the ${ordinal(p.day)} (next ${nice(nextDue(p.day, on))}).\n\nSend another bill, or tap Done.`, kb: [[btn('✔️ Done', 'bgb')]] };
-  }
-  if (kind === 'spend' || kind.startsWith('spend:')) {
-    const sp = parseSpend(t, kind.includes(':') ? kind.split(':')[1] : null);
-    if (!sp) return { text: `BUDGET · 💸 Couldn't read an amount in "${t}". Send e.g. 40 or "40 drinks".`, kb: [HOME] };
-    return spentScreen(b, logSpend(b, sp, on)); // stays listening on this bucket
+    const found = parseBills(t);
+    if (!found.length) return { text: `${ASK.bill}\n\n(Couldn't read a name, amount and due day in "${t}")`, kb: [HOME] };
+    const np = nextPayOf(b) || addDays(on, Math.round(PAY_DAYS[b.pay.freq]));
+    const lines = [];
+    for (const p of found) {
+      const due = p.freq === 'monthly' ? nextDue(p.day, on) : p.day ? nextDue(p.day, on) : np;
+      b.bills.push({ id: b.nextId++, name: p.name, amount: p.amount, freq: p.freq, day: p.day || Number(due.slice(8)), nextDue: due, saved: 0 });
+      lines.push(`• ${p.name} — ${money(p.amount)} ${p.freq === 'monthly' ? `on the ${ordinal(p.day)}` : BILL_FREQ[p.freq]}`, `    first due ${nice(due)}`);
+    }
+    return { text: `BUDGET · ✅ Added ${found.length} bill${found.length > 1 ? 's' : ''}:\n\n${lines.join('\n')}\n\nSend more, or tap Done.`, kb: [[btn('✔️ Done', 'bgb')]] };
   }
   if (kind === 'essential') {
     const p = parseEssential(t);
@@ -378,11 +503,23 @@ export function handleText(b, text, on = today()) {
     b.essentials.push({ id: b.nextId++, ...p });
     return { text: `BUDGET · ✅ Added ${p.name} — ${money(p.monthly)} / month.\n\nSend another, or tap Done.`, kb: [[btn('✔️ Done', 'bge')]] };
   }
+  if (kind === 'fun') {
+    const p = parseFun(t);
+    if (!p) return { text: `${ASK.fun}\n\n(Couldn't read "${t}" — send a name and a %, e.g. Golf 40%)`, kb: [HOME] };
+    b.fun.push({ id: b.nextId++, ...p, balance: 0 });
+    return { ...funScreen(b), text: `BUDGET · ✅ Added ${p.name} — ${p.pct}% of leisure (priority #${b.fun.length}).\n\nSend another, or tap Done.`, kb: [[btn('✔️ Done', 'bgl')]] };
+  }
+  if (kind === 'spend' || kind.startsWith('spend:')) {
+    const sp = parseSpend(t, kind.includes(':') ? kind.slice(6) : null, b);
+    if (!sp) return { text: `BUDGET · 💸 Couldn't read an amount in "${t}". Send e.g. 40 or "40 drinks".`, kb: [HOME] };
+    return spentScreen(b, logSpend(b, sp, on)); // stays listening
+  }
   return null;
 }
 
 // Button taps (ops start with "bg")
 export function handleTap(b, op, a, c, d, on = today()) {
+  normalize(b);
   rollBills(b, on);
   if (op === 'bg') {
     b.awaiting = null; // Done / home stops listening for typed replies
@@ -391,17 +528,15 @@ export function handleTap(b, op, a, c, d, on = today()) {
   if (op === 'bgp') { b.awaiting = 'pay'; return { text: ASK.pay, kb: [HOME] }; }
   if (op === 'bga') { b.awaiting = 'bill'; return { text: ASK.bill, kb: [HOME] }; }
   if (op === 'bgn') { b.awaiting = 'essential'; return { text: ASK.essential, kb: [HOME] }; }
+  if (op === 'bgm') { b.awaiting = 'fun'; return { text: ASK.fun, kb: [HOME] }; }
   if (op === 'bgw') {
-    b.awaiting = a ? `spend:${a}` : 'spend';
-    return a ? { text: ASK.spend(a), kb: [HOME] } : spendPickScreen(b);
+    const k = a ? (a.startsWith('fun-') ? `fun:${a.slice(4)}` : a) : null;
+    b.awaiting = k ? `spend:${k}` : 'spend';
+    return k ? { text: ASK.spend(b, k), kb: [HOME] } : spendPickScreen(b);
   }
   b.awaiting = null;
   if (op === 'bgu') {
-    const e = (b.spends || []).find((x) => x.id === Number(a));
-    if (e) {
-      b.balances[e.bucket] = r2((b.balances[e.bucket] || 0) + e.amount);
-      b.spends = b.spends.filter((x) => x.id !== e.id);
-    }
+    undoSpend(b, Number(a));
     return homeScreen(b, on);
   }
   if (op === 'bgb') return billsScreen(b, on);
@@ -416,7 +551,7 @@ export function handleTap(b, op, a, c, d, on = today()) {
       const covered = Math.min(x.saved || 0, x.amount);
       b.log.unshift({ name: x.name, amount: x.amount, due: x.nextDue, covered: r2(covered), short: r2(x.amount - covered), at: on });
       x.saved = r2((x.saved || 0) - covered);
-      x.nextDue = nextDue(x.day, addDays(x.nextDue, 1));
+      x.nextDue = followingDue(x);
     }
     return billsScreen(b, on);
   }
@@ -424,6 +559,24 @@ export function handleTap(b, op, a, c, d, on = today()) {
   if (op === 'bgy') {
     b.essentials = b.essentials.filter((e) => e.id !== Number(a));
     return essentialsScreen(b);
+  }
+  if (op === 'bgl') return funScreen(b);
+  if (op === 'bgo') return funItemScreen(b, Number(a));
+  if (op === 'bgr') {
+    const f = b.fun.find((x) => x.id === Number(a));
+    if (f && Number(c) > 0 && Number(c) <= 100) f.pct = Number(c);
+    return funItemScreen(b, Number(a));
+  }
+  if (op === 'bgt') {
+    const i = b.fun.findIndex((x) => x.id === Number(a));
+    if (i > 0) [b.fun[i - 1], b.fun[i]] = [b.fun[i], b.fun[i - 1]];
+    return funItemScreen(b, Number(a));
+  }
+  if (op === 'bgz') {
+    const f = b.fun.find((x) => x.id === Number(a));
+    if (f) b.balances.leisure = r2(b.balances.leisure + (f.balance || 0)); // its savings go back to general leisure
+    b.fun = b.fun.filter((x) => x.id !== Number(a));
+    return funScreen(b);
   }
   if (op === 'bgs') return splitScreen(b);
   if (op === 'bgv') {
@@ -441,13 +594,14 @@ export function handleTap(b, op, a, c, d, on = today()) {
 
 // Daily (9 AM Toronto): roll paid bills, remind about bills due today / in 3 days
 export function dailyReminders(b, on = today()) {
+  normalize(b);
   const paid = rollBills(b, on);
   const msgs = paid.map((p) => `🧾 ${p.name} ${money(p.amount)} was due ${nice(p.due)} — ${p.short ? `⚠️ only ${money(p.covered)} was set aside` : 'paid from what you set aside ✅'}`);
   for (const x of b.bills) {
-    const d = daysBetween(on, x.nextDue);
-    if (d === 0 || d === 3) {
+    const n = daysBetween(on, x.nextDue);
+    if (n === 0 || n === 3) {
       const ready = (x.saved || 0) >= x.amount;
-      msgs.push(`⏰ ${x.name} ${money(x.amount)} is due ${d === 0 ? 'TODAY' : `in 3 days (${nice(x.nextDue)})`} — ${ready ? 'fully set aside ✅' : `${money(x.saved || 0)} set aside, ${money(x.amount - (x.saved || 0))} still needed ⚠️`}`);
+      msgs.push(`⏰ ${x.name} ${money(x.amount)} is due ${n === 0 ? 'TODAY' : `in 3 days (${nice(x.nextDue)})`} — ${ready ? 'fully set aside ✅' : `${money(x.saved || 0)} set aside, ${money(x.amount - (x.saved || 0))} still needed ⚠️`}`);
     }
   }
   return msgs;
