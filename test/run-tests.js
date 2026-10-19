@@ -1241,6 +1241,50 @@ await test('FX buttons: menu, pair, calendar, headlines, drivers, record, brief-
   }
 });
 
+await test('called coins: one full alert, then short updates only on real changes; mute / follow / drop-out / milestones', async () => {
+  const T = await import('../src/tracking.js');
+  const H = 3_600_000;
+  const now = Date.UTC(2026, 9, 19, 12);
+  const called = {};
+  const prefs = {};
+  const tok = '0xaaa';
+  assert.equal(T.decide(called, prefs, { token: tok, tier: 'watch', score: 58, price: 1 }, now).kind, 'full');
+  T.markSent(called, { token: tok, symbol: 'WOOD', tier: 'watch', score: 58, price: 1 }, now);
+  // same coin next scans, little change → silence (this was the repeat-alert problem)
+  assert.equal(T.decide(called, prefs, { token: tok, tier: 'watch', score: 60, price: 1.05 }, now + 15 * 60000).kind, null);
+  assert.equal(T.decide(called, prefs, { token: tok, tier: 'watch', score: 61, price: 1.1 }, now + 30 * H).kind, null);
+  // real changes → short update
+  let d = T.decide(called, prefs, { token: tok, tier: 'buy', score: 69, price: 1.1 }, now + H);
+  assert.equal(d.kind, 'update');
+  assert.ok(d.reasons.some((r) => /BUY ZONE/.test(r)));
+  d = T.decide(called, prefs, { token: tok, tier: 'watch', score: 59, price: 1.4 }, now + 3 * H);
+  assert.ok(d.reasons.some((r) => /price \+40%/.test(r)));
+  // mute = nothing; follow = tighter + daily check-in
+  assert.equal(T.decide(called, { [tok]: 'mute' }, { token: tok, tier: 'buy', score: 90, price: 3 }, now + 3 * H).kind, null);
+  assert.equal(T.decide(called, { [tok]: 'follow' }, { token: tok, tier: 'watch', score: 58, price: 1 }, now + 25 * H).reasons[0], '⭐ scheduled check-in');
+  assert.ok(T.decide(called, { [tok]: 'follow' }, { token: tok, tier: 'watch', score: 64, price: 1 }, now + 3 * H).reasons.some((r) => /score 58 → 64/.test(r)));
+  // drop-out: one note after 2 missed runs, then quiet; qualifying again is news
+  assert.equal(T.noteMiss(called, prefs, tok, 'score fell to 41', now + 4 * H), null);
+  assert.equal(T.noteMiss(called, prefs, tok, 'score fell to 41', now + 5 * H), 'score fell to 41');
+  assert.equal(T.noteMiss(called, prefs, tok, 'score fell to 40', now + 6 * H), null);
+  assert.ok(T.decide(called, prefs, { token: tok, tier: 'watch', score: 58, price: 1 }, now + 9 * H).reasons.includes('back within the rules'));
+  // silent for 14+ days → fresh full alert
+  assert.equal(T.decide(called, prefs, { token: tok, tier: 'watch', score: 58, price: 1 }, now + 15 * 24 * H).kind, 'full');
+  // milestones once each
+  const card = [{ token: tok, peakX: 3.2, lowX: 0.9, lastX: 2.9, outcome: 'win' }];
+  const ms = T.milestones(called, prefs, card).map((m) => m.what);
+  assert.deepEqual(ms.sort(), ['x2', 'x3']);
+  assert.equal(T.milestones(called, prefs, card).length, 0);
+  // seeding from older alerts: no fresh wave after the upgrade
+  const st = { alerts: { '0xb': { at: now, score: 70, symbol: 'B' } }, watchAlerts: {}, scorecard: [{ token: '0xb', price: 2 }] };
+  T.seedCalled(st);
+  assert.equal(T.decide(st.called, {}, { token: '0xb', tier: 'buy', score: 71, price: 2 }, now + H).kind, null);
+  const { applyPref } = await import('../scripts/coin-pref.js');
+  const pf = path.join(process.env.DATA_DIR, 'coin-prefs.json');
+  assert.equal(applyPref(pf, tok.padEnd(42, '0'), 'mute'), 'mute');
+  assert.equal(applyPref(pf, tok.padEnd(42, '0'), 'normal'), 'normal');
+});
+
 await test('budget: reads bills and amounts the way you type them', async () => {
   const B = await import('../worker/budget.js');
   assert.deepEqual(B.parseBill('Rent 1200 on the 1st'), { name: 'Rent', amount: 1200, day: 1 });

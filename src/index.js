@@ -21,7 +21,8 @@ import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS, DATA_
 import { notify } from './notify.js';
 import { httpErrors, httpStats, resetBreakers } from './http.js';
 import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
-import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage, ignitionMessage } from './messages.js';
+import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage, ignitionMessage, updateMessage, dropMessage, milestoneMessage } from './messages.js';
+import { loadPrefs, seedCalled, decide, markSent, noteMiss, milestones, pruneCalled } from './tracking.js';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -413,7 +414,8 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
     if (!sig?.fired) continue;
     log(`🔥 ignition ${base.symbol}: ${sig.mult.toFixed(1)}× hourly volume`);
     const mcap = pool?.marketCap ?? null;
-    await notify(ignitionMessage({ token, base, sig, pool }), { buttons: paperButtons(token) });
+    if (loadPrefs()[token] === 'mute') continue;
+    await notify(ignitionMessage({ token, base, sig, pool }), { buttons: coinButtons(token) });
     state.ignitionAlerts[token] = { at: now, symbol: base.symbol };
     state.scorecard ||= [];
     recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score, kind: base.kind, ethTrend: eth.trend, mcap: pool?.marketCap ?? null, pool: base.pool }, now);
@@ -452,6 +454,8 @@ export async function main() {
   state.quietBases ||= {};
   state.ignitionAlerts ||= {};
   const catalysts = loadCatalysts(now);
+  const prefs = loadPrefs(); // 🔕 / ⭐ per coin, from the Telegram buttons
+  const called = seedCalled(state);
   const w = loadWallets();
   state.runs = (state.runs || 0) + 1;
   const snapshots = [];
@@ -503,6 +507,9 @@ export async function main() {
     state.scorecard ||= [];
     for (const a of updateScorecard(state.scorecard, allPrices, now)) {
       log(`scorecard: $${a.symbol} ${a.tier} alert → ${a.outcome} (peak ${a.peakX.toFixed(2)}×)`);
+    }
+    for (const m of milestones(called, prefs, state.scorecard)) {
+      await notify(milestoneMessage({ symbol: m.c.symbol, token: m.token, what: m.what, e: m.e }), { buttons: coinButtons(m.token) });
     }
     if (resolved.length) log(`wallet buys resolved: ${resolved.filter((r) => r.r === 'W').length} wins, ${resolved.filter((r) => r.r === 'L').length} losses`);
     for (const ev of CONFIG.paper.auto ? updatePositions(state.paper, prices, now) : []) {
@@ -571,6 +578,8 @@ export async function main() {
       if (!r.filt.ok) {
         tally(reasons, r.filt.reasons);
         log(`✗ ${pool.baseToken.symbol}: ${r.filt.reasons.join('; ')}`);
+        const why = noteMiss(called, prefs, pool.baseToken.address, r.filt.reasons.slice(0, 2).join('; '), now);
+        if (why) await notify(dropMessage({ symbol: pool.baseToken.symbol, token: pool.baseToken.address, why, firstPrice: called[pool.baseToken.address]?.firstPrice, price: pool.priceUsd }), { buttons: coinButtons(pool.baseToken.address) });
         continue;
       }
       runStats.deepPass += 1;
@@ -581,23 +590,32 @@ export async function main() {
       log(`✓ ${pool.baseToken.symbol}: score ${s}`);
       const token = pool.baseToken.address;
 
-      if (s >= buyBar && !r.score.buyBlocked && shouldAlert(state.alerts, token, s, CONFIG.realertCooldownHours, now)) {
-        const paperOpened = CONFIG.paper.auto
+      const tierNow = s >= buyBar && !r.score.buyBlocked ? 'buy' : s >= watchBar ? 'watch' : null;
+      if (!tierNow) {
+        const why = noteMiss(called, prefs, token, `score fell to ${s} (watch level is ${watchBar})`, now);
+        if (why) await notify(dropMessage({ symbol: pool.baseToken.symbol, token, why, firstPrice: called[token]?.firstPrice, price: pool.priceUsd }), { buttons: coinButtons(token) });
+        continue;
+      }
+      const d = decide(called, prefs, { token, tier: tierNow, score: s, price: pool.priceUsd }, now);
+      if (d.kind === 'full') {
+        const paperOpened = tierNow === 'buy' && CONFIG.paper.auto
           ? openPosition(state.paper, { token, symbol: pool.baseToken.symbol, pool: pool.poolAddress, price: pool.priceUsd, score: s }, now)
           : null;
         await priceCrossCheck(r);
-        await notify(alertMessage({ ...r, tier: 'buy', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }), { buttons: paperButtons(token) });
-        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'buy', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend, mcap: pool.marketCap, pool: pool.poolAddress }, now);
-        state.alerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
-        runStats.buy += 1;
-        if (row) row.decision = 'BUY-ALERT';
-      } else if (s >= watchBar && (s < buyBar || r.score.buyBlocked) && shouldAlert(state.watchAlerts, token, s, CONFIG.watchCooldownHours, now)) {
-        await priceCrossCheck(r);
-        await notify(alertMessage({ ...r, tier: 'watch', plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings }), { buttons: paperButtons(token) });
-        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: 'watch', lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend, mcap: pool.marketCap, pool: pool.poolAddress }, now);
-        state.watchAlerts[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
-        runStats.watch += 1;
-        if (row) row.decision = 'WATCH-ALERT';
+        await notify(alertMessage({ ...r, tier: tierNow, plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }), { buttons: coinButtons(token) });
+      } else if (d.kind === 'update') {
+        const c = called[token];
+        await notify(updateMessage({ symbol: pool.baseToken.symbol, token, reasons: d.reasons, tier: tierNow, score: s, price: pool.priceUsd, mcap: pool.marketCap, firstPrice: c.firstPrice, firstAt: c.firstAt, lane: r.lane }), { buttons: coinButtons(token) });
+      }
+      if (d.kind) {
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: tierNow, lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend, mcap: pool.marketCap, pool: pool.poolAddress }, now);
+        (tierNow === 'buy' ? state.alerts : state.watchAlerts)[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
+        markSent(called, { token, symbol: pool.baseToken.symbol, tier: tierNow, score: s, price: pool.priceUsd }, now);
+        if (d.kind === 'full') runStats[tierNow] += 1;
+        else runStats.updates = (runStats.updates || 0) + 1;
+        if (row) row.decision = `${tierNow.toUpperCase()}-${d.kind === 'full' ? 'ALERT' : 'UPDATE'}`;
+      } else if (called[token]) {
+        called[token].miss = 0; // still qualifying, nothing new to say
       }
     }
 
@@ -614,6 +632,7 @@ export async function main() {
       const token = p.baseToken.address;
       const prev = state.pumpAlerts[token];
       if (prev && now - prev.at < CONFIG.pump.cooldownHours * HOUR) continue;
+      if (prefs[token] === 'mute') continue;
       let r;
       try {
         r = await deepCheck(p, state, leaders, now, w, { force: true, catalysts, lane: laneOf(f.baseMcap) }); // judged on its pre-pump size
@@ -700,6 +719,7 @@ export async function main() {
     for (const [t, v] of Object.entries(state.chartCache || {})) if (now - v.at > CONFIG.chartCacheMin * MIN) delete state.chartCache[t];
     saveWallets(w, now);
     saveCandidates(candidates, now);
+    if (state.called) pruneCalled(state.called, now);
     if (lastPools.length) savePrices(lastPools, now);
     for (const [t, v] of Object.entries(state.pumpAlerts)) if (now - v.at > 3 * DAY) delete state.pumpAlerts[t];
     delete state.holdersFile; // read-only copy of data/holders.json, never saved into state
@@ -710,6 +730,8 @@ export async function main() {
 
 const fmtPx = (v) => (v == null ? '—' : v >= 1 ? `$${v.toFixed(4)}` : `$${v.toPrecision(3)}`);
 const paperButtons = (token) => [[{ text: '📝 Paper buy', data: `pc:${token}` }, { text: '📋 Paper menu', data: 'm' }]];
+// on every alert/update for a coin: trade it, see the full report, or choose how much to hear about it
+const coinButtons = (token) => [[{ text: '📝 Paper buy', data: `pc:${token}` }, { text: '🔍 Full report', data: `ck:${token}` }], [{ text: '🔕 Mute coin', data: `cm:${token}` }, { text: '⭐ Follow closely', data: `cf:${token}` }]];
 
 function candidateRow(r, tier, now) {
   const p = r.pool;

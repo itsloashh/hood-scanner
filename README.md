@@ -21,6 +21,10 @@ A standalone bot that scans Robinhood Chain memecoins every 15 minutes, around t
 | Targets | conservative 3x–10x |
 | Paper wallet | any starting amount ($30 / $100 / $1k / $10k); trades sized as % of cash |
 
+## Repeat calls: one alert, then updates
+
+Each coin gets **one full alert**. After that the bot tracks it quietly and only sends a short **🔄 UPDATE** when something real changes: it moves up to the buy zone (or slips back), its score moves 10+ points, its price moves 30%+ since the last message, it hits **2× / 3× / −50%** from the first call, it ignites, or it **⏸ stops meeting the rules** (one note, then silence). Every alert and update has buttons: 📝 Paper buy · 🔍 Full report · 🔕 Mute coin (nothing more about it) · ⭐ Follow closely (updates at 5 points / 15%, plus a daily check-in). A coin silent for 14 days gets a fresh full alert if it qualifies again. Settings: `CONFIG.tracking`.
+
 ## How a coin gets scored (0–100)
 
 The thesis: a 3+ week old coin that already crashed, whose community held on, whose price stopped making new lows, and where buyers are coming back.

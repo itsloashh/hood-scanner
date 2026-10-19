@@ -1134,7 +1134,7 @@ export async function signalDetail(env, token) {
   const pool = c.pool;
   if (pool) L.push('', `Chart: https://www.geckoterminal.com/robinhood/pools/${pool}`);
   L.push(`CA: ${c.token}`);
-  return { text: L.join('\n'), kb: [[btn('📝 Paper buy', `pc:${c.token}`)], [btn('⬅️ Signals', 'sg:0:all')]] };
+  return { text: L.join('\n'), kb: [[btn('📝 Paper buy', `pc:${c.token}`), btn('🔍 Full report', `ck:${c.token}`)], [btn('🔕 Mute coin', `cm:${c.token}`), btn('⭐ Follow closely', `cf:${c.token}`)], [btn('⬅️ Signals', 'sg:0:all')]] };
 }
 
 async function sendScreen(env, chatId, scr) {
@@ -1152,7 +1152,7 @@ export async function handleCallback(env, cq) {
   let scr = null;
   let toast = '';
 
-  const fxOps = ['fx', 'fxp', 'fxc', 'fxn', 'fxd', 'fxr', 'fxb'];
+  const fxOps = ['fx', 'fxp', 'fxc', 'fxn', 'fxd', 'fxr', 'fxb', 'cm', 'cf', 'cu', 'ck'];
   const isBudget = /^bg[a-z]?$/.test(op);
   const p = op === 'sg' || op === 'sd' || fxOps.includes(op) || isBudget ? null : await loadPaper(env);
   if (isBudget) {
@@ -1162,6 +1162,25 @@ export async function handleCallback(env, cq) {
       scr = BG.handleTap(b, op, a, b2, c2);
       await BG.saveBudget(env, b);
     }
+  } else if (['cm', 'cf', 'cu'].includes(op)) {
+    const mode = { cm: 'mute', cf: 'follow', cu: 'normal' }[op];
+    const r = await dispatch(env, 'coin-pref.yml', { ca: a, mode });
+    const sym = (await candidates(env)).find((x) => x.token === a)?.symbol;
+    const name = sym ? `$${sym}` : 'this coin';
+    toast = !r.ok
+      ? `Couldn't save it: ${dispatchError(r)}`
+      : mode === 'mute'
+        ? `🔕 Muted ${name} — no more alerts for it (takes ~1 min)`
+        : mode === 'follow'
+          ? `⭐ Following ${name} — tighter updates + a daily check-in`
+          : `${name} back to normal updates`;
+    if (r.ok) {
+      const undo = mode === 'normal' ? [] : [[{ text: mode === 'mute' ? '🔔 Unmute' : '☆ Stop following', callback_data: `cu:${a}` }]];
+      await tg(env, 'editMessageReplyMarkup', { chat_id: chatId, message_id: cq.message.message_id, reply_markup: { inline_keyboard: [[{ text: '📝 Paper buy', callback_data: `pc:${a}` }, { text: '🔍 Full report', callback_data: `ck:${a}` }], ...undo] } }).catch(() => {});
+    }
+  } else if (op === 'ck') {
+    const r = await dispatch(env, 'scan.yml', { ca: a });
+    toast = r.ok ? '🔍 Full report coming in about 1–2 minutes' : `Couldn't start it: ${dispatchError(r)}`;
   } else if (op === 'fx') scr = await fxMenu(env);
   else if (op === 'fxp') scr = await fxPairScreen(env, a);
   else if (op === 'fxc') scr = await fxCalendarScreen(env, a || 'today');

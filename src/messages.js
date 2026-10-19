@@ -389,3 +389,25 @@ export function ignitionMessage({ token, base, sig, pool }) {
   L.push(`CA: ${token}`);
   return L.filter((l) => l !== null).join('\n');
 }
+
+// ── called-coin updates (short — the full report is one tap away) ──
+export function updateMessage({ symbol, token, reasons, tier, score, price, mcap, firstPrice, firstAt, lane }) {
+  const since = firstPrice && price ? (price / firstPrice) : null;
+  const L = [`🔄 UPDATE · $${symbol} — ${tier === 'buy' ? '🟢 buy zone' : '👀 watch'} · ${score}/100`];
+  for (const r of reasons) L.push(`• ${r}`);
+  L.push(`• Market cap ${usd(mcap)}${lane ? ` · ${lane} lane` : ''}`);
+  if (since) L.push(`• Since first called (${new Date(firstAt).toLocaleDateString('en-US', { timeZone: CONFIG.timezone, month: 'short', day: 'numeric' })}): ${since.toFixed(2)}×`);
+  L.push(`CA: ${token}`);
+  return L.join('\n');
+}
+
+export function dropMessage({ symbol, token, why, firstPrice, price }) {
+  const since = firstPrice && price ? ` · ${(price / firstPrice).toFixed(2)}× since first called` : '';
+  return `⏸ $${symbol} no longer meets the rules${since}\n• ${why}\nI'll stay quiet on it unless it qualifies again.\nCA: ${token}`;
+}
+
+export function milestoneMessage({ symbol, token, what, e }) {
+  const head = { x2: `🚀 $${symbol} hit 2× from the call`, x3: `✅ $${symbol} hit 3× from the call — the target`, half: `❌ $${symbol} fell 50% from the call` }[what];
+  const tip = { x2: 'Halfway to target — the plan sells half at 3x.', x3: 'Plan: sell half here, another quarter at 5x, trail the rest.', half: 'That\'s the stop level in the plan.' }[what];
+  return `${head}\n• Peak ${e.peakX.toFixed(2)}× · now ${e.lastX.toFixed(2)}×\n• ${tip}\nCA: ${token}`;
+}

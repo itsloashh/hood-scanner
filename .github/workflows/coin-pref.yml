@@ -1,0 +1,36 @@
+name: coin-pref
+
+# 🔕 Mute / ⭐ Follow / normal for one coin — started by the Telegram buttons
+on:
+  workflow_dispatch:
+    inputs:
+      ca:
+        description: 'Contract address'
+        required: true
+      mode:
+        description: 'mute | follow | normal'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: coin-pref
+  cancel-in-progress: false
+
+jobs:
+  pref:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Save choice
+        run: node scripts/coin-pref.js
+        env:
+          PREF_CA: ${{ inputs.ca }}
+          PREF_MODE: ${{ inputs.mode }}
+      - name: Save
+        run: scripts/save-data.sh "coin pref" data/coin-prefs.json

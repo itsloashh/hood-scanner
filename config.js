@@ -145,6 +145,13 @@ export const CONFIG = {
   alertScore: 65, // 🟢 BUY ZONE — opens a paper position
   watchScore: 50, // 👀 WATCH — heads-up only, no paper position
   regimeAdjust: { riskOn: -5, riskOff: +10 },
+  // Called coins: one full alert, then short updates only when something changes (src/tracking.js)
+  tracking: {
+    scoreJump: 10, priceMovePct: 30, // update when the score moves 10+ or price moves 30%+ since the last message
+    followScoreJump: 5, followPriceMovePct: 15, followEveryHours: 24, // ⭐ followed coins: tighter, plus a daily check-in
+    minGapHours: 2, // never two updates on the same coin within 2h (except a move up to buy zone)
+    forgetDays: 14, // silent for 14 days → a fresh full alert if it qualifies again
+  },
   realertCooldownHours: 72, // don't re-alert the same coin unless the score jumps…
   realertScoreJump: 10,
   watchCooldownHours: 24,
