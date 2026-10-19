@@ -13,6 +13,8 @@ import { notify } from '../src/notify.js';
 import { DATA_DIR } from '../src/store.js';
 
 const HOUR = 3_600_000;
+// on every FX message: jump into the Telegram FX menu
+const FX_BUTTONS = [[{ text: '🌍 FX menu', data: 'fx' }, { text: '🥇 Gold', data: 'fxp:XAUUSD' }, { text: '🇨🇦🇯🇵 CAD/JPY', data: 'fxp:CADJPY' }], [{ text: '📅 Calendar', data: 'fxc:today' }, { text: '📰 Headlines', data: 'fxn:all' }]];
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 const FX_DIR = () => path.join(DATA_DIR, 'fx');
 const readJson = (f, d) => {
@@ -381,13 +383,13 @@ export async function main(mode = process.env.FX_MODE || 'watch', now = Date.now
   snap.record = trackRecord(leans);
   let sent = 0;
   if (mode === 'brief' || mode === 'weekly') {
-    await notify(msg.briefMessage(snap, { weekly: mode === 'weekly' }));
+    await notify(msg.briefMessage(snap, { weekly: mode === 'weekly' }), { buttons: FX_BUTTONS });
     sent = 1;
     // seed price memory + headline memory so the next watch run only reports changes
     for (const [k, s] of Object.entries(snap.pairs)) state.lastPrice[k] = s.bias.price;
   } else if (mode === 'watch') {
     for (const text of [...watchAlerts(snap, state, now), ...(await releaseResults(snap, state, now))]) {
-      await notify(text);
+      await notify(text, { buttons: FX_BUTTONS });
       sent += 1;
     }
   }

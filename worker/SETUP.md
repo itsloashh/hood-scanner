@@ -48,6 +48,9 @@ https://hood-scanner-bot.<your-subdomain>.workers.dev/setup?key=<your WEBHOOK_SE
 You should see **"✅ Telegram is connected."** Then send `/help` to your bot.
 
 ## Commands
+Send `/menu` once to get a permanent button bar at the bottom of the chat: 🌍 FX desk · 📅 FX calendar · 📜 Signals · 📋 Paper · 📍 Status · 🚀 Scan now.
+
+- `/fx` — FX desk menu (buttons): 🥇 Gold · 🇨🇦🇯🇵 CAD/JPY (lean, reasons, structure, levels, next releases) · 📅 Calendar (24h / week / high-impact only) · 📰 Headlines (all / per pair) · 📊 Drivers & rates · 🎯 Track record · 🌍 Full brief now. Every FX alert also carries these buttons.
 - `/scan` — full scan now (results ~4 min; alerts only if something qualifies)
 - `/check 0x…` — full report on one coin, even if it fails your rules. Pasting an address works too.
 - `/research` — research job now (10–30 min)

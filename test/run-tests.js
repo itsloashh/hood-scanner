@@ -1193,6 +1193,54 @@ await test('FX: rates from FRED, Stooq spot check, release results from the news
   assert.equal(rec.CADJPY.dayN, 0); // mixed lean isn't a call
 });
 
+await test('FX buttons: menu, pair, calendar, headlines, drivers, record, brief-now; bottom button bar', async () => {
+  const W = (await import('../worker/worker.js'));
+  const latest = {
+    at: new Date().toISOString(),
+    pairs: { XAUUSD: { name: 'Gold (XAU/USD)', price: 4171.5, dayChange: 0.25, lean: 'Bullish lean', score: 3, max: 7, reasons: ['▲ x'], levels: { prevDayHigh: 4200, prevDayLow: 4147, atr: 70 }, decimals: 1, daily: 'ranging', hourly: 'up', source: 'spot (Swissquote)' },
+      CADJPY: { name: 'CAD/JPY', price: 111.89, dayChange: 0.4, lean: 'Bearish lean', score: -5, max: 11, reasons: ['▼ y'], levels: {}, decimals: 3 } },
+    events: [{ title: 'CPI m/m', country: 'CAD', impact: 'High', at: Date.now() + 3_600_000 }],
+    headlines: [{ title: 'BoJ holds', source: 'Reuters', pairs: ['CAD/JPY'] }, { title: 'Gold up', source: 'Bloomberg', pairs: ['Gold (XAU/USD)'] }],
+    drivers: { OIL: { name: 'WTI crude oil', d1: -3.8, d5: 4.1 } }, macro: { REAL10Y: { name: 'US 10-yr real yield', v: 2.78, d1bp: -6, d5bp: -9 } }, record: { XAUUSD: { dayRight: 3, dayN: 4, weekRight: 1, weekN: 1 } },
+  };
+  const sent = [];
+  const dispatched = [];
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('fx/latest.json')) return new Response(JSON.stringify(latest));
+    if (url.includes('api.telegram.org')) { sent.push({ m: url.split('/').pop(), b: JSON.parse(init.body || '{}') }); return new Response('{"ok":true}'); }
+    if (url.includes('/dispatches')) { dispatched.push(JSON.parse(init.body)); return new Response(null, { status: 204 }); }
+    return new Response('{}', { status: 404 });
+  };
+  const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_TOKEN: 'G', WEBHOOK_SECRET: 's', GITHUB_REPO: 'x/y' }; // no KV needed for FX
+  const tap = (data) => W.handleCallback(env, { id: 'c', data, message: { chat: { id: 111 }, message_id: 1, text: 'FX · menu' } });
+  const say = (text) => W.default.fetch(new Request('https://b/telegram', { method: 'POST', headers: { 'x-telegram-bot-api-secret-token': 's' }, body: JSON.stringify({ message: { chat: { id: 111 }, text } }) }), env);
+  try {
+    await say('🌍 FX desk'); // bottom button = /fx
+    assert.match(sent.at(-1).b.text, /FX · 🌍 FX DESK/);
+    assert.match(JSON.stringify(sent.at(-1).b.reply_markup), /fxp:XAUUSD/);
+    await tap('fxp:XAUUSD');
+    assert.equal(sent.at(-1).m, 'editMessageText');
+    assert.match(sent.at(-1).b.text, /Previous day: 4147\.0 – 4200\.0/);
+    await tap('fxc:week');
+    assert.match(sent.at(-1).b.text, /CAD CPI m\/m/);
+    await tap('fxn:CADJPY');
+    assert.match(sent.at(-1).b.text, /BoJ holds/);
+    assert.ok(!sent.at(-1).b.text.includes('Gold up'));
+    await tap('fxd');
+    assert.match(sent.at(-1).b.text, /real yield: 2\.78%/);
+    await tap('fxr');
+    assert.match(sent.at(-1).b.text, /Next day: 3\/4 right \(75%\)/);
+    await tap('fxb');
+    assert.deepEqual(dispatched.at(-1).inputs, { mode: 'brief' });
+    await say('/menu');
+    assert.ok(sent.at(-1).b.reply_markup.keyboard);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
 await test('FX: market hours + Telegram clock (brief 6:45 weekdays, weekly Sunday 6 PM, watch every 15 min)', async () => {
   const R = await import('../fx/run.js');
   const W = await import('../worker/worker.js');

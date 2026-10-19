@@ -42,13 +42,21 @@ const HELP = [
   '/status — what the last scan found, instantly',
   '',
   '🌍 FX desk (XAU/USD · CAD/JPY):',
-  '/fx — current lean, reasons and levels for both pairs',
+  '/fx — FX menu: each pair, calendar, headlines, drivers, track record',
   '/fxcal — this week\'s USD · CAD · JPY releases',
   '/fxbrief — full brief now (also automatic 6:45 AM weekdays + Sunday 6 PM)',
   '/help — this list',
   '',
   'Alerts only arrive when a coin qualifies — a quiet scan sends nothing.',
 ].join('\n');
+
+// Permanent button bar at the bottom of the chat (sent with /start, /help or /menu)
+const MENU_BUTTONS = { '🌍 FX desk': '/fx', '📅 FX calendar': '/fxcal', '📜 Signals': '/signals', '📋 Paper': '/paper', '📍 Status': '/status', '🚀 Scan now': '/scan' };
+const MENU_KEYBOARD = {
+  keyboard: [[{ text: '🌍 FX desk' }, { text: '📅 FX calendar' }], [{ text: '📜 Signals' }, { text: '📋 Paper' }], [{ text: '📍 Status' }, { text: '🚀 Scan now' }]],
+  resize_keyboard: true,
+  is_persistent: true,
+};
 
 const COMMANDS = [
   { command: 'scan', description: 'Run a full scan now' },
@@ -61,6 +69,7 @@ const COMMANDS = [
   { command: 'fx', description: 'Gold + CAD/JPY lean and levels' },
   { command: 'fxcal', description: 'This week\'s USD/CAD/JPY releases' },
   { command: 'fxbrief', description: 'Full FX brief now' },
+  { command: 'menu', description: 'Show the button bar' },
   { command: 'help', description: 'List commands' },
 ];
 
@@ -176,6 +185,134 @@ export async function fxCalendar(env) {
   return L.join('\n');
 }
 
+// ── FX desk screens (buttons). Every screen starts with "FX ·" so taps edit it in place.
+const FX_PAIRS = { XAUUSD: '🥇 Gold', CADJPY: '🇨🇦🇯🇵 CAD/JPY' };
+const leanDot = (l) => (l.startsWith('Bullish') ? '🟢' : l.startsWith('Bearish') ? '🔴' : '⚪');
+const fxNav = [{ text: '🌍 FX menu', callback_data: 'fx' }];
+const fxStale = (x) => {
+  const mins = Math.round((Date.now() - Date.parse(x.at)) / 60000);
+  return mins < 1 ? 'just now' : mins < 120 ? `${mins} min ago` : `${Math.round(mins / 60)}h ago`;
+};
+const noFx = { text: 'FX · no data yet\n\nThe FX desk hasn\'t run yet. Tap "Full brief now" to run it.', kb: [[{ text: '🌍 Full brief now', callback_data: 'fxb' }]] };
+
+export async function fxMenu(env) {
+  const x = await fxLatest(env);
+  if (!x) return noFx;
+  const L = [`FX · 🌍 FX DESK — updated ${fxStale(x)}`, ''];
+  for (const [k, p] of Object.entries(x.pairs)) {
+    L.push(`${leanDot(p.lean)} ${p.name} ${fxNum(p.price, p.decimals)} (${fxPct(p.dayChange)} today)`);
+    L.push(`   ${p.lean} (${p.score > 0 ? '+' : ''}${p.score} of ±${p.max})`);
+  }
+  const next = (x.events || []).find((e) => e.impact === 'High' && e.at > Date.now());
+  if (next) L.push('', `Next high-impact: ${fxWhen(next.at)} ${next.country} ${next.title}`);
+  if (x.priceNotes?.length) L.push('', ...x.priceNotes.map((n) => `⚠️ ${n}`));
+  L.push('', 'Context only — not trade signals.');
+  const kb = [
+    Object.entries(FX_PAIRS).filter(([k]) => x.pairs[k]).map(([k, label]) => ({ text: label, callback_data: `fxp:${k}` })),
+    [{ text: '📅 Calendar', callback_data: 'fxc:today' }, { text: '📰 Headlines', callback_data: 'fxn:all' }],
+    [{ text: '📊 Drivers & rates', callback_data: 'fxd' }, { text: '🎯 Track record', callback_data: 'fxr' }],
+    [{ text: '🌍 Full brief now', callback_data: 'fxb' }, { text: '🔄 Refresh', callback_data: 'fx' }],
+  ];
+  return { text: L.join('\n'), kb };
+}
+
+export async function fxPairScreen(env, key) {
+  const x = await fxLatest(env);
+  const p = x?.pairs?.[key];
+  if (!p) return noFx;
+  const d = p.decimals;
+  const lv = p.levels || {};
+  const L = [`FX · ${leanDot(p.lean)} ${p.name} — ${fxNum(p.price, d)} (${fxPct(p.dayChange)} today)`, `Updated ${fxStale(x)}${p.source ? ` · price: ${p.source}` : ''}`, ''];
+  L.push(`LEAN: ${p.lean} (${p.score > 0 ? '+' : ''}${p.score} of ±${p.max})`);
+  for (const r of p.reasons) L.push(`  ${r}`);
+  L.push('', 'STRUCTURE');
+  if (p.daily) L.push(`• Daily: ${p.daily}`);
+  if (p.hourly) L.push(`• Hourly: ${p.hourly}`);
+  L.push('', 'LEVELS');
+  L.push(`• Previous day: ${fxNum(lv.prevDayLow, d)} – ${fxNum(lv.prevDayHigh, d)}`);
+  if (lv.prevWeekHigh) L.push(`• Previous week: ${fxNum(lv.prevWeekLow, d)} – ${fxNum(lv.prevWeekHigh, d)}`);
+  if (lv.sma50) L.push(`• 50-day avg ${fxNum(lv.sma50, d)}${lv.sma200 ? ` · 200-day avg ${fxNum(lv.sma200, d)}` : ''}`);
+  if (lv.atr) L.push(`• Typical daily range (ATR): ${fxNum(lv.atr, d)}`);
+  const cur = key === 'XAUUSD' ? ['USD'] : ['CAD', 'JPY'];
+  const next = (x.events || []).filter((e) => cur.includes(e.country) && e.at > Date.now()).slice(0, 4);
+  if (next.length) L.push('', 'NEXT RELEASES', ...next.map((e) => `${e.impact === 'High' ? '🔴' : '🟠'} ${fxWhen(e.at)} ${e.country} ${e.title}`));
+  const other = Object.keys(FX_PAIRS).find((k) => k !== key);
+  return {
+    text: L.join('\n'),
+    kb: [
+      [{ text: '📰 Its headlines', callback_data: `fxn:${key}` }, { text: FX_PAIRS[other], callback_data: `fxp:${other}` }],
+      [{ text: '🔄 Refresh', callback_data: `fxp:${key}` }, ...fxNav],
+    ],
+  };
+}
+
+export async function fxCalendarScreen(env, span = 'today') {
+  const x = await fxLatest(env);
+  if (!x) return noFx;
+  const now = Date.now();
+  const horizon = span === 'week' ? 8 * 86_400_000 : 24 * 3_600_000;
+  const list = (x.events || []).filter((e) => e.at > now - 3_600_000 && e.at < now + horizon && (span === 'high' ? e.impact === 'High' : true));
+  const title = { today: 'NEXT 24 HOURS', week: 'THIS WEEK', high: 'HIGH-IMPACT ONLY (this week)' }[span] || 'NEXT 24 HOURS';
+  const L = [`FX · 📅 ${title} — USD · CAD · JPY (Toronto time)`, ''];
+  const shown = span === 'high' ? (x.events || []).filter((e) => e.at > now - 3_600_000 && e.impact === 'High') : list;
+  if (!shown.length) L.push('Nothing high or medium impact in this window.');
+  for (const e of shown.slice(0, 30)) L.push(`${e.impact === 'High' ? '🔴' : '🟠'} ${fxWhen(e.at)} ${e.country} ${e.title}${e.forecast ? ` (fcst ${e.forecast}${e.previous ? `, prev ${e.previous}` : ''})` : ''}`);
+  L.push('', '🔴 high impact · 🟠 medium. You get a heads-up 30 min before every 🔴 release and the result after.');
+  return {
+    text: L.join('\n'),
+    kb: [
+      [['today', 'Next 24h'], ['week', 'This week'], ['high', '🔴 only']].filter(([k]) => k !== span).map(([k, t]) => ({ text: t, callback_data: `fxc:${k}` })),
+      fxNav,
+    ],
+  };
+}
+
+export async function fxHeadlinesScreen(env, which = 'all') {
+  const x = await fxLatest(env);
+  if (!x) return noFx;
+  const name = { XAUUSD: 'Gold (XAU/USD)', CADJPY: 'CAD/JPY' }[which];
+  const list = (x.headlines || []).filter((h) => !name || (h.pairs || []).includes(name));
+  const L = [`FX · 📰 HEADLINES${name ? ` — ${name}` : ''} (trusted outlets)`, ''];
+  if (!list.length) L.push('No matching headlines in the last run.');
+  for (const h of list.slice(0, 10)) L.push(`• ${h.title}`, `   ${h.source || ''}${h.at ? ` · ${fxWhen(h.at)}` : ''}`);
+  return {
+    text: L.join('\n'),
+    kb: [
+      [['all', 'All'], ['XAUUSD', '🥇 Gold'], ['CADJPY', '🇨🇦🇯🇵 CAD/JPY']].filter(([k]) => k !== which).map(([k, t]) => ({ text: t, callback_data: `fxn:${k}` })),
+      fxNav,
+    ],
+  };
+}
+
+export async function fxDriversScreen(env) {
+  const x = await fxLatest(env);
+  if (!x) return noFx;
+  const L = ['FX · 📊 DRIVERS & RATES', ''];
+  for (const m of Object.values(x.drivers || {})) L.push(`${m.d1 >= 0 ? '▲' : '▼'} ${m.name}: ${fxPct(m.d1)} today · ${fxPct(m.d5)} this week`);
+  const mac = Object.values(x.macro || {});
+  if (mac.length) {
+    L.push('');
+    const bp = (v) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(0)} bp`;
+    for (const m of mac) L.push(`${m.d1bp >= 0 ? '▲' : '▼'} ${m.name}: ${m.v.toFixed(2)}% (${bp(m.d1bp)} · week ${bp(m.d5bp)})`);
+  }
+  L.push('', 'Gold usually moves against the dollar, real yields and the 2-yr yield, and with fear (VIX).', 'CAD/JPY usually moves with oil, stocks and the Nikkei, and against fear.');
+  return { text: L.join('\n'), kb: [fxNav] };
+}
+
+export async function fxRecordScreen(env) {
+  const x = await fxLatest(env);
+  if (!x) return noFx;
+  const L = ['FX · 🎯 LEAN TRACK RECORD', 'Every morning brief logs each pair\'s lean, then checks where price went.', ''];
+  const rec = Object.entries(x.record || {}).filter(([, r]) => r.dayN || r.weekN);
+  if (!rec.length) L.push('Not enough history yet — the first results appear the day after the first briefs.');
+  for (const [k, r] of rec) {
+    const pctR = (a, n) => (n ? ` (${Math.round((a / n) * 100)}%)` : '');
+    L.push(`${FX_PAIRS[k] || k}`, `  Next day: ${r.dayRight}/${r.dayN} right${pctR(r.dayRight, r.dayN)}`, `  One week: ${r.weekRight}/${r.weekN} right${pctR(r.weekRight, r.weekN)}`, '');
+  }
+  L.push('Only bullish/bearish leans count — "mixed" isn\'t a call.');
+  return { text: L.join('\n'), kb: [fxNav] };
+}
+
 async function catalystList(env) {
   const res = await fetch(`https://raw.githubusercontent.com/${env.GITHUB_REPO}/main/data/catalysts.json?t=${Date.now()}`, { headers: { 'cache-control': 'no-cache' } });
   if (res.status === 404) return '⚡ No catalyst tags yet.\nTag one: /catalyst 0x… Robinhood app listing';
@@ -193,14 +330,18 @@ async function catalystList(env) {
 async function handleMessage(env, msg) {
   const chatId = msg.chat?.id;
   if (String(chatId) !== String(env.ALLOWED_CHAT_ID)) return; // ignore everyone else, silently
-  const text = (msg.text || '').trim();
+  let text = (msg.text || '').trim();
+  // bottom-of-chat button bar → commands
+  if (MENU_BUTTONS[text]) text = MENU_BUTTONS[text];
   const [rawCmd, ...args] = text.split(/\s+/);
   const cmd = rawCmd.toLowerCase().replace(/@.*$/, ''); // /scan@MyBot → /scan
 
   // pasted contract address = /check
   if (ADDR.test(rawCmd)) return handleMessage(env, { ...msg, text: `/check ${rawCmd}` });
 
-  if (cmd === '/start' || cmd === '/help') return reply(env, chatId, HELP);
+  if (cmd === '/start' || cmd === '/help' || cmd === '/menu') {
+    return tg(env, 'sendMessage', { chat_id: chatId, text: HELP, disable_web_page_preview: true, reply_markup: MENU_KEYBOARD });
+  }
 
   if (cmd === '/scan') {
     const r = await dispatch(env, 'scan.yml');
@@ -236,8 +377,8 @@ async function handleMessage(env, msg) {
 
   if (cmd === '/signals') return sendScreen(env, chatId, await signalsScreen(env).catch((e) => ({ text: `Couldn't load signals: ${e.message}`, kb: [] })));
 
-  if (cmd === '/fx') return reply(env, chatId, await fxStatus(env).catch((e) => `Couldn't read FX data: ${e.message}`));
-  if (cmd === '/fxcal') return reply(env, chatId, await fxCalendar(env).catch((e) => `Couldn't read FX data: ${e.message}`));
+  if (cmd === '/fx') return sendScreen(env, chatId, await fxMenu(env).catch((e) => ({ text: `Couldn't read FX data: ${e.message}`, kb: [] })));
+  if (cmd === '/fxcal') return sendScreen(env, chatId, await fxCalendarScreen(env, 'week').catch((e) => ({ text: `Couldn't read FX data: ${e.message}`, kb: [] })));
   if (cmd === '/fxbrief') {
     const r = await dispatch(env, 'fx.yml', { mode: 'brief' });
     return reply(env, chatId, r.ok ? '🌍 FX brief started — arrives in about 1–2 minutes.' : `❌ Couldn't start the FX brief. ${dispatchError(r)}`);
@@ -933,8 +1074,18 @@ export async function handleCallback(env, cq) {
   let scr = null;
   let toast = '';
 
-  const p = op === 'sg' || op === 'sd' ? null : await loadPaper(env);
-  if (op === 'sg') scr = await signalsScreen(env, Number(a) || 0, b || 'all');
+  const fxOps = ['fx', 'fxp', 'fxc', 'fxn', 'fxd', 'fxr', 'fxb'];
+  const p = op === 'sg' || op === 'sd' || fxOps.includes(op) ? null : await loadPaper(env);
+  if (op === 'fx') scr = await fxMenu(env);
+  else if (op === 'fxp') scr = await fxPairScreen(env, a);
+  else if (op === 'fxc') scr = await fxCalendarScreen(env, a || 'today');
+  else if (op === 'fxn') scr = await fxHeadlinesScreen(env, a || 'all');
+  else if (op === 'fxd') scr = await fxDriversScreen(env);
+  else if (op === 'fxr') scr = await fxRecordScreen(env);
+  else if (op === 'fxb') {
+    const r = await dispatch(env, 'fx.yml', { mode: 'brief' });
+    toast = r.ok ? 'Full FX brief started — arrives in 1–2 min' : `Couldn't start it: ${dispatchError(r)}`;
+  } else if (op === 'sg') scr = await signalsScreen(env, Number(a) || 0, b || 'all');
   else if (op === 'sd') scr = await signalDetail(env, a);
   else if (!p) {
     scr = needKV;
@@ -1018,7 +1169,7 @@ export async function handleCallback(env, cq) {
   await tg(env, 'answerCallbackQuery', { callback_query_id: cq.id, text: toast.slice(0, 190) });
   if (!scr) return;
   // menus edit themselves in place; taps on scanner alerts open a fresh menu message
-  if (/^(PAPER|SIGNALS) ·/.test(cq.message?.text || '')) {
+  if (/^(PAPER|SIGNALS|FX) ·/.test(cq.message?.text || '')) {
     await tg(env, 'editMessageText', { chat_id: chatId, message_id: cq.message.message_id, text: scr.text, reply_markup: { inline_keyboard: scr.kb }, disable_web_page_preview: true });
   } else {
     await sendScreen(env, chatId, scr);
