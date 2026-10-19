@@ -1241,6 +1241,98 @@ await test('FX buttons: menu, pair, calendar, headlines, drivers, record, brief-
   }
 });
 
+await test('budget: reads bills and amounts the way you type them', async () => {
+  const B = await import('../worker/budget.js');
+  assert.deepEqual(B.parseBill('Rent 1200 on the 1st'), { name: 'Rent', amount: 1200, day: 1 });
+  assert.deepEqual(B.parseBill('Phone $85.50 15th'), { name: 'Phone', amount: 85.5, day: 15 });
+  assert.deepEqual(B.parseBill('Car insurance 210 due 28'), { name: 'Car insurance', amount: 210, day: 28 });
+  assert.deepEqual(B.parseBill('Car payment $1,050 on the 3rd'), { name: 'Car payment', amount: 1050, day: 3 });
+  assert.deepEqual(B.parseBill('Netflix 22.99 9'), { name: 'Netflix', amount: 22.99, day: 9 });
+  assert.equal(B.parseBill('Rent'), null);
+  assert.equal(B.parseAmount('$1,850.25'), 1850.25);
+  assert.deepEqual(B.parseEssential('Groceries 400'), { name: 'Groceries', monthly: 400 });
+  assert.equal(B.nextDue(31, '2026-11-05'), '2026-11-30'); // short month → last day
+  assert.equal(B.nextDue(1, '2026-10-19'), '2026-11-01');
+});
+
+await test('budget: a paycheque covers bills due before next payday first, spreads later bills, then essentials, then the split', async () => {
+  const B = await import('../worker/budget.js');
+  const b = B.freshBudget(); // biweekly, 40/30/30
+  const on = '2026-10-19';
+  b.bills.push({ id: 1, name: 'Phone', amount: 85, day: 25, nextDue: '2026-10-25', saved: 0 }); // before next payday (Nov 2)
+  b.bills.push({ id: 2, name: 'Rent', amount: 1200, day: 1, nextDue: '2026-11-01', saved: 0 }); // also before next payday
+  b.bills.push({ id: 3, name: 'Insurance', amount: 210, day: 28, nextDue: '2026-11-28', saved: 0 }); // 40 days out → 3 paycheques
+  b.essentials.push({ id: 4, name: 'Groceries', monthly: 435 });
+  const a = B.allocate(b, 2000, on);
+  assert.equal(a.bills.find((x) => x.name === 'Phone').give, 85);
+  assert.equal(a.bills.find((x) => x.name === 'Rent').give, 1200);
+  assert.equal(a.bills.find((x) => x.name === 'Insurance').give, 70); // 210 / 3
+  assert.equal(a.essentials, 200.07); // 435 ÷ (30.44/14)
+  const left = 2000 - 85 - 1200 - 70 - 200.07;
+  assert.ok(Math.abs(a.spending + a.leisure + a.investing - left) < 0.02);
+  assert.ok(Math.abs(a.spending - left * 0.4) < 0.02);
+  assert.equal(a.short, 0);
+  B.applyPaycheque(b, a);
+  assert.equal(b.bills.find((x) => x.name === 'Rent').saved, 1200);
+  // a small cheque: bills first (earliest due), the rest flagged short
+  const b2 = B.freshBudget();
+  b2.bills.push({ id: 1, name: 'Rent', amount: 1200, day: 1, nextDue: '2026-11-01', saved: 0 });
+  const small = B.allocate(b2, 900, on);
+  assert.equal(small.bills[0].give, 900);
+  assert.equal(small.spending, 0);
+  assert.equal(small.short, 300);
+  // due date passes → paid from what was set aside, rolls to next month
+  const paid = B.rollBills(b, '2026-10-26');
+  assert.equal(paid[0].name, 'Phone');
+  assert.equal(paid[0].short, 0);
+  assert.equal(b.bills.find((x) => x.name === 'Phone').nextDue, '2026-11-25');
+  assert.equal(b.bills.find((x) => x.name === 'Phone').saved, 0);
+  const rem = B.dailyReminders(b, '2026-10-29'); // Rent due Nov 1 = in 3 days
+  assert.ok(rem.some((m) => /Rent \$1,200\.00 is due in 3 days/.test(m) && /fully set aside/.test(m)));
+});
+
+await test('budget: buttons + typed replies in Telegram (add bill, log paycheque), stored privately in KV', async () => {
+  const W = await import('../worker/worker.js');
+  const kv = new Map();
+  const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_TOKEN: 'G', WEBHOOK_SECRET: 's', GITHUB_REPO: 'x/y',
+    PAPER: { get: async (k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null), put: async (k, v) => kv.set(k, v) } };
+  const sent = [];
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) { sent.push({ m: url.split('/').pop(), b: JSON.parse(init.body || '{}') }); return new Response('{"ok":true}'); }
+    return new Response('{}', { status: 404 });
+  };
+  const say = (text) => W.default.fetch(new Request('https://b/telegram', { method: 'POST', headers: { 'x-telegram-bot-api-secret-token': 's' }, body: JSON.stringify({ message: { chat: { id: 111 }, text } }) }), env);
+  const tap = (data) => W.handleCallback(env, { id: 'c', data, message: { chat: { id: 111 }, message_id: 1, text: 'BUDGET · x' } });
+  try {
+    await say('💰 Budget');
+    assert.match(sent.at(-1).b.text, /BUDGET · 💰 BUDGET/);
+    await tap('bga');
+    await say('Rent 1200 on the 1st');
+    assert.match(sent.at(-1).b.text, /Added Rent — \$1,200\.00 on the 1st/);
+    await say('Phone 85 15th'); // stays in add-bill mode
+    assert.match(sent.at(-1).b.text, /Added Phone/);
+    await tap('bgb');
+    assert.match(sent.at(-1).b.text, /Total bills: \$1,285\.00 \/ month/);
+    await tap('bgp');
+    await say('$2,000');
+    assert.match(sent.at(-1).b.text, /PAYCHEQUE \$2,000\.00 — SORTED/);
+    assert.match(sent.at(-1).b.text, /Rent: \$/);
+    const saved = JSON.parse(kv.get('budget'));
+    assert.equal(saved.history.length, 1);
+    assert.equal(saved.awaiting, null);
+    await say('/paid 500');
+    assert.match(sent.at(-1).b.text, /PAYCHEQUE \$500\.00/);
+    await tap('bgv:50:30:20');
+    assert.deepEqual(JSON.parse(kv.get('budget')).split, { spending: 50, leisure: 30, investing: 20 });
+    await tap('bgq:weekly');
+    assert.equal(JSON.parse(kv.get('budget')).pay.freq, 'weekly');
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
 await test('FX: market hours + Telegram clock (brief 6:45 weekdays, weekly Sunday 6 PM, watch every 15 min)', async () => {
   const R = await import('../fx/run.js');
   const W = await import('../worker/worker.js');

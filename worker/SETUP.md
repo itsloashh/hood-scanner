@@ -48,6 +48,12 @@ https://hood-scanner-bot.<your-subdomain>.workers.dev/setup?key=<your WEBHOOK_SE
 You should see **"✅ Telegram is connected."** Then send `/help` to your bot.
 
 ## Commands
+
+**💰 Budget assistant** (`/budget` or the 💰 Budget button) — stored only in the Worker's private KV, never in the public repo.
+- ➕ Add bill: type `Rent 1200 on the 1st`, `Phone $85.50 15th`… (keeps listening so you can add several; tap Done)
+- 💵 I got paid: type the amount (or `/paid 1850`). It sorts the cheque: bills due before your next payday get fully covered first, later bills get their share so they're ready by their due date, then monthly essentials, then the rest splits into 🛍 spending / 🎉 leisure / 📈 investing.
+- 🛒 Essentials (monthly: groceries, gas…), ⚖️ split % (40/30/30, 50/30/20…), 📅 pay schedule (weekly / every 2 weeks / twice a month / monthly), 📜 history.
+- 9 AM reminders for bills due today and in 3 days, and a note when a bill's due date passes (paid from what was set aside).
 Send `/menu` once to get a permanent button bar at the bottom of the chat: 🌍 FX desk · 📅 FX calendar · 📜 Signals · 📋 Paper · 📍 Status · 🚀 Scan now.
 
 - `/fx` — FX desk menu (buttons): 🥇 Gold · 🇨🇦🇯🇵 CAD/JPY (lean, reasons, structure, levels, next releases) · 📅 Calendar (24h / week / high-impact only) · 📰 Headlines (all / per pair) · 📊 Drivers & rates · 🎯 Track record · 🌍 Full brief now. Every FX alert also carries these buttons.

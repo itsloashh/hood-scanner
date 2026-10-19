@@ -1,3 +1,4 @@
+import * as BG from './budget.js';
 // HOOD SCANNER — Telegram command relay (Cloudflare Worker, free plan)
 //
 // Telegram → this Worker → GitHub Actions. Commands:
@@ -45,15 +46,20 @@ const HELP = [
   '/fx — FX menu: each pair, calendar, headlines, drivers, track record',
   '/fxcal — this week\'s USD · CAD · JPY releases',
   '/fxbrief — full brief now (also automatic 6:45 AM weekdays + Sunday 6 PM)',
+  '',
+  '💰 Budget assistant:',
+  '/budget — bills, set-asides and buckets (buttons)',
+  '/paid 1850 — log a paycheque and sort it',
+  '/bill Rent 1200 on the 1st — add a monthly bill',
   '/help — this list',
   '',
   'Alerts only arrive when a coin qualifies — a quiet scan sends nothing.',
 ].join('\n');
 
 // Permanent button bar at the bottom of the chat (sent with /start, /help or /menu)
-const MENU_BUTTONS = { '🌍 FX desk': '/fx', '📅 FX calendar': '/fxcal', '📜 Signals': '/signals', '📋 Paper': '/paper', '📍 Status': '/status', '🚀 Scan now': '/scan' };
+const MENU_BUTTONS = { '💰 Budget': '/budget', '🌍 FX desk': '/fx', '📅 FX calendar': '/fxcal', '📜 Signals': '/signals', '📋 Paper': '/paper', '📍 Status': '/status', '🚀 Scan now': '/scan' };
 const MENU_KEYBOARD = {
-  keyboard: [[{ text: '🌍 FX desk' }, { text: '📅 FX calendar' }], [{ text: '📜 Signals' }, { text: '📋 Paper' }], [{ text: '📍 Status' }, { text: '🚀 Scan now' }]],
+  keyboard: [[{ text: '💰 Budget' }, { text: '🌍 FX desk' }, { text: '📅 FX calendar' }], [{ text: '📜 Signals' }, { text: '📋 Paper' }], [{ text: '📍 Status' }, { text: '🚀 Scan now' }]],
   resize_keyboard: true,
   is_persistent: true,
 };
@@ -66,6 +72,8 @@ const COMMANDS = [
   { command: 'paper', description: 'Paper trading menu' },
   { command: 'signals', description: 'Every coin called + how it did' },
   { command: 'status', description: 'What the last scan found' },
+  { command: 'budget', description: 'Budget: bills, paycheques, buckets' },
+  { command: 'paid', description: 'Log a paycheque: /paid 1850' },
   { command: 'fx', description: 'Gold + CAD/JPY lean and levels' },
   { command: 'fxcal', description: 'This week\'s USD/CAD/JPY releases' },
   { command: 'fxbrief', description: 'Full FX brief now' },
@@ -136,6 +144,21 @@ async function status(env) {
 }
 
 // ── FX desk clock (Toronto time) ─────────────────────────────
+// 9:00 AM Toronto: bill reminders
+export function budgetClock(ms) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  return Number(p.hour) % 24 === 9 && Number(p.minute) < 5;
+}
+
+export async function budgetTick(env) {
+  const b = await BG.loadBudget(env);
+  if (!b || (!b.bills.length && !b.history.length)) return [];
+  const msgs = BG.dailyReminders(b);
+  await BG.saveBudget(env, b);
+  if (msgs.length) await tg(env, 'sendMessage', { chat_id: env.ALLOWED_CHAT_ID, text: `💰 BILLS\n\n${msgs.join('\n\n')}`, reply_markup: { inline_keyboard: [[{ text: '💰 Budget home', callback_data: 'bg' }]] } });
+  return msgs;
+}
+
 export function fxClock(ms) {
   const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
   const h = Number(p.hour) % 24;
@@ -333,6 +356,18 @@ async function handleMessage(env, msg) {
   let text = (msg.text || '').trim();
   // bottom-of-chat button bar → commands
   if (MENU_BUTTONS[text]) text = MENU_BUTTONS[text];
+
+  // budget assistant waiting for a typed answer (paycheque amount, a bill, an essential)
+  if (env.PAPER && text && !text.startsWith('/')) {
+    const b = await BG.loadBudget(env);
+    if (b?.awaiting) {
+      const scr = BG.handleText(b, text);
+      if (scr) {
+        await BG.saveBudget(env, b);
+        return sendScreen(env, chatId, scr);
+      }
+    }
+  }
   const [rawCmd, ...args] = text.split(/\s+/);
   const cmd = rawCmd.toLowerCase().replace(/@.*$/, ''); // /scan@MyBot → /scan
 
@@ -376,6 +411,20 @@ async function handleMessage(env, msg) {
   }
 
   if (cmd === '/signals') return sendScreen(env, chatId, await signalsScreen(env).catch((e) => ({ text: `Couldn't load signals: ${e.message}`, kb: [] })));
+
+  if (cmd === '/budget' || cmd === '/paid' || cmd === '/bill') {
+    if (!env.PAPER) return reply(env, chatId, needKV.text);
+    const b = await BG.loadBudget(env);
+    let scr;
+    if (cmd === '/budget') scr = BG.handleTap(b, 'bg');
+    else {
+      b.awaiting = cmd === '/paid' ? 'pay' : 'bill';
+      scr = args.length ? BG.handleText(b, args.join(' ')) : { text: cmd === '/paid' ? BG.ASK.pay : BG.ASK.bill, kb: [[{ text: '💰 Budget home', callback_data: 'bg' }]] };
+      if (cmd === '/bill' && args.length) b.awaiting = null;
+    }
+    await BG.saveBudget(env, b);
+    return sendScreen(env, chatId, scr);
+  }
 
   if (cmd === '/fx') return sendScreen(env, chatId, await fxMenu(env).catch((e) => ({ text: `Couldn't read FX data: ${e.message}`, kb: [] })));
   if (cmd === '/fxcal') return sendScreen(env, chatId, await fxCalendarScreen(env, 'week').catch((e) => ({ text: `Couldn't read FX data: ${e.message}`, kb: [] })));
@@ -1070,13 +1119,22 @@ export async function handleCallback(env, cq) {
   const chatId = cq.message?.chat?.id;
   if (String(chatId) !== String(env.ALLOWED_CHAT_ID)) return;
   const data = cq.data || '';
-  const [op, a, b] = data.split(':');
+  const [op, a, b, c2] = data.split(':');
+  const b2 = b;
   let scr = null;
   let toast = '';
 
   const fxOps = ['fx', 'fxp', 'fxc', 'fxn', 'fxd', 'fxr', 'fxb'];
-  const p = op === 'sg' || op === 'sd' || fxOps.includes(op) ? null : await loadPaper(env);
-  if (op === 'fx') scr = await fxMenu(env);
+  const isBudget = /^bg[a-z]?$/.test(op);
+  const p = op === 'sg' || op === 'sd' || fxOps.includes(op) || isBudget ? null : await loadPaper(env);
+  if (isBudget) {
+    if (!env.PAPER) scr = needKV;
+    else {
+      const b = await BG.loadBudget(env);
+      scr = BG.handleTap(b, op, a, b2, c2);
+      await BG.saveBudget(env, b);
+    }
+  } else if (op === 'fx') scr = await fxMenu(env);
   else if (op === 'fxp') scr = await fxPairScreen(env, a);
   else if (op === 'fxc') scr = await fxCalendarScreen(env, a || 'today');
   else if (op === 'fxn') scr = await fxHeadlinesScreen(env, a || 'all');
@@ -1169,7 +1227,7 @@ export async function handleCallback(env, cq) {
   await tg(env, 'answerCallbackQuery', { callback_query_id: cq.id, text: toast.slice(0, 190) });
   if (!scr) return;
   // menus edit themselves in place; taps on scanner alerts open a fresh menu message
-  if (/^(PAPER|SIGNALS|FX) ·/.test(cq.message?.text || '')) {
+  if (/^(PAPER|SIGNALS|FX|BUDGET) ·/.test(cq.message?.text || '')) {
     await tg(env, 'editMessageText', { chat_id: chatId, message_id: cq.message.message_id, text: scr.text, reply_markup: { inline_keyboard: scr.kb }, disable_web_page_preview: true });
   } else {
     await sendScreen(env, chatId, scr);
@@ -1183,6 +1241,7 @@ export default {
     // a scan every 15 min; the holder-list job every 30 min; research daily; FX desk on its own clock.
     const minute = new Date(event.scheduledTime || Date.now()).getUTCMinutes();
     const fxJob = event.cron === '23 14 * * *' ? null : fxClock(event.scheduledTime || Date.now());
+    if (event.cron !== '23 14 * * *' && budgetClock(event.scheduledTime || Date.now()) && env.PAPER) ctx.waitUntil(budgetTick(env).catch(() => {}));
     if (fxJob) ctx.waitUntil(dispatch(env, 'fx.yml', { mode: fxJob }).catch(() => {}));
     const job = event.cron === '23 14 * * *' ? 'research.yml' : 'scan.yml';
     if (job === 'scan.yml' && env.PAPER) ctx.waitUntil(paperTick(env).catch(() => {}));
