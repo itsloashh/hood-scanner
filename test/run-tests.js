@@ -1057,6 +1057,88 @@ await test('research history: runs add up instead of replacing each other; walle
   assert.equal(h.runs, 2);
 });
 
+await test('FX: parsers for Yahoo prices, ForexFactory calendar, RSS and CFTC positioning', async () => {
+  const S = await import('../fx/sources.js');
+  const k = S.parseYahoo({ chart: { result: [{ timestamp: [1, 2, 3], indicators: { quote: [{ open: [1, 2, null], high: [2, 3, 4], low: [0.5, 1, 2], close: [1.5, 2.5, 3], volume: [0, 0, 0] }] } }] } });
+  assert.equal(k.length, 2); // the bar with a missing open is dropped
+  assert.equal(k[1].t, 2000);
+  const cal = S.parseCalendar([
+    { title: 'CPI m/m', country: 'USD', date: '2026-10-20T08:30:00-04:00', impact: 'High', forecast: '0.3%', previous: '0.4%' },
+    { title: 'German PMI', country: 'EUR', date: '2026-10-20T04:00:00-04:00', impact: 'High' },
+  ]);
+  assert.equal(cal.length, 1);
+  assert.equal(cal[0].at, Date.parse('2026-10-20T12:30:00Z'));
+  const rss = S.parseRss('<rss><channel><item><title><![CDATA[Gold hits record high as dollar slides]]></title><link>https://x.test/a</link><pubDate>Mon, 19 Oct 2026 10:00:00 GMT</pubDate><source url="https://reuters.com">Reuters</source></item><entry><title>BoJ keeps rates &amp; signals hike</title><link href="https://boj.test/b"/><updated>2026-10-19T09:00:00Z</updated></entry></channel></rss>', 'test');
+  assert.equal(rss.length, 2);
+  assert.equal(rss[0].source, 'Reuters');
+  assert.equal(rss[1].title, 'BoJ keeps rates & signals hike');
+  assert.equal(rss[1].link, 'https://boj.test/b');
+  const cot = S.parseCot([{ report_date_as_yyyy_mm_dd: '2026-10-06T00:00:00', noncomm_positions_long_all: '300', noncomm_positions_short_all: '100' }, { report_date_as_yyyy_mm_dd: '2026-10-13T00:00:00', noncomm_positions_long_all: '350', noncomm_positions_short_all: '90' }]);
+  assert.equal(cot[0].date, '2026-10-13');
+  assert.equal(cot[0].net, 260);
+});
+
+await test('FX: structure, levels and a lean with reasons (gold uptrend + weak dollar = bullish lean)', async () => {
+  const A = await import('../fx/analysis.js');
+  const D = 86_400_000;
+  const t0 = Date.UTC(2026, 3, 1);
+  // zig-zag uptrend: higher highs and higher lows
+  const daily = [];
+  for (let i = 0; i < 260; i++) {
+    const base = 2000 + i * 3 + (i % 10 < 5 ? (i % 5) * 8 : (5 - (i % 5)) * 8);
+    daily.push({ t: t0 + i * D, o: base - 2, h: base + 6, l: base - 6, c: base });
+  }
+  const hourly = daily.slice(-60).map((k, i) => ({ ...k, t: k.t + i }));
+  const st = A.structure(daily);
+  assert.equal(st.trend, 'up');
+  const lv = A.levels(daily);
+  assert.ok(lv.prevDayHigh && lv.sma50 && lv.sma200 && lv.atr > 0);
+  const weakDollar = { DXY: { d1: -0.3, d5: -1.2 }, US10Y: { d1: -1, d5: -3 } };
+  const b = A.bias('XAUUSD', { daily, hourly, drivers: weakDollar, cot: [{ net: 200 }, { net: 150 }] });
+  assert.equal(b.label, 'Bullish lean');
+  assert.ok(b.factors.some((f) => /US Dollar Index down/.test(f.why) && f.dir > 0));
+  assert.ok(b.factors.some((f) => /speculators added/.test(f.why)));
+  const strongDollar = { DXY: { d5: 2 }, US10Y: { d5: 6 } };
+  const b2 = A.bias('XAUUSD', { daily, hourly, drivers: strongDollar });
+  assert.ok(b2.score < b.score);
+});
+
+await test('FX: watch alerts — event heads-up, level break, driver shock, breaking headline; no repeats', async () => {
+  const R = await import('../fx/run.js');
+  const now = Date.UTC(2026, 9, 20, 12, 10); // Tue
+  const hourly = Array.from({ length: 10 }, (_, i) => ({ t: now - (10 - i) * 3_600_000, o: 2400, h: 2402, l: 2398, c: 2400 }));
+  const snap = {
+    pairs: { XAUUSD: { bias: { price: 2412, levels: { prevDayHigh: 2405, prevDayLow: 2380, prevWeekHigh: 2450, prevWeekLow: 2350, atr: 30 }, daily: {} }, hourly } },
+    drivers: { OIL: { d1: -4.2, d5: -6 } },
+    events: [{ title: 'CPI m/m', country: 'USD', impact: 'High', at: now + 20 * 60000, forecast: '0.3%', previous: '0.4%' }],
+    headlines: [{ title: 'Japan warns of yen intervention as currency slides', at: now - 600000, pairs: ['CAD/JPY'], source: 'Reuters' }],
+  };
+  const state = { alerted: {}, lastPrice: { XAUUSD: 2401 }, primed: true };
+  const out = R.watchAlerts(snap, state, now);
+  const all = out.join('\n---\n');
+  assert.match(all, /HIGH-IMPACT IN 20 MIN — 🇺🇸 USD CPI m\/m/);
+  assert.match(all, /broke ABOVE the previous day high \(2405\.0\)/);
+  assert.match(all, /WTI crude oil −4\.20% today/);
+  assert.match(all, /yen intervention/);
+  assert.equal(R.watchAlerts(snap, state, now + 60000).length, 0); // nothing repeats
+  // first ever run: existing headlines are remembered, not blasted
+  const fresh = { alerted: {}, lastPrice: {} };
+  assert.ok(!R.watchAlerts({ ...snap, events: [], drivers: {} }, fresh, now).some((x) => /intervention/.test(x)));
+});
+
+await test('FX: market hours + Telegram clock (brief 6:45 weekdays, weekly Sunday 6 PM, watch every 15 min)', async () => {
+  const R = await import('../fx/run.js');
+  const W = await import('../worker/worker.js');
+  assert.equal(R.marketOpen(Date.UTC(2026, 9, 17, 16)), false); // Sat
+  assert.equal(R.marketOpen(Date.UTC(2026, 9, 18, 22)), true); // Sun 6 PM NY
+  assert.equal(R.marketOpen(Date.UTC(2026, 9, 23, 22)), false); // Fri 6 PM NY
+  assert.equal(W.fxClock(Date.UTC(2026, 9, 20, 10, 45)), 'brief'); // Tue 6:45 Toronto (EDT)
+  assert.equal(W.fxClock(Date.UTC(2026, 9, 18, 22, 0)), 'weekly'); // Sun 6:00 PM Toronto
+  assert.equal(W.fxClock(Date.UTC(2026, 9, 20, 14, 5)), 'watch');
+  assert.equal(W.fxClock(Date.UTC(2026, 9, 20, 14, 0)), null);
+  assert.equal(W.fxClock(Date.UTC(2026, 9, 17, 14, 5)), null); // Saturday
+});
+
 await test('case studies: finds launch runs and later base-breakout runs, judges them against our rules', async () => {
   const { findRuns, wouldScannerCatch } = await import('../research/case-studies.js');
   const D = 86_400_000;

@@ -1,0 +1,40 @@
+name: fx
+
+# FX desk: XAU/USD + CAD/JPY context alerts. The Telegram Worker starts it
+# (watch every 15 min in market hours, brief 6:45 AM weekdays, weekly Sunday 6 PM Toronto).
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'watch | brief | weekly | probe'
+        required: false
+        default: 'watch'
+  push:
+    branches: [main]
+    paths: ['triggers/fx.txt'] # editing this file runs a probe (lets Claude test remotely)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fx # own lane: only writes data/fx
+  cancel-in-progress: false
+
+jobs:
+  fx:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: FX desk
+        run: node fx/run.js
+        env:
+          FX_MODE: ${{ inputs.mode || 'probe' }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      - name: Save
+        if: always()
+        run: scripts/save-data.sh "fx ${{ inputs.mode || 'probe' }} $(date -u +%Y-%m-%dT%H:%MZ)" data/fx

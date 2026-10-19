@@ -40,6 +40,11 @@ const HELP = [
   '/paper — paper trading: place trade · TP/SL · positions · wallet · P/L',
   '/signals — every coin the bot has called: when, at what price, and how it\'s doing',
   '/status — what the last scan found, instantly',
+  '',
+  '🌍 FX desk (XAU/USD · CAD/JPY):',
+  '/fx — current lean, reasons and levels for both pairs',
+  '/fxcal — this week\'s USD · CAD · JPY releases',
+  '/fxbrief — full brief now (also automatic 6:45 AM weekdays + Sunday 6 PM)',
   '/help — this list',
   '',
   'Alerts only arrive when a coin qualifies — a quiet scan sends nothing.',
@@ -53,6 +58,9 @@ const COMMANDS = [
   { command: 'paper', description: 'Paper trading menu' },
   { command: 'signals', description: 'Every coin called + how it did' },
   { command: 'status', description: 'What the last scan found' },
+  { command: 'fx', description: 'Gold + CAD/JPY lean and levels' },
+  { command: 'fxcal', description: 'This week\'s USD/CAD/JPY releases' },
+  { command: 'fxbrief', description: 'Full FX brief now' },
   { command: 'help', description: 'List commands' },
 ];
 
@@ -118,6 +126,56 @@ async function status(env) {
   return L.join('\n');
 }
 
+// ── FX desk clock (Toronto time) ─────────────────────────────
+export function fxClock(ms) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', weekday: 'short', hour: 'numeric', minute: 'numeric', hour12: false }).formatToParts(new Date(ms)).map((x) => [x.type, x.value]));
+  const h = Number(p.hour) % 24;
+  const m = Number(p.minute);
+  const wk = p.weekday;
+  if (['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(wk) && h === 6 && m >= 45 && m < 50) return 'brief';
+  if (wk === 'Sun' && h === 18 && m < 5) return 'weekly';
+  if (wk === 'Sat' || (wk === 'Sun' && h < 17) || (wk === 'Fri' && h >= 17)) return null; // market closed
+  return m % 15 >= 5 && m % 15 < 10 ? 'watch' : null;
+}
+
+async function fxLatest(env) {
+  const res = await fetch(`https://raw.githubusercontent.com/${env.GITHUB_REPO}/main/data/fx/latest.json?t=${Math.floor(Date.now() / 60000)}`, { headers: { 'cache-control': 'no-cache' } });
+  return res.ok ? res.json() : null;
+}
+
+const fxNum = (v, d) => (v == null ? '—' : Number(v).toFixed(d));
+const fxPct = (v) => (v == null ? '—' : `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(2)}%`);
+const fxWhen = (ms) => new Date(ms).toLocaleString('en-US', { timeZone: 'America/Toronto', weekday: 'short', hour: 'numeric', minute: '2-digit' });
+
+export async function fxStatus(env) {
+  const x = await fxLatest(env);
+  if (!x) return '🌍 FX desk has no data yet — send /fxbrief to run it now.';
+  const mins = Math.round((Date.now() - Date.parse(x.at)) / 60000);
+  const L = [`🌍 FX DESK — updated ${mins < 1 ? 'just now' : `${mins} min ago`}`, ''];
+  for (const p of Object.values(x.pairs)) {
+    const icon = p.lean.startsWith('Bullish') ? '🟢' : p.lean.startsWith('Bearish') ? '🔴' : '⚪';
+    L.push(`${icon} ${p.name} ${fxNum(p.price, p.decimals)} (${fxPct(p.dayChange)} today)`);
+    L.push(`Lean: ${p.lean} (${p.score > 0 ? '+' : ''}${p.score} of ±${p.max})`);
+    for (const r of p.reasons.slice(0, 5)) L.push(`  ${r}`);
+    if (p.levels) L.push(`Prev day ${fxNum(p.levels.prevDayLow, p.decimals)}–${fxNum(p.levels.prevDayHigh, p.decimals)} · ATR ${fxNum(p.levels.atr, p.decimals)}`);
+    L.push('');
+  }
+  const next = (x.events || []).filter((e) => e.impact === 'High' && e.at > Date.now()).slice(0, 3);
+  if (next.length) L.push('Next high-impact:', ...next.map((e) => `🔴 ${fxWhen(e.at)} ${e.country} ${e.title}`), '');
+  L.push('Context only — not trade signals. /fxcal for the week · /fxbrief for the full brief');
+  return L.join('\n');
+}
+
+export async function fxCalendar(env) {
+  const x = await fxLatest(env);
+  if (!x) return '📅 No calendar yet — send /fxbrief to run the FX desk now.';
+  const up = (x.events || []).filter((e) => e.at > Date.now() - 3_600_000);
+  if (!up.length) return '📅 No more high/medium-impact USD · CAD · JPY releases this week.';
+  const L = ['📅 THIS WEEK — USD · CAD · JPY (Toronto time)'];
+  for (const e of up.slice(0, 30)) L.push(`${e.impact === 'High' ? '🔴' : '🟠'} ${fxWhen(e.at)} ${e.country} ${e.title}${e.forecast ? ` (fcst ${e.forecast}${e.previous ? `, prev ${e.previous}` : ''})` : ''}`);
+  return L.join('\n');
+}
+
 async function catalystList(env) {
   const res = await fetch(`https://raw.githubusercontent.com/${env.GITHUB_REPO}/main/data/catalysts.json?t=${Date.now()}`, { headers: { 'cache-control': 'no-cache' } });
   if (res.status === 404) return '⚡ No catalyst tags yet.\nTag one: /catalyst 0x… Robinhood app listing';
@@ -177,6 +235,13 @@ async function handleMessage(env, msg) {
   }
 
   if (cmd === '/signals') return sendScreen(env, chatId, await signalsScreen(env).catch((e) => ({ text: `Couldn't load signals: ${e.message}`, kb: [] })));
+
+  if (cmd === '/fx') return reply(env, chatId, await fxStatus(env).catch((e) => `Couldn't read FX data: ${e.message}`));
+  if (cmd === '/fxcal') return reply(env, chatId, await fxCalendar(env).catch((e) => `Couldn't read FX data: ${e.message}`));
+  if (cmd === '/fxbrief') {
+    const r = await dispatch(env, 'fx.yml', { mode: 'brief' });
+    return reply(env, chatId, r.ok ? '🌍 FX brief started — arrives in about 1–2 minutes.' : `❌ Couldn't start the FX brief. ${dispatchError(r)}`);
+  }
 
   if (cmd === '/paper') return sendScreen(env, chatId, await mainScreen(env));
 
@@ -964,8 +1029,10 @@ export default {
   // Cloudflare Cron Triggers — reliable clock (GitHub schedules can lag for hours)
   async scheduled(event, env, ctx) {
     // Clock: this fires every 5 min. Paper positions (TP/SL + move updates) every 5 min;
-    // a scan every 15 min; the holder-list job every 30 min; research daily.
+    // a scan every 15 min; the holder-list job every 30 min; research daily; FX desk on its own clock.
     const minute = new Date(event.scheduledTime || Date.now()).getUTCMinutes();
+    const fxJob = event.cron === '23 14 * * *' ? null : fxClock(event.scheduledTime || Date.now());
+    if (fxJob) ctx.waitUntil(dispatch(env, 'fx.yml', { mode: fxJob }).catch(() => {}));
     const job = event.cron === '23 14 * * *' ? 'research.yml' : 'scan.yml';
     if (job === 'scan.yml' && env.PAPER) ctx.waitUntil(paperTick(env).catch(() => {}));
     // older 15-min cron setups dispatch every time; the 5-min cron only on quarter hours
