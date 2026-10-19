@@ -1126,6 +1126,31 @@ await test('FX: watch alerts — event heads-up, level break, driver shock, brea
   assert.ok(!R.watchAlerts({ ...snap, events: [], drivers: {} }, fresh, now).some((x) => /intervention/.test(x)));
 });
 
+await test('FX: headlines keep trusted outlets + central banks only, matched to the right pair', async () => {
+  const R = await import('../fx/run.js');
+  const S = await import('../fx/sources.js');
+  const now = Date.now();
+  const item = (title, source) => `<item><title>${title}</title><link>https://n.test/${encodeURIComponent(title)}</link><pubDate>${new Date(now - 3_600_000).toUTCString()}</pubDate><source url="https://s.test">${source}</source></item>`;
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    url = String(url);
+    if (url.includes('news.google.com')) return new Response(`<rss><channel>${item('Gold edges higher as traders ease rate hike bets - Reuters', 'Reuters')}${item('SJC gold prices plummet - Vietnam.vn', 'Vietnam.vn')}${item('FX:XAUUSD Chart Image - TradingView', 'TradingView')}${item('Bank of Japan signals hike as yen slides - Bloomberg', 'Bloomberg')}</channel></rss>`);
+    if (url.includes('federalreserve.gov')) return new Response(`<rss><channel>${item('Federal Reserve issues FOMC statement', 'Federal Reserve')}</channel></rss>`);
+    return new Response('', { status: 404 });
+  };
+  try {
+    const hs = await R.headlines(now);
+    const titles = hs.map((h) => h.title);
+    assert.ok(titles.includes('Gold edges higher as traders ease rate hike bets'));
+    assert.ok(titles.includes('Bank of Japan signals hike as yen slides'));
+    assert.ok(titles.includes('Federal Reserve issues FOMC statement'));
+    assert.ok(!titles.some((t) => /SJC|TradingView/.test(t)));
+    assert.deepEqual(hs.find((h) => /Bank of Japan/.test(h.title)).pairs, ['CAD/JPY']);
+  } finally {
+    globalThis.fetch = prevFetch;
+  }
+});
+
 await test('FX: market hours + Telegram clock (brief 6:45 weekdays, weekly Sunday 6 PM, watch every 15 min)', async () => {
   const R = await import('../fx/run.js');
   const W = await import('../worker/worker.js');

@@ -108,7 +108,9 @@ export async function headlines(now = Date.now()) {
     if (seen.has(k)) continue;
     seen.add(k);
     h.pairs = pairsFor(h);
-    if (h.pairs.length || h.official) out.push(h);
+    h.title = h.title.replace(/ - [^-]{2,60}$/, ''); // Google appends " - Publisher"
+    const trusted = h.official || FX.trustedSources.test(h.source || '');
+    if (trusted && (h.pairs.length || h.official)) out.push(h);
   }
   return out;
 }

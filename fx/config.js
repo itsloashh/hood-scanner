@@ -49,12 +49,15 @@ export const FX = {
   // News: several sites, matched by keyword, deduped. Google News RSS pulls Reuters, Bloomberg,
   // CNBC, Kitco, FXStreet, MarketWatch… in one free feed.
   feeds: [
-    { name: 'FXStreet', url: 'https://www.fxstreet.com/rss/news' },
     { name: 'Federal Reserve', url: 'https://www.federalreserve.gov/feeds/press_all.xml', always: true },
     { name: 'Bank of Canada', url: 'https://www.bankofcanada.ca/content_type/press-releases/feed/', always: true },
     { name: 'Bank of Japan', url: 'https://www.boj.or.jp/en/rss/whatsnew.xml', always: true },
   ],
   googleNews: (q) => `https://news.google.com/rss/search?q=${encodeURIComponent(q)}+when:1d&hl=en-US&gl=US&ceid=US:en`,
+  // Only these outlets make it into briefs/alerts (Google News also returns local blogs and chart spam).
+  // Central-bank feeds are always kept.
+  trustedSources: /reuters|bloomberg|cnbc|wall street journal|wsj|financial times|\bft\b|marketwatch|barron|kitco|fxstreet|forexlive|investinglive|dailyfx|investing\.com|yahoo finance|business insider|the economist|associated press|\bap news|nikkei|japan times|globe and mail|bnn|financial post|cbc|axios|fortune|morningstar|seeking alpha|the business times|south china morning post|al jazeera|bbc|guardian|new york times|cnn business|fox business|benzinga|coindesk/i,
+
   // headlines worth an immediate alert (everything else waits for the brief)
   breaking: /intervention|emergency|surprise|unexpected|rate (hike|cut)|hikes rates|cuts rates|holds rates|war|missile|invasion|sanction|tariff|default|downgrade|shutdown|resign|ceasefire|record high|all-time high|plunge|crash|soar|tumble/i,
   maxHeadlineAlertsPerRun: 3,

@@ -30,11 +30,15 @@ jobs:
         with:
           node-version: 22
       - name: FX desk
-        run: node fx/run.js
+        # dispatch input wins; a push to triggers/fx.txt uses the word in that file (brief/weekly/watch), else probe
+        run: |
+          MODE="${{ inputs.mode }}"
+          if [ -z "$MODE" ]; then MODE=$(grep -oE '^(brief|weekly|watch|probe)' triggers/fx.txt || echo probe); fi
+          echo "mode: $MODE"
+          FX_MODE="$MODE" node fx/run.js
         env:
-          FX_MODE: ${{ inputs.mode || 'probe' }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       - name: Save
         if: always()
-        run: scripts/save-data.sh "fx ${{ inputs.mode || 'probe' }} $(date -u +%Y-%m-%dT%H:%MZ)" data/fx
+        run: scripts/save-data.sh "fx $(date -u +%Y-%m-%dT%H:%MZ)" data/fx
