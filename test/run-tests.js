@@ -1134,7 +1134,7 @@ await test('FX: headlines keep trusted outlets + central banks only, matched to 
   const prevFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
     url = String(url);
-    if (url.includes('news.google.com')) return new Response(`<rss><channel>${item('Gold edges higher as traders ease rate hike bets - Reuters', 'Reuters')}${item('SJC gold prices plummet - Vietnam.vn', 'Vietnam.vn')}${item('FX:XAUUSD Chart Image - TradingView', 'TradingView')}${item('Bank of Japan signals hike as yen slides - Bloomberg', 'Bloomberg')}</channel></rss>`);
+    if (url.includes('news.google.com')) return new Response(`<rss><channel>${item('Gold edges higher as traders ease rate hike bets - Reuters', 'Reuters')}${item('SJC gold prices plummet - Vietnam.vn', 'Vietnam.vn')}${item('FX:XAUUSD Chart Image - TradingView', 'TradingView')}${item('Bank of Japan signals hike as yen slides - Bloomberg', 'Bloomberg')}${item('Gold Edges Higher As Traders Ease Rate-Hike Bets - Bloomberg', 'Bloomberg.com')}${item('Opinion: Canada needs more housing - Globe', 'The Globe and Mail')}</channel></rss>`);
     if (url.includes('federalreserve.gov')) return new Response(`<rss><channel>${item('Federal Reserve issues FOMC statement', 'Federal Reserve')}</channel></rss>`);
     return new Response('', { status: 404 });
   };
@@ -1146,6 +1146,8 @@ await test('FX: headlines keep trusted outlets + central banks only, matched to 
     assert.ok(titles.includes('Federal Reserve issues FOMC statement'));
     assert.ok(!titles.some((t) => /SJC|TradingView/.test(t)));
     assert.deepEqual(hs.find((h) => /Bank of Japan/.test(h.title)).pairs, ['CAD/JPY']);
+    assert.equal(titles.filter((t) => /edges higher/i.test(t)).length, 1); // same story, two outlets
+    assert.ok(!titles.some((t) => /^Opinion/.test(t)));
   } finally {
     globalThis.fetch = prevFetch;
   }

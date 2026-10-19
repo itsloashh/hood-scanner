@@ -178,3 +178,13 @@ Without it you can still run anything from **Actions → (workflow) → Run work
 
 ## Starting runs without the Run button
 Editing `triggers/scan.txt` or `triggers/research.txt` (any change, committed to main) starts that job. That's how Claude can start runs remotely. You can also do it from the GitHub app: open the file, tap ✏️, change the date, and commit.
+
+## 🌍 FX desk — XAU/USD + CAD/JPY (same Telegram bot)
+
+Context alerts for your own strategy — **not** trade signals or execution. Runs from `fx/` on its own GitHub workflow, started by the Telegram Worker's clock.
+
+- **Sources (free, keyless):** Yahoo Finance charts (gold futures, CAD/JPY, plus DXY, US 10-year yield, WTI oil, S&P futures, Nikkei, VIX), ForexFactory's weekly calendar, Google News (trusted outlets only: Reuters, Bloomberg, CNBC, investingLive, Kitco…), Fed / Bank of Canada / Bank of Japan feeds, CFTC positioning. X.com has no free API, so it isn't read directly — the same stories reach us through the outlets above. Source health: `data/fx/health.json`.
+- **Analysis:** daily + hourly market structure (swing highs/lows, breaks of structure), previous day/week levels, 50/200-day averages, ATR, and each driver's push on each pair → a **lean** (bullish / bearish / mixed) that always lists its reasons.
+- **Alerts:** 6:45 AM weekday brief · Sunday 6 PM weekly outlook · 30 min before high-impact USD/CAD/JPY releases (and the result when published) · breaks of the previous day/week high/low or last daily swing · fast moves (≈60%+ of a normal day's range in 4h) · big driver moves (oil ±3%, DXY ±0.6%, VIX ±15%…) · breaking headlines (rate decisions, intervention, tariffs, war…).
+- **Telegram:** `/fx` current lean + levels · `/fxcal` this week's releases · `/fxbrief` full brief now.
+- Tune everything in `fx/config.js`.

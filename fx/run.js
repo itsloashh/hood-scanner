@@ -101,12 +101,19 @@ export async function headlines(now = Date.now()) {
       log(`feed ${j.name} failed: ${e.message}`);
     }
   }
-  const seen = new Set();
+  const kept = []; // word sets of stories already kept — same story from another outlet is skipped
   const out = [];
+  const words = (t) => new Set(t.toLowerCase().replace(/ - [^-]+$/, '').replace(/[^a-z0-9% ]/g, ' ').split(/\s+/).filter((w) => w.length > 2 && !['the', 'and', 'for', 'says', 'with', 'from', 'reuters', 'after'].includes(w)));
+  const sameStory = (a, b) => {
+    let n = 0;
+    for (const w of a) if (b.has(w)) n += 1;
+    return n / Math.min(a.size, b.size) >= 0.6;
+  };
   for (const h of all.filter((x) => !x.at || now - x.at < 36 * HOUR).sort((a, b) => (b.at || 0) - (a.at || 0))) {
-    const k = h.title.toLowerCase().replace(/ - [^-]+$/, '').slice(0, 80);
-    if (seen.has(k)) continue;
-    seen.add(k);
+    if (/^(opinion|analysis|editorial|letters?)\b[:\s]/i.test(h.title)) continue;
+    const w = words(h.title);
+    if (!w.size || kept.some((k) => sameStory(w, k))) continue;
+    kept.push(w);
     h.pairs = pairsFor(h);
     h.title = h.title.replace(/ - [^-]{2,60}$/, ''); // Google appends " - Publisher"
     const trusted = h.official || FX.trustedSources.test(h.source || '');
@@ -116,7 +123,7 @@ export async function headlines(now = Date.now()) {
 }
 
 const PAIR_WORDS = {
-  XAUUSD: /\bgold\b|xau|bullion|precious metal|\bfed\b|federal reserve|powell|fomc|treasury yield|dollar index|\bdxy\b|us cpi|inflation|payrolls|nfp/i,
+  XAUUSD: /\bgold\b|xau|bullion|precious metal|\bfed\b|federal reserve|powell|warsh|fomc|treasury yield|dollar index|\bdxy\b|us cpi|us inflation|u\.s\. inflation|payrolls|nfp/i,
   CADJPY: /canad|loonie|\bcad\b|bank of canada|\bboc\b|macklem|\byen\b|\bjpy\b|bank of japan|\bboj\b|ueda|japan|crude|\boil\b|opec/i,
 };
 export const pairsFor = (h) => Object.entries(PAIR_WORDS).filter(([, re]) => re.test(h.title)).map(([k]) => FX.pairs[k].name);
