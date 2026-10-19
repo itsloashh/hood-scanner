@@ -232,11 +232,10 @@ export function watchAlerts(snap, state, now = Date.now()) {
   for (const [key, m] of Object.entries(snap.drivers)) {
     if (m?.d1 != null && Math.abs(m.d1) >= FX.drivers[key].shockPct) once(`drv:${key}:${day}:${Math.sign(m.d1)}`, 20, msg.driverShockMessage(key, m));
   }
-  // 4b. yen intervention watch: fast USD/JPY rise + official warning language in the news
-  const uj = snap.drivers.USDJPY;
+  // 4b. yen intervention watch: official warning language in trusted news
   const warn = state.primed ? (snap.headlines || []).find((h) => FX.intervention.words.test(h.title) && /yen|jpy|japan/i.test(h.title) && (!h.at || now - h.at < 6 * HOUR)) : null;
-  if (warn || (uj?.d5 != null && uj.d5 >= FX.intervention.fastRisePct)) {
-    once(`intv:${day}`, 20, msg.interventionMessage(uj, warn));
+  if (warn) {
+    once(`intv:${day}`, 20, msg.interventionMessage(warn));
   }
 
   // 5. breaking headlines (new ones only)

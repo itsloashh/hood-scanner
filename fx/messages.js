@@ -118,9 +118,10 @@ export function eventNewsResultMessage(e, h) {
   ].join('\n');
 }
 
-export function interventionMessage(uj, warn) {
-  const L = [`🇯🇵 YEN INTERVENTION WATCH${uj?.price ? ` — USD/JPY ${uj.price.toFixed(2)} (${sgn(uj.d5)} in 5 days)` : ''}`];
-  if (warn) L.push(`Officials/press: "${warn.title}" — ${warn.source || ''}`);
-  L.push('Japan has stepped in before after fast yen drops. An intervention can knock CAD/JPY down 2–4% in minutes.');
-  return L.join('\n');
+export function interventionMessage(warn) {
+  return [
+    '🇯🇵 YEN INTERVENTION WATCH — CAD/JPY',
+    `"${warn.title}" — ${warn.source || ''}`,
+    'Japan has stepped in to strengthen the yen before. If it does, CAD/JPY can drop 2–4% in minutes.',
+  ].join('\n');
 }
