@@ -39,37 +39,38 @@ const hash = (s) => {
   return String(h >>> 0);
 };
 
-// Prices for a pair: spot first; for gold, futures shifted to spot if spot candles are missing.
-// A second spot source (Stooq) checks the price; disagreement is noted in the brief.
+// Prices for a pair. CAD/JPY: Yahoo spot candles. Gold: futures candles shifted onto the live
+// spot quote (Swissquote / gold-api.com) so levels line up with TradingView OANDA:XAUUSD.
+// The live quote also cross-checks the price; disagreement is noted in the brief.
 async function pairCandles(key, P, snap) {
   const get = async (sym) => ({
     daily: await src.candles(sym, { range: '1y', interval: '1d' }).catch(() => []),
     hourly: await src.candles(sym, { range: '10d', interval: '1h' }).catch(() => []),
   });
-  let { daily, hourly } = await get(P.yahoo);
-  let source = `${P.yahoo} (spot)`;
-  let check = null;
-  if (P.stooq) {
-    try {
-      check = (await src.stooqQuote(P.stooq))?.price ?? null;
-    } catch {
-      /* second opinion unavailable */
-    }
+  const quote = P.spot ? await src.spotQuote(...P.spot).catch(() => null) : null;
+  let daily = [];
+  let hourly = [];
+  let source = '';
+  if (P.yahoo) {
+    ({ daily, hourly } = await get(P.yahoo));
+    source = `${P.yahoo} (spot)`;
   }
   if ((!daily.length || !hourly.length) && P.futures) {
     const fut = await get(P.futures);
     if (fut.daily.length) {
-      const basis = check ? check - (fut.hourly.at(-1) || fut.daily.at(-1)).c : 0;
+      const lastFut = (fut.hourly.at(-1) || fut.daily.at(-1)).c;
+      const basis = quote ? quote.price - lastFut : 0;
       const shift = (k) => ({ ...k, o: k.o + basis, h: k.h + basis, l: k.l + basis, c: k.c + basis });
-      daily = daily.length ? daily : fut.daily.map(shift);
-      hourly = hourly.length ? hourly : fut.hourly.map(shift);
-      source = basis ? `${P.futures} futures shifted ${basis >= 0 ? '+' : ''}${basis.toFixed(1)} to spot` : `${P.futures} futures (spot unavailable — may differ from your chart by a few dollars)`;
+      daily = fut.daily.map(shift);
+      hourly = fut.hourly.map(shift);
+      source = quote ? `spot (${quote.source}), chart from futures shifted ${basis >= 0 ? '+' : '−'}${Math.abs(basis).toFixed(1)}` : `${P.futures} futures — spot unavailable, may differ from your chart by a few dollars`;
+      if (!quote) snap.priceNotes.push(`${P.name}: live spot quote unavailable — prices are COMEX futures (a few dollars off spot)`);
     }
   }
   const price = (hourly.at(-1) || daily.at(-1))?.c;
-  if (check && price) {
-    const diff = Math.abs(price / check - 1) * 100;
-    if (diff > FX.priceCheckMaxDiffPct) snap.priceNotes.push(`${P.name}: sources disagree by ${diff.toFixed(2)}% (${price.toFixed(P.decimals)} vs ${check.toFixed(P.decimals)}) — double-check your chart`);
+  if (quote && price && P.yahoo) {
+    const diff = Math.abs(price / quote.price - 1) * 100;
+    if (diff > FX.priceCheckMaxDiffPct) snap.priceNotes.push(`${P.name}: sources disagree by ${diff.toFixed(2)}% (${price.toFixed(P.decimals)} vs ${quote.price.toFixed(P.decimals)} on ${quote.source}) — double-check your chart`);
   }
   return { daily, hourly, source };
 }

@@ -116,16 +116,31 @@ export async function fred(id) {
   return parseFredCsv(await fetchText(FX.fredUrl(id), { name: `fred:${id}` }));
 }
 
-// ── Stooq live quote (keyless CSV) → { price, at } — second opinion on spot prices
-export function parseStooqQuote(text) {
-  const [head, row] = String(text).trim().split(/\r?\n/);
-  if (!head || !row) return null;
-  const cols = head.toLowerCase().split(',');
-  const v = row.split(',');
-  const close = Number(v[cols.indexOf('close')]);
-  return Number.isFinite(close) && close > 0 ? { price: close } : null;
+// ── live spot quotes (keyless): Swissquote's public feed, gold-api.com as backup for gold
+// → { price, source }. Used to put gold on spot and to cross-check CAD/JPY.
+export function parseSwissquote(json) {
+  const mids = [];
+  for (const venue of Array.isArray(json) ? json : []) {
+    for (const p of venue.spreadProfilePrices || []) {
+      if (p.bid > 0 && p.ask > 0) mids.push((p.bid + p.ask) / 2);
+    }
+  }
+  if (!mids.length) return null;
+  mids.sort((a, b) => a - b);
+  return mids[Math.floor(mids.length / 2)];
 }
 
-export async function stooqQuote(sym) {
-  return parseStooqQuote(await fetchText(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlc&h&e=csv`, { name: `stooq:${sym}` }));
+export async function spotQuote(base, quote) {
+  try {
+    const j = JSON.parse(await fetchText(`https://forex-data-feed.swissquote.com/public-quotes/bboquotes/instrument/${base}/${quote}`, { name: `swissquote:${base}${quote}` }));
+    const price = parseSwissquote(j);
+    if (price) return { price, source: 'Swissquote' };
+  } catch {
+    /* try the backup */
+  }
+  if (base === 'XAU') {
+    const j = JSON.parse(await fetchText('https://api.gold-api.com/price/XAU', { name: 'gold-api:XAU' }));
+    if (Number(j?.price) > 0) return { price: Number(j.price), source: 'gold-api.com' };
+  }
+  return null;
 }

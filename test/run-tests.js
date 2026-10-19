@@ -1164,7 +1164,7 @@ await test('FX: rates from FRED, Stooq spot check, release results from the news
   const m = A.macroMove(fredRows);
   assert.equal(Math.round(m.d1bp), 2);
   assert.equal(Math.round(m.d5bp), 17);
-  assert.equal(S.parseStooqQuote('Symbol,Date,Time,Open,High,Low,Close\nXAUUSD,2026-10-19,01:00:00,4190,4200,4185,4193.4').price, 4193.4);
+  assert.equal(S.parseSwissquote([{ spreadProfilePrices: [{ bid: 4193.0, ask: 4193.6 }, { bid: 4192.8, ask: 4193.8 }] }, { spreadProfilePrices: [{ bid: 4193.1, ask: 4193.5 }] }]), 4193.3);
   // release result found in the news after the number is out
   const now = Date.UTC(2026, 9, 20, 12, 45);
   const e = { title: 'CPI m/m', country: 'CAD', impact: 'High', at: Date.UTC(2026, 9, 20, 12, 30), forecast: '0.2%', previous: '0.1%' };

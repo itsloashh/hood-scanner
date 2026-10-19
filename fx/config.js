@@ -8,9 +8,9 @@ export const FX = {
   // What we watch. `yahoo` = Yahoo Finance chart symbol (free, keyless).
   pairs: {
     XAUUSD: {
-      name: 'Gold (XAU/USD)', yahoo: 'XAUUSD=X', // spot, like TradingView OANDA:XAUUSD
-      futures: 'GC=F', // backup: COMEX futures shifted to spot by today's spot–futures gap
-      stooq: 'xauusd', // second spot source for the price cross-check
+      name: 'Gold (XAU/USD)', yahoo: null, // Yahoo has no spot-gold chart…
+      futures: 'GC=F', // …so COMEX futures candles are shifted onto the live spot price (≈ TradingView OANDA:XAUUSD)
+      spot: ['XAU', 'USD'], // live spot quote (Swissquote, gold-api.com backup)
       decimals: 1, pip: 0.1,
       currencies: ['USD'], // calendar events that move it
       // how each driver usually pushes it: +1 = driver up → pair up, −1 = driver up → pair down
@@ -20,7 +20,7 @@ export const FX = {
       cot: 'GOLD - COMMODITY EXCHANGE INC.',
     },
     CADJPY: {
-      name: 'CAD/JPY', yahoo: 'CADJPY=X', stooq: 'cadjpy', decimals: 3, pip: 0.01,
+      name: 'CAD/JPY', yahoo: 'CADJPY=X', spot: ['CAD', 'JPY'], decimals: 3, pip: 0.01,
       currencies: ['CAD', 'JPY'],
       drivers: { OIL: +1, SPX: +1, NIKKEI: +1, US10Y: +1, VIX: -1, DXY: 0, USDJPY: +1 },
       macro: {},
