@@ -514,9 +514,9 @@
    "recentBurns": null
   },
   "0xf4c5015bbeaa89cb6c60b0ecafea05351533f4cd": {
-   "at": 1792452817005,
+   "at": 1792476110367,
    "symbol": "PORKU",
-   "holdersCount": 1091,
+   "holdersCount": 1092,
    "conc": {
     "top1Pct": 4.9206,
     "top10Pct": 5.7297,
@@ -575,11 +575,18 @@
   }
  },
  "lastRun": {
-  "at": "2026-10-20T05:31:02.534Z",
-  "targets": 0,
-  "ok": 0,
-  "failed": 0,
-  "errors": [],
-  "http": {}
+  "at": "2026-10-20T06:01:03.438Z",
+  "targets": 2,
+  "ok": 1,
+  "failed": 1,
+  "errors": [
+   "ORBIO: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0xaa07a0e9209e16ac99708c3ec70159c6ef3128a"
+  ],
+  "http": {
+   "api.blockscout.com": {
+    "calls": 9,
+    "sec": 32
+   }
+  }
  }
 }
