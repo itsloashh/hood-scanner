@@ -22,7 +22,7 @@ import { notify } from './notify.js';
 import { httpErrors, httpStats, resetBreakers } from './http.js';
 import { loadWallets, saveWallets, ingestTrades, resolveOutcomes, flowFeatures, smartWallets } from './wallets.js';
 import { alertMessage, tradeMessage, digestMessage, checkMessage, pumpMessage, ignitionMessage, updateMessage, dropMessage, milestoneMessage } from './messages.js';
-import { loadPrefs, seedCalled, decide, markSent, noteMiss, milestones, pruneCalled } from './tracking.js';
+import { loadPrefs, seedCalled, decide, markSent, markSeen, noteMiss, milestones, pruneCalled } from './tracking.js';
 
 const MIN = 60_000;
 const HOUR = 60 * MIN;
@@ -456,6 +456,11 @@ export async function main() {
   const catalysts = loadCatalysts(now);
   const prefs = loadPrefs(); // 🔕 / ⭐ per coin, from the Telegram buttons
   const called = seedCalled(state);
+  if (!state.trackingV2) {
+    // quieter tracking (Oct 20): coins already called before this have had their say
+    for (const c of Object.values(called)) c.buyNotified = true;
+    state.trackingV2 = true;
+  }
   const w = loadWallets();
   state.runs = (state.runs || 0) + 1;
   const snapshots = [];
@@ -614,8 +619,8 @@ export async function main() {
         if (d.kind === 'full') runStats[tierNow] += 1;
         else runStats.updates = (runStats.updates || 0) + 1;
         if (row) row.decision = `${tierNow.toUpperCase()}-${d.kind === 'full' ? 'ALERT' : 'UPDATE'}`;
-      } else if (called[token]) {
-        called[token].miss = 0; // still qualifying, nothing new to say
+      } else {
+        markSeen(called, token, now); // still qualifying, nothing new to say
       }
     }
 
@@ -633,6 +638,7 @@ export async function main() {
       const prev = state.pumpAlerts[token];
       if (prev && now - prev.at < CONFIG.pump.cooldownHours * HOUR) continue;
       if (prefs[token] === 'mute') continue;
+      if (called[token] && prefs[token] !== 'follow') continue; // already called: its big moves come as 2×/3× milestones
       let r;
       try {
         r = await deepCheck(p, state, leaders, now, w, { force: true, catalysts, lane: laneOf(f.baseMcap) }); // judged on its pre-pump size

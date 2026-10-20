@@ -25,7 +25,10 @@ export function seedCalled(state) {
   for (const [store, tier] of [[state.watchAlerts, 'watch'], [state.alerts, 'buy']]) {
     for (const [t, v] of Object.entries(store || {})) {
       const c = (state.called[t] ||= { symbol: v.symbol, firstAt: v.at, firstPrice: firstPrice(t), lastSentAt: v.at, lastScore: v.score ?? null, lastTier: tier, lastPrice: firstPrice(t), miss: 0, active: true, milestones: {} });
-      if (tier === 'buy') c.lastTier = 'buy';
+      if (tier === 'buy') {
+        c.lastTier = 'buy';
+        c.buyNotified = true;
+      }
       c.lastSentAt = Math.max(c.lastSentAt, v.at);
     }
   }
@@ -34,33 +37,43 @@ export function seedCalled(state) {
 
 // What to send for a coin that qualifies this run: 'full' alert, a short 'update', or nothing.
 //   tier: 'buy' | 'watch' — what it qualifies for now
+// Already-called coins stay quiet. The only update a normal coin can get here is the FIRST time
+// it reaches the buy zone (once, ever). Big moves are covered by the 2×/3×/−50% milestones.
+// ⭐ Followed coins also get score/price changes and a daily check-in.
 export function decide(called, prefs, { token, tier, score, price }, now = Date.now()) {
   const T = CONFIG.tracking;
   const mode = prefs[token];
   if (mode === 'mute') return { kind: null, reasons: [] };
   const c = called[token];
-  if (!c || now - c.lastSentAt > T.forgetDays * DAY) return { kind: 'full', reasons: [] };
-  const follow = mode === 'follow';
+  const lastSeen = c ? Math.max(c.lastSeenAt || 0, c.lastSentAt || 0) : 0;
+  if (!c || now - lastSeen > T.forgetDays * DAY) return { kind: 'full', reasons: [] };
   const reasons = [];
-  if (tier === 'buy' && c.lastTier !== 'buy') reasons.push('moved up to 🟢 BUY ZONE');
-  if (tier === 'watch' && c.lastTier === 'buy') reasons.push('slipped back to 👀 watch');
-  const jump = follow ? T.followScoreJump : T.scoreJump;
-  if (c.lastScore != null && Math.abs(score - c.lastScore) >= jump) reasons.push(`score ${c.lastScore} → ${score}`);
-  const move = follow ? T.followPriceMovePct : T.priceMovePct;
-  if (c.lastPrice && price) {
-    const pct = (price / c.lastPrice - 1) * 100;
-    if (Math.abs(pct) >= move) reasons.push(`price ${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(0)}% since the last message`);
+  if (tier === 'buy' && !c.buyNotified && c.lastTier !== 'buy') reasons.push('reached 🟢 BUY ZONE for the first time');
+  if (mode === 'follow') {
+    if (c.lastScore != null && Math.abs(score - c.lastScore) >= T.followScoreJump) reasons.push(`score ${c.lastScore} → ${score}`);
+    if (c.lastPrice && price) {
+      const pct = (price / c.lastPrice - 1) * 100;
+      if (Math.abs(pct) >= T.followPriceMovePct) reasons.push(`price ${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(0)}% since the last message`);
+    }
+    if (!reasons.length && now - c.lastSentAt >= T.followEveryHours * HOUR) reasons.push('⭐ daily check-in');
+    if (reasons.length && now - c.lastSentAt < T.minGapHours * HOUR && !reasons.some((r) => /BUY ZONE/.test(r))) return { kind: null, reasons };
   }
-  if (!c.active) reasons.push('back within the rules');
-  if (follow && !reasons.length && now - c.lastSentAt >= T.followEveryHours * HOUR) reasons.push('⭐ scheduled check-in');
-  if (!reasons.length) return { kind: null, reasons };
-  if (now - c.lastSentAt < T.minGapHours * HOUR && !reasons.some((r) => /BUY ZONE/.test(r))) return { kind: null, reasons };
-  return { kind: 'update', reasons };
+  return reasons.length ? { kind: 'update', reasons } : { kind: null, reasons };
+}
+
+// the coin still qualifies — remember that (it isn't "forgotten" while it keeps showing up)
+export function markSeen(called, token, now = Date.now()) {
+  const c = called[token];
+  if (c) {
+    c.lastSeenAt = now;
+    c.miss = 0;
+  }
 }
 
 export function markSent(called, { token, symbol, tier, score, price }, now = Date.now()) {
   const c = (called[token] ||= { symbol, firstAt: now, firstPrice: price, milestones: {} });
-  Object.assign(c, { symbol, lastSentAt: now, lastScore: score, lastTier: tier, lastPrice: price, miss: 0, active: true });
+  Object.assign(c, { symbol, lastSentAt: now, lastSeenAt: now, lastScore: score, lastTier: tier, lastPrice: price, miss: 0, active: true });
+  if (tier === 'buy') c.buyNotified = true;
   c.firstPrice ??= price;
   return c;
 }
@@ -68,7 +81,7 @@ export function markSent(called, { token, symbol, tier, score, price }, now = Da
 // A called coin that stopped qualifying: one note after it misses 2 runs in a row
 export function noteMiss(called, prefs, token, reasonText, now = Date.now()) {
   const c = called[token];
-  if (!c || !c.active || prefs[token] === 'mute') return null;
+  if (!c || !c.active || prefs[token] !== 'follow') return null; // only ⭐ followed coins get "no longer qualifies" notes
   if (now - c.lastSentAt > CONFIG.tracking.forgetDays * DAY) return null;
   c.miss = (c.miss || 0) + 1;
   if (c.miss < 2) return null;

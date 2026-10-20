@@ -23,7 +23,7 @@ A standalone bot that scans Robinhood Chain memecoins every 15 minutes, around t
 
 ## Repeat calls: one alert, then updates
 
-Each coin gets **one full alert**. After that the bot tracks it quietly and only sends a short **🔄 UPDATE** when something real changes: it moves up to the buy zone (or slips back), its score moves 10+ points, its price moves 30%+ since the last message, it hits **2× / 3× / −50%** from the first call, it ignites, or it **⏸ stops meeting the rules** (one note, then silence). Every alert and update has buttons: 📝 Paper buy · 🔍 Full report · 🔕 Mute coin (nothing more about it) · ⭐ Follow closely (updates at 5 points / 15%, plus a daily check-in). A coin silent for 14 days gets a fresh full alert if it qualifies again. Settings: `CONFIG.tracking`.
+Each coin gets **one full alert**, then the bot stays quiet about it. The only follow-ups for a called coin: the **first** time it reaches the buy zone (once), the **2× / 3× / −50%** milestones from the call, and an ignition (at most once every 3 days). Score and price wiggles, buy↔watch flip-flops and pump alerts are skipped for called coins. Buttons on every alert: 📝 Paper buy · 🔍 Full report · 🔕 Mute coin (nothing more at all) · ⭐ Follow closely (score/price changes, a daily check-in, and a note if it stops qualifying). A coin that stops showing up for 14 days gets a fresh full alert if it qualifies again. Settings: `CONFIG.tracking`.
 
 ## How a coin gets scored (0–100)
 

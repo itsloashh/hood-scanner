@@ -84,7 +84,7 @@ export const CONFIG = {
     minVolMultiple: 5, // …trading at ≥5× the base's normal hourly volume
     maxPriceAboveBasePct: 40, // still early: price no more than 40% above the base's top
     minVolume24hUsd: 5_000, // ignore 'ignition' from a handful of tiny trades
-    cooldownHours: 24,
+    cooldownHours: 72, // at most one ignition alert per coin every 3 days
     keepDays: 7, // forget a quiet base not re-confirmed for a week
   },
 
@@ -147,8 +147,8 @@ export const CONFIG = {
   regimeAdjust: { riskOn: -5, riskOff: +10 },
   // Called coins: one full alert, then short updates only when something changes (src/tracking.js)
   tracking: {
-    scoreJump: 10, priceMovePct: 30, // update when the score moves 10+ or price moves 30%+ since the last message
-    followScoreJump: 5, followPriceMovePct: 15, followEveryHours: 24, // ⭐ followed coins: tighter, plus a daily check-in
+    // normal coins: after the first alert, only the first move into the buy zone + 2×/3×/−50% milestones
+    followScoreJump: 10, followPriceMovePct: 25, followEveryHours: 24, // ⭐ followed coins also get these + a daily check-in
     minGapHours: 2, // never two updates on the same coin within 2h (except a move up to buy zone)
     forgetDays: 14, // silent for 14 days → a fresh full alert if it qualifies again
   },
