@@ -1,12 +1,12 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-10-21 18:45 UTC from 220 coins._
+_Generated 2026-10-22 14:23 UTC from 220 coins._
 
 ## The base rate
-36 times a coin matched our rules — every setup found since research began, 3 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 123 of 220 coins.
-- **2 went 3–10x** within 30 days (our target)
+37 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 178 of 220 coins.
+- **3 went 3–10x** within 30 days (our target)
 - 1 went past 10x (outliers — listed, not used to learn)
-- 9 never reached 3x
-- Community check: 8 of 13 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
+- 18 never reached 3x
+- Community check: 9 of 14 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
 
 **Hit rate on real setups: 15%** (4 wins / 27). Any parameter is only worth adding if coins with it beat this.
 
@@ -44,7 +44,7 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - During: volume exploded to 8× normal on day 13
 - Check X (verified accounts): https://x.com/search?q=%24GENESIS%20filter%3Ablue_verified&f=live
 
-### $INDEX — 5.7× from $7013k (2026-08-01, 3x in 22 days)
+### $INDEX — 5.7× from $6918k (2026-08-01, 3x in 22 days)
 - During: volume exploded to 5× normal on day 5
 - Check X (verified accounts): https://x.com/search?q=%24INDEX%20filter%3Ablue_verified&f=live
 
@@ -52,22 +52,27 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $JUGGERNAUT — 10× from $1375k (2026-07-31)
 
 ## Thrown out by the community check
-- $PRIZE (WIN) — only 5 real buyers
+- $UBTC (DUD) — only 9 real buyers
+- $MEMEOW (DUD) — only 3 real buyers
+- $SHILLING (DUD) — only 4 real buyers
+- $SHILLING (DUD) — only 2 real buyers
+- $QUANT (DUD) — only 11 real buyers
 
-## After a pump: pullback odds (from 123 past pumps)
-- **+50–100% day** (39 examples): 82% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 87–105%) · low came after ~5 day(s) · 23% made a new high within 2 weeks · 33% gave back the whole move
-- **+100–200% day** (17 examples): 82% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 77–110%) · low came after ~5 day(s) · 35% made a new high within 2 weeks · 53% gave back the whole move
-- **+200+% day** (67 examples): 93% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 95–100%) · low came after ~5 day(s) · 12% made a new high within 2 weeks · 27% gave back the whole move
+## After a pump: pullback odds (from 125 past pumps)
+- **+50–100% day** (38 examples): 82% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 87–101%) · low came after ~5 day(s) · 26% made a new high within 2 weeks · 32% gave back the whole move
+- **+100–200% day** (18 examples): 83% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 69–110%) · low came after ~5 day(s) · 33% made a new high within 2 weeks · 50% gave back the whole move
+- **+200+% day** (69 examples): 93% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 95–100%) · low came after ~4 day(s) · 12% made a new high within 2 weeks · 26% gave back the whole move
 
 ## Smart wallets
 No wallet showed up early in multiple real winners yet — the sample grows every day.
 
 ## Notes
+- $🪶: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $INDEX: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
 - $DIH: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $HMM: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $WOOD: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $PEPONS: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $TENDIES: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $PRIZE: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $JUGGERNAUT: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $TENOV: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $RVH: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- Stopped wallet research at the 45-minute mark so the run finishes and saves (the rest next run).
 
-_Wallet history: 3 setup(s) checked · history jump worked 0× / failed 11×._
+_Wallet history: 7 setup(s) checked · history jump worked 0× / failed 16×._
