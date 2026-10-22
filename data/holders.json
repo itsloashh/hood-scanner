@@ -18,13 +18,13 @@
    }
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
-   "at": 1792633123492,
+   "at": 1792633637141,
    "symbol": "CANNACAT",
-   "holdersCount": 590,
+   "holdersCount": 591,
    "conc": {
     "top1Pct": 2.7943,
     "top10Pct": 23.9927,
-    "largestContractPct": 8.7284,
+    "largestContractPct": 8.7266,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -99,7 +99,7 @@
    "recentBurns": null
   },
   "0xf8bc08092c06db6148114dcf82af881f1085f92b": {
-   "at": 1792632770695,
+   "at": 1792633384499,
    "symbol": "WOOD",
    "holdersCount": 69815,
    "conc": {
@@ -201,7 +201,7 @@
    }
   },
   "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": {
-   "at": 1792633111179,
+   "at": 1792633622374,
    "symbol": "DIH",
    "holdersCount": 1617459,
    "conc": {
@@ -269,30 +269,26 @@
    }
   },
   "0xc0d6457c16cc70d6790dd43521c899c87ce02f35": {
-   "at": 1792633170134,
+   "at": 1792633719622,
    "symbol": "META",
-   "holdersCount": 54945,
+   "holdersCount": 54944,
    "conc": {
     "top1Pct": 10.6562,
-    "top10Pct": 18.4535,
-    "largestContractPct": 38.5059,
+    "top10Pct": 18.4498,
+    "largestContractPct": 38.5256,
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "recentBurns": {
-    "count": 0,
-    "units": 0,
-    "lastTs": null
-   }
+   "recentBurns": null
   },
   "0xaf3d76f1834a1d425780943c99ea8a608f8a93f9": {
-   "at": 1792633298766,
+   "at": 1792633864751,
    "symbol": "AAPL",
-   "holdersCount": 85331,
+   "holdersCount": 85332,
    "conc": {
     "top1Pct": 1.6218,
-    "top10Pct": 4.8818,
-    "largestContractPct": 31.4436,
+    "top10Pct": 4.8823,
+    "largestContractPct": 31.3591,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -354,13 +350,13 @@
    }
   },
   "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3": {
-   "at": 1792610526330,
+   "at": 1792633995338,
    "symbol": "GOOGL",
-   "holdersCount": 70345,
+   "holdersCount": 70365,
    "conc": {
-    "top1Pct": 3.805,
-    "top10Pct": 14.8878,
-    "largestContractPct": 24.3298,
+    "top1Pct": 3.8013,
+    "top10Pct": 14.8289,
+    "largestContractPct": 24.0474,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -456,9 +452,9 @@
    }
   },
   "0x45242320dbb855eea8fd36804c6487e10e97fcf9": {
-   "at": 1792632926383,
+   "at": 1792633526225,
    "symbol": "TENDIES",
-   "holdersCount": 21236,
+   "holdersCount": 21237,
    "conc": {
     "top1Pct": 2.2136,
     "top10Pct": 13.788,
@@ -469,9 +465,9 @@
    "recentBurns": null
   },
   "0xd7321801caae694090694ff55a9323139f043b88": {
-   "at": 1792633061175,
+   "at": 1792633589528,
    "symbol": "JUGGERNAUT",
-   "holdersCount": 20503,
+   "holdersCount": 20502,
    "conc": {
     "top1Pct": 2.9583,
     "top10Pct": 13.1516,
@@ -533,13 +529,13 @@
    }
   },
   "0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e": {
-   "at": 1792632692057,
+   "at": 1792609431318,
    "symbol": "gld",
-   "holdersCount": 41143,
+   "holdersCount": 41129,
    "conc": {
-    "top1Pct": 2.6782,
-    "top10Pct": 6.7438,
-    "largestContractPct": 28.601,
+    "top1Pct": 2.6965,
+    "top10Pct": 6.7379,
+    "largestContractPct": 28.6523,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -589,9 +585,9 @@
    "recentBurns": null
   },
   "0x96765066f6a040a21eb027167d2315b707c82633": {
-   "at": 1792632708228,
+   "at": 1792633333564,
    "symbol": "RVH",
-   "holdersCount": 23230,
+   "holdersCount": 23232,
    "conc": {
     "top1Pct": 6.0502,
     "top10Pct": 21.7693,
@@ -718,15 +714,17 @@
   }
  },
  "lastRun": {
-  "at": "2026-10-22T01:28:55.102Z",
+  "at": "2026-10-22T01:41:49.517Z",
   "targets": 18,
   "ok": 9,
-  "failed": 0,
-  "errors": [],
+  "failed": 1,
+  "errors": [
+   "gld: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0xc9a981fee1f9dec688bb123ccdecc63d0debfc4"
+  ],
   "http": {
    "api.blockscout.com": {
-    "calls": 40,
-    "sec": 746
+    "calls": 45,
+    "sec": 665
    }
   }
  }
