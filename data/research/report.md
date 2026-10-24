@@ -1,32 +1,32 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-10-23 18:30 UTC from 220 coins._
+_Generated 2026-10-24 14:23 UTC from 220 coins._
 
 ## The base rate
-40 times a coin matched our rules — every setup found since research began, 3 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 115 of 220 coins.
+41 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 113 of 220 coins.
 - **1 went 3–10x** within 30 days (our target)
 - 1 went past 10x (outliers — listed, not used to learn)
-- 9 never reached 3x
+- 10 never reached 3x
 - Community check: 11 of 16 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
 
-**Hit rate on real setups: 14%** (4 wins / 28). Any parameter is only worth adding if coins with it beat this.
+**Hit rate on real setups: 14%** (4 wins / 29). Any parameter is only worth adding if coins with it beat this.
 
 ## Which signals showed up before winners
 Ranked by how much more often they appear in 3–10x winners than in duds:
-- **Volume explosion (3×+) during the run** _(happens during the run — explains, can’t predict)_: 4/4 winners vs 7/24 duds — 3.4× more common in winners
-- **Volume already rising on the setup day**: 1/4 winners vs 2/24 duds — 3.0× more common in winners
-- **hood theme**: 1/4 winners vs 6/24 duds — 1.0× more common in winners
-- **cat theme**: 0/4 winners vs 1/24 duds — more common in duds
-- **Token burns in the 2 weeks before**: 0/4 winners vs 4/24 duds — more common in duds
-- **frog theme**: 0/4 winners vs 2/24 duds — more common in duds
-- **Token burns during the run** _(happens during the run — explains, can’t predict)_: 0/4 winners vs 4/24 duds — more common in duds
-- **Buyers up 50%+ week-over-week**: 0/4 winners vs 2/24 duds — more common in duds
-- **Paired with a stock token**: 0/4 winners vs 1/24 duds — more common in duds
+- **Volume explosion (3×+) during the run** _(happens during the run — explains, can’t predict)_: 4/4 winners vs 8/25 duds — 3.1× more common in winners
+- **Volume already rising on the setup day**: 1/4 winners vs 2/25 duds — 3.1× more common in winners
+- **hood theme**: 1/4 winners vs 7/25 duds — more common in duds
+- **cat theme**: 0/4 winners vs 1/25 duds — more common in duds
+- **Token burns in the 2 weeks before**: 0/4 winners vs 4/25 duds — more common in duds
+- **frog theme**: 0/4 winners vs 2/25 duds — more common in duds
+- **Token burns during the run** _(happens during the run — explains, can’t predict)_: 0/4 winners vs 4/25 duds — more common in duds
+- **Buyers up 50%+ week-over-week**: 0/4 winners vs 2/25 duds — more common in duds
+- **Paired with a stock token**: 0/4 winners vs 1/25 duds — more common in duds
 
 ## Winners vs duds (middle value of each group)
 - **Volume on the setup day vs its 7-day average:** winners 0.9× vs duds 0.5×
-- **7-day price range (lower = tighter base):** winners 1.32× vs duds 1.41×
-- **Drop from all-time high:** winners 99% vs duds 91%
-- **Age:** winners 22 days vs duds 47 days
+- **7-day price range (lower = tighter base):** winners 1.32× vs duds 1.34×
+- **Drop from all-time high:** winners 99% vs duds 90%
+- **Age:** winners 22 days vs duds 39 days
 - **Market cap:** winners $20k vs duds $45k
 
 ## Why each winner pumped
@@ -55,12 +55,11 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $RWM (DUD) — only 9 real buyers
 - $RWM (DUD) — only 4 real buyers
 - $PONS (DUD) — only 3 real buyers
-- $SCALE (DUD) — only 10 real buyers
 
 ## After a pump: pullback odds (from 134 past pumps)
-- **+50–100% day** (44 examples): 80% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 87–101%) · low came after ~5 day(s) · 30% made a new high within 2 weeks · 30% gave back the whole move
-- **+100–200% day** (18 examples): 83% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 69–110%) · low came after ~5 day(s) · 33% made a new high within 2 weeks · 50% gave back the whole move
-- **+200+% day** (72 examples): 93% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 95–100%) · low came after ~4 day(s) · 11% made a new high within 2 weeks · 25% gave back the whole move
+- **+50–100% day** (43 examples): 81% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 87–101%) · low came after ~5 day(s) · 28% made a new high within 2 weeks · 30% gave back the whole move
+- **+100–200% day** (18 examples): 83% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 69–110%) · low came after ~6 day(s) · 28% made a new high within 2 weeks · 50% gave back the whole move
+- **+200+% day** (73 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 95–100%) · low came after ~4 day(s) · 12% made a new high within 2 weeks · 25% gave back the whole move
 
 ## Smart wallets
 No wallet showed up early in multiple real winners yet — the sample grows every day.
@@ -69,6 +68,8 @@ No wallet showed up early in multiple real winners yet — the sample grows ever
 - $GENESIS: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
 - $RETAIL: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
 - $STAG: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $HOOD: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
 - $SCALE: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- Stopped wallet research at the 45-minute mark so the run finishes and saves (the rest next run).
 
-_Wallet history: 4 setup(s) checked · history jump worked 0× / failed 10×._
+_Wallet history: 3 setup(s) checked · history jump worked 0× / failed 10×._
