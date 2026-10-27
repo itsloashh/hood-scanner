@@ -1,6 +1,7 @@
 // HOOD SCANNER — one run: scan → filter → score → alert → paper trade → log.
 // Runs every 15 minutes on GitHub Actions (free on a public repo). Locally: `npm run scan`.
 import { pathToFileURL } from 'node:url';
+import { winnerProfile } from './profile.js';
 import { CONFIG } from '../config.js';
 import * as gecko from './gecko.js';
 import * as bs from './blockscout.js';
@@ -595,7 +596,15 @@ export async function main() {
       log(`✓ ${pool.baseToken.symbol}: score ${s}`);
       const token = pool.baseToken.address;
 
-      const tierNow = s >= buyBar && !r.score.buyBlocked ? 'buy' : s >= watchBar ? 'watch' : null;
+      let tierNow = s >= buyBar && !r.score.buyBlocked ? 'buy' : s >= watchBar ? 'watch' : null;
+      const prof = winnerProfile(pool, r.score, r.lane);
+      if (tierNow && !prof.ok) {
+        log(`  ${pool.baseToken.symbol}: score ${s} but not the winner profile — ${prof.misses.join('; ')}`);
+        if (row) { row.decision = 'profile-miss'; row.reasons = prof.misses.join('; '); }
+        runStats.profileMiss = (runStats.profileMiss || 0) + 1;
+        markSeen(called, token, now);
+        continue;
+      }
       if (!tierNow) {
         const why = noteMiss(called, prefs, token, `score fell to ${s} (watch level is ${watchBar})`, now);
         if (why) await notify(dropMessage({ symbol: pool.baseToken.symbol, token, why, firstPrice: called[token]?.firstPrice, price: pool.priceUsd }), { buttons: coinButtons(token) });
@@ -860,6 +869,8 @@ export async function checkCoin(ca, now = Date.now()) {
   const quickReasons = q.reasons.filter((x) => !(x.startsWith('younger than') && r.age >= CONFIG.minAgeDays));
   const failed = [...quickReasons, ...r.filt.reasons];
   const s = r.score?.total ?? 0;
+  const prof = r.score ? winnerProfile(pool, r.score, r.lane) : { ok: true, misses: [] };
+  if (!prof.ok) failed.push(`not the winner profile — ${prof.misses.join('; ')}`);
   const tier = failed.length ? 'none' : s >= CONFIG.alertScore && !r.score.buyBlocked ? 'buy' : s >= CONFIG.watchScore ? 'watch' : 'none';
   await notify(checkMessage({ ...r, failed, verdict: tier, plan: planFor(pool.priceUsd), regime: { state: 'neutral' }, warnings: r.filt.warnings }));
   return { failed, score: s, tier };

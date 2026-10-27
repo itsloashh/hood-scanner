@@ -1673,6 +1673,16 @@ await test('paper sizes are % of the wallet, and the starting amount can be chan
   }
 });
 
+await test('winner profile: revival with buyers back + volume 2×+ passes; dead or ripping micro coins do not; quality lane untouched', async () => {
+  const { winnerProfile } = await import('../src/profile.js');
+  const pool = (b, se, ch) => ({ buyers24h: b, sellers24h: se, change: { h24: ch } });
+  assert.equal(winnerProfile(pool(97, 62, 9), { volRatio: 3.4 }, 'micro').ok, true); // CANNACAT the day before it ran
+  assert.equal(winnerProfile(pool(35, 36, -1), { volRatio: 0.7 }, 'micro').ok, false); // typical loser
+  assert.equal(winnerProfile(pool(500, 300, 250), { volRatio: 9 }, 'micro').ok, false); // already ripping
+  assert.equal(winnerProfile(pool(80, 100, 5), { volRatio: 3 }, 'micro').ok, false); // more sellers than buyers
+  assert.equal(winnerProfile(pool(10, 10, 0), { volRatio: 0.5 }, 'quality').ok, true);
+});
+
 console.log = origLog;
 console.log(`\n${failures ? `${failures} test(s) failed` : 'all tests passed'} · ${calls.length} mocked API calls`);
 process.exit(failures ? 1 : 0);

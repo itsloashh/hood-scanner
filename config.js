@@ -142,6 +142,11 @@ export const CONFIG = {
   targetMaxX: 10,
 
   // ── Scoring / alerting ───────────────────────────────────
+  // Winner profile (src/profile.js) — micro-lane calls must look like our past 2× winners.
+  // Oct 17–27: coins we called by score alone doubled 5% of the time; coins matching this did 27–75%.
+  // Quality lane not gated yet: no snapshot data for $1M+ coins until now.
+  profile: { enabled: true, lanes: ['micro'], minBuyers24h: 60, minBuySell: 1.0, minVolRatio: 2, change24h: [0, 60] },
+
   alertScore: 65, // 🟢 BUY ZONE — opens a paper position
   watchScore: 50, // 👀 WATCH — heads-up only, no paper position
   regimeAdjust: { riskOn: -5, riskOff: +10 },
@@ -210,7 +215,7 @@ export const CONFIG = {
   timezone: 'America/Toronto',
 
   // Snapshot logger — builds the research dataset
-  snapshotMaxMarketCap: 1_000_000,
+  snapshotMaxMarketCap: 25_000_000, // log quality-lane coins too, so they can be studied
 
   // Base tokens that are never memecoins
   ignoreSymbols: ['WETH', 'ETH', 'USDC', 'USDT', 'USDG', 'DAI', 'WBTC', 'CBBTC'],
