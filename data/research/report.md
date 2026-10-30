@@ -1,8 +1,8 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-10-30 14:23 UTC from 220 coins._
+_Generated 2026-10-30 19:30 UTC from 220 coins._
 
 ## The base rate
-48 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 109 of 220 coins.
+48 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 115 of 220 coins.
 - **4 went 3–10x** within 30 days (our target)
 - 1 went past 10x (outliers — listed, not used to learn)
 - 9 never reached 3x
@@ -44,7 +44,7 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - During: volume exploded to 8× normal on day 13
 - Check X (verified accounts): https://x.com/search?q=%24GENESIS%20filter%3Ablue_verified&f=live
 
-### $INDEX — 5.7× from $7013k (2026-08-01, 3x in 22 days)
+### $INDEX — 5.7× from $6917k (2026-08-01, 3x in 22 days)
 - During: volume exploded to 5× normal on day 5
 - Check X (verified accounts): https://x.com/search?q=%24INDEX%20filter%3Ablue_verified&f=live
 
