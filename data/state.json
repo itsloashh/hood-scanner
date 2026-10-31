@@ -9520,6 +9520,10 @@
    [
     1793434567107,
     872
+   ],
+   [
+    1793443566003,
+    872
    ]
   ],
   "0x05b37fb53a299a1b874a619e1c4c404d52c36f4c": [
@@ -9972,17 +9976,17 @@
   }
  ],
  "lastDigest": "2026-10-17",
- "runs": 1312,
+ "runs": 1313,
  "lastRun": {
-  "at": "2026-10-31T10:31:04.786Z",
-  "scanned": 345,
+  "at": "2026-10-31T10:46:06.003Z",
+  "scanned": 344,
   "quickPass": 31,
-  "deepPass": 11,
+  "deepPass": 10,
   "buy": 0,
   "watch": 0,
   "pump": 0,
   "ignition": 0,
-  "quality": 9,
+  "quality": 8,
   "micro": 2,
   "profileMiss": 1,
   "regime": "neutral",
@@ -9991,43 +9995,50 @@
   "topCuts": {
    "too few buyers 24h": 228,
    "almost no sellers (honeypot risk)": 139,
-   "liquidity too thin": 124,
-   "younger than 21d": 123,
+   "liquidity too thin": 125,
+   "younger than 21d": 122,
    "mcap under min (dead)": 100,
    "already pumping": 31,
    "copycat ticker": 28,
-   "mcap over max": 19
+   "mcap over max": 18
   },
   "holderData": {
    "blockscout": 0,
    "cached": 0,
-   "estimate": 0,
+   "estimate": 4,
    "none": 0,
-   "holdersJob": 24
+   "holdersJob": 23
   },
   "cacheHits": {
-   "info": 18,
-   "chart": 9
+   "info": 26,
+   "chart": 18
   },
   "ignitionSource": {
    "dexpaprika": 0,
-   "gecko": 0
+   "gecko": 7
   },
   "http": {
    "geckoterminal": {
-    "calls": 58,
-    "sec": 21,
-    "waitSec": 352,
-    "backoffSec": 134,
-    "r429": 15
+    "calls": 42,
+    "sec": 13,
+    "waitSec": 221,
+    "backoffSec": 128,
+    "r429": 14
+   },
+   "dexpaprika": {
+    "calls": 6,
+    "sec": 0,
+    "waitSec": 0,
+    "backoffSec": 0,
+    "r429": 0
    }
   },
   "phases": {
-   "discover+lists": 205,
+   "discover+lists": 208,
    "paper+wallets": 0,
-   "deepChecks": 302,
+   "deepChecks": 28,
    "pumps": 0,
-   "ignition": 0
+   "ignition": 126
   },
   "scorecard": {
    "buy/quality": {
@@ -10112,20 +10123,24 @@
    }
   },
   "eth": {
-   "price": 2244.26,
-   "h6": 0.07089763540779614,
-   "h24": -1.5083624809644314,
-   "d7": -5.683943332871055,
+   "price": 2243.34,
+   "h6": 0.029875104228449523,
+   "h24": -1.5487376186568258,
+   "d7": -5.722606755172288,
    "trend": "flat"
   },
   "httpErrors": {
    "api.geckoterminal.com": {
     "count": 1,
     "last": "HTTP 429"
+   },
+   "api.dexpaprika.com": {
+    "count": 6,
+    "last": "HTTP 402"
    }
   },
-  "outOfTime": true,
-  "seconds": 507,
+  "outOfTime": false,
+  "seconds": 362,
   "blockscout": {
    "key": true,
    "calls": 0
@@ -10134,10 +10149,10 @@
   "knownTickers": 354,
   "catalysts": 0,
   "wallets": {
-   "tracked": 6011,
+   "tracked": 6001,
    "smart": 4,
    "seeded": 0,
-   "tradePulls": 9
+   "tradePulls": 1
   }
  },
  "watchAlerts": {
@@ -10241,157 +10256,157 @@
   "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3": {
    "pool": "0x6d0f67069596c7ef9d1ce6981c1b6dbcd9a91b0c5393aebe9dd07c35e412df30",
    "symbol": "GOOGL",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xec262a75e413fafd0df80480274532c79d42da09": {
    "pool": "0x319bac87e616a89e241c10aeb8afd4892a852cdd8b373cd9765ecddc40b87cfe",
    "symbol": "MSTR",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xff080c8ce2e5feadaca0da81314ae59d232d4afd": {
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "symbol": "MU",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xc72b96e0e48ecd4dc75e1e45396e26300bc39681": {
    "pool": "0x7fb585f108d921de3b197cf7e26b5aebc96b035fec13f972b868e008ea062394",
    "symbol": "INTC",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x12f190a9f9d7d37a250758b26824b97ce941bf54": {
    "pool": "0x8ac92da74ab5f3b1d024dc1943ad7e15dc4179ef",
    "symbol": "AMZN",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x86923f96303d656e4aa86d9d42d1e57ad2023fdc": {
    "pool": "0xe6e17efdbdd916526293cf1b509171be4ffb04f47c4a5fe1a7367acdaa6ffd82",
    "symbol": "AMD",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x58ffe4a942d3885baa22d7520691f611ef09e7aa": {
    "pool": "0x4c862e5846659b086fe73896bbb9058513417e4e6938a1be93aeb7a768fa5754",
    "symbol": "TSM",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xe93237c50d904957cf27e7b1133b510c669c2e74": {
    "pool": "0x18074ca08154f613c70444ef22793ff1875e9bdc92bab25a5ee0f39107c77258",
    "symbol": "MSFT",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xd5f3879160bc7c32ebb4dc785f8a4f505888de68": {
    "pool": "0x8493982435e4273028008cd181c84c0d6a548f96792fdb5acddcbb6a8c82d305",
    "symbol": "QQQ",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": {
    "pool": "0x2b3211e96d15212086e8333b447fbb35dc08348a",
    "symbol": "DIH",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xb9972ca7188e511174947e3936a5315ac7073277": {
    "pool": "0x8651e656738064177752a395dbde2b2a9e3fc469edc2a9212e6060c0990bb7eb",
    "symbol": "PROLOGUE",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x7fe995a80075df3dc8ae11a9b82c7fe4202cd87f": {
    "pool": "0x2b0d0183d017c58b924401ca8ac362f6e01f0e9e",
    "symbol": "HMM",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x32ac8c1d7672667d5ebdea22935f7b06fc8d496f": {
    "pool": "0x7fb39eb653999feb9f0d3b1410848911383dfc681f3585229df4aa5b560bf0ba",
    "symbol": "HOOD",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x45242320dbb855eea8fd36804c6487e10e97fcf9": {
    "pool": "0x237609918f330add285b8bc5f8f2922283d1c4c5",
    "symbol": "TENDIES",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
    "pool": "0x91e9823a895a2d05a2c853fbd1619da089b36054f0a342039a0e8046608bbece",
    "symbol": "ROO",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x07ebb29a38fbcb41563817e5e19f2cec619c90d2": {
    "pool": "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c",
    "symbol": "BUN",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x43b07d15ce533bec5476d70c22a78a1b2b662155": {
    "pool": "0xb40196272a6d2eb5edf6d93bc4dc39856ad95e0e",
    "symbol": "mrna",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
    "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
    "symbol": "GENESIS",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x96765066f6a040a21eb027167d2315b707c82633": {
    "pool": "0xfbd1b5e73760b59b65c63cf8214bfd96eb4f4870",
    "symbol": "RVH",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e": {
    "pool": "0xba2f1ed4ceb2169d538d1e614d847e83c5a55913",
    "symbol": "gld",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x6330d8c3178a418788df01a47479c0ce7ccf450b": {
    "pool": "0x6707aeac7d0e519b083219d27bb427364363183a",
    "symbol": "COIN",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x4a0e65a3eccec6dbe60ae065f2e7bb85fae35eea": {
    "pool": "0xc61284332117c3fb23a2a56cceffd07f7af60029",
    "symbol": "SPCX",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "symbol": "CANNACAT",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xe934e36a439c94017b64a3fece66af12099abf50": {
    "pool": "0xd33c8fd38b06e989cdbd4dffdefab71c4bdd415b24964c8d69e38ff35b068f92",
    "symbol": "STONKBROKER",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x05b37fb53a299a1b874a619e1c4c404d52c36f4c": {
    "pool": "0xa541143f20d7b0643123064abf25f423e375b531",
    "symbol": "RDDT",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xf177d86a28b520e3e396e4f3b96cd8e72d7dabd8": {
    "pool": "0xd0ce400b5a20071718f4220cd5e49700337fe8ccaeefe6cfcea65bba99b85e54",
    "symbol": "UNI",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x56910d4409f3a0c78c64dd8d0545ff0705389870": {
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "symbol": "Index",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3": {
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "symbol": "ORBIO",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0x22eb9f1c5385ed74257da42d8021916c2d837135": {
    "pool": "0xe85a8f60ad2b0b7e97b745bac661671223100ea6089fe8ff0e93ba7d6894bdea",
    "symbol": "SHIT",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xdc45b71d7203c2e8baafc43a19bca0eb993bb54e": {
    "pool": "0x99c8f9fb1f73ccd0977fd39ff3508c387223b3be27aa984c09dd06c2f4674e4e",
    "symbol": "DARK",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xccee82fe024c36fa15e1005ede3e9e4787e23d09": {
    "pool": "0x67983c0d78cea3a8b4a5cc283feeeefd278a8ae5c6504b983b0c72bde13d1c0c",
    "symbol": "HIMS",
-   "at": 1793442664786
+   "at": 1793443566003
   },
   "0xf8bc08092c06db6148114dcf82af881f1085f92b": {
    "pool": "0xbf3bb81de6285b8310a028d1c2cd38f9419d54c1",
@@ -10609,34 +10624,6 @@
   ]
  },
  "funnel24h": [
-  {
-   "t": 1793357163585,
-   "scanned": 325,
-   "quickPass": 34,
-   "deepPass": 9,
-   "reasons": {
-    "mcap over max": 18,
-    "liquidity too thin": 120,
-    "younger than 21d": 111,
-    "too few buyers 24h": 221,
-    "copycat ticker": 26,
-    "flagged suspicious on GeckoTerminal": 2,
-    "already pumping": 29,
-    "mcap under min (dead)": 95,
-    "quality lane: liquidity under $100k": 4,
-    "almost no sellers (honeypot risk)": 154,
-    "quality lane: only 22% off its high (want 50–90%)": 4,
-    "quality lane: only 47% off its high (want 50–90%)": 1,
-    "quality lane: only 21% off its high (want 50–90%)": 1,
-    "top wallet too big": 4,
-    "top 10 wallets too concentrated": 2,
-    "quality lane: only 26% off its high (want 50–90%)": 1,
-    "quality lane: only 18% off its high (want 50–90%)": 1,
-    "quality lane: only 19% off its high (want 50–90%)": 1,
-    "quality lane: under 5,000 holders": 1,
-    "no socials linked": 1
-   }
-  },
   {
    "t": 1793358066825,
    "scanned": 327,
@@ -13405,6 +13392,35 @@
     "quality lane: 91% off its high — too broken (want 50–90%)": 1,
     "top 10 wallets too concentrated": 1
    }
+  },
+  {
+   "t": 1793443566003,
+   "scanned": 344,
+   "quickPass": 31,
+   "deepPass": 10,
+   "reasons": {
+    "mcap over max": 18,
+    "younger than 21d": 122,
+    "too few buyers 24h": 228,
+    "almost no sellers (honeypot risk)": 139,
+    "copycat ticker": 28,
+    "flagged suspicious on GeckoTerminal": 4,
+    "liquidity too thin": 125,
+    "already pumping": 31,
+    "mcap under min (dead)": 100,
+    "quality lane: liquidity under $100k": 4,
+    "quality lane: only 23% off its high (want 50–90%)": 1,
+    "quality lane: only 18% off its high (want 50–90%)": 1,
+    "top wallet too big": 4,
+    "quality lane: only 22% off its high (want 50–90%)": 1,
+    "quality lane: only 30% off its high (want 50–90%)": 1,
+    "quality lane: only 25% off its high (want 50–90%)": 1,
+    "top 10 wallets too concentrated": 3,
+    "quality lane: under 5,000 holders": 2,
+    "quality lane: only 17% off its high (want 50–90%)": 1,
+    "quality lane: 91% off its high — too broken (want 50–90%)": 1,
+    "no socials linked": 1
+   }
   }
  ],
  "universe": {
@@ -14678,12 +14694,12 @@
    "pool": "0x2b0d0183d017c58b924401ca8ac362f6e01f0e9e",
    "symbol": "HMM",
    "lane": "quality",
-   "at": 1793442664786,
+   "at": 1793443566003,
    "baseHigh": 0.00936584497812153,
    "baseHourVol": 3162.474050137195,
-   "drawdownPct": 86.01185478306891,
+   "drawdownPct": 85.99703079460625,
    "volTrend": 1.6766017860119888,
-   "score": 77,
+   "score": 74,
    "type": "absorption",
    "kind": "meme"
   },
@@ -14756,10 +14772,10 @@
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "symbol": "MU",
    "lane": "quality",
-   "at": 1793442664786,
+   "at": 1793443566003,
    "baseHigh": 1096.74288554604,
    "baseHourVol": 36735.60684338859,
-   "drawdownPct": 53.022615957618655,
+   "drawdownPct": 53.054621032798345,
    "volTrend": 2.2990450344511686,
    "score": 80,
    "type": "absorption",
@@ -14769,10 +14785,10 @@
    "pool": "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c",
    "symbol": "BUN",
    "lane": "quality",
-   "at": 1793442664786,
+   "at": 1793443566003,
    "baseHigh": 0.0519551246038351,
    "baseHourVol": 4534.988576126233,
-   "drawdownPct": 71.50314751125238,
+   "drawdownPct": 71.28116063336559,
    "volTrend": 1.2894093628253438,
    "score": 82,
    "type": "absorption",
@@ -14808,7 +14824,7 @@
    "pool": "0x67983c0d78cea3a8b4a5cc283feeeefd278a8ae5c6504b983b0c72bde13d1c0c",
    "symbol": "HIMS",
    "lane": "quality",
-   "at": 1793442664786,
+   "at": 1793443566003,
    "baseHigh": 36.0758896286066,
    "baseHourVol": 40017.660359879905,
    "drawdownPct": 76.66567280751518,
@@ -16514,6 +16530,23 @@
     "devPct": null,
     "categories": [],
     "description": ""
+   }
+  },
+  "0x22eb9f1c5385ed74257da42d8021916c2d837135": {
+   "at": 1793443566003,
+   "info": {
+    "holders": 872,
+    "top10PctRaw": 57.8232,
+    "twitter": null,
+    "telegram": null,
+    "websites": [],
+    "discord": null,
+    "gtScore": 37.968253968253975,
+    "isHoneypot": false,
+    "devAddress": null,
+    "devPct": null,
+    "categories": [],
+    "description": null
    }
   }
  },
@@ -26004,7 +26037,7 @@
    ]
   },
   "0x2b0d0183d017c58b924401ca8ac362f6e01f0e9e": {
-   "at": 1793439964226,
+   "at": 1793443566003,
    "c": [
     [
      1785715200000,
@@ -26723,8 +26756,8 @@
      0.0058689587129907,
      0.00599397207959821,
      0.00544859830885671,
-     0.00557486133650648,
-     23923.336712028657
+     0.00555939784189922,
+     26238.520290473716
     ]
    ]
   },
@@ -27813,7 +27846,7 @@
    "price": 0.00820427054112547,
    "peakX": 1.1004570780942917,
    "lowX": 0.6036273074712459,
-   "lastX": 0.67690508970052,
+   "lastX": 0.6776224423648244,
    "outcome": null
   },
   {
@@ -27854,7 +27887,7 @@
    "price": 0.0084097427460974,
    "peakX": 1.0735700080447435,
    "lowX": 0.5888790996375471,
-   "lastX": 0.6603665122984905,
+   "lastX": 0.6610663381444215,
    "outcome": null
   },
   {
@@ -27969,7 +28002,7 @@
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "peakX": 1.4888729981438071,
    "lowX": 0.5801400671027587,
-   "lastX": 1.133352355809901,
+   "lastX": 1.1322585968245185,
    "outcome": null
   },
   {
@@ -28021,7 +28054,7 @@
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "peakX": 1.447749095427678,
    "lowX": 0.564116118981592,
-   "lastX": 1.1020482270618288,
+   "lastX": 1.1009846786035804,
    "outcome": null
   },
   {
@@ -28056,7 +28089,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 2.4731357149711677,
    "lowX": 0.9606837501270689,
-   "lastX": 1.1415123840134591,
+   "lastX": 1.1243236260442113,
    "outcome": null
   },
   {
@@ -28143,7 +28176,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 2.197510123953737,
    "lowX": 0.8591102132838586,
-   "lastX": 1.0142933140720853,
+   "lastX": 0.9990202057558065,
    "outcome": null
   },
   {
@@ -28177,7 +28210,7 @@
    "pool": "0xf49ee5b66c4e7163026e5d25e6a1f93cff46dca4d3752f712d181d9392c1d567",
    "peakX": 2.79311538926115,
    "lowX": 0.6363787536042447,
-   "lastX": 2.45818493187876,
+   "lastX": 2.48947537877355,
    "outcome": null
   },
   {
@@ -28194,7 +28227,7 @@
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "peakX": 2.105010363408036,
    "lowX": 0.8964097692952979,
-   "lastX": 1.376707361632827,
+   "lastX": 1.3731318335186797,
    "outcome": null
   },
   {
@@ -28297,7 +28330,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 1.4463838490478376,
    "lowX": 0.595433210089655,
-   "lastX": 0.6675998675407947,
+   "lastX": 0.6575472279863164,
    "outcome": null
   },
   {
@@ -28314,7 +28347,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 1.6197470817061295,
    "lowX": 0.6668016965403305,
-   "lastX": 0.7476182328145151,
+   "lastX": 0.7363606862147457,
    "outcome": null
   },
   {
@@ -28331,7 +28364,7 @@
    "pool": "0x237609918f330add285b8bc5f8f2922283d1c4c5",
    "peakX": 1.218519988075751,
    "lowX": 0.640010572435583,
-   "lastX": 0.799373883787897,
+   "lastX": 0.8039685196383454,
    "outcome": null
   },
   {
@@ -28348,7 +28381,7 @@
    "pool": "0x237609918f330add285b8bc5f8f2922283d1c4c5",
    "peakX": 1.218519988075751,
    "lowX": 0.640010572435583,
-   "lastX": 0.799373883787897,
+   "lastX": 0.8039685196383454,
    "outcome": null
   },
   {
@@ -28382,7 +28415,7 @@
    "pool": "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c",
    "peakX": 1.1327812408114344,
    "lowX": 0.6360040540841572,
-   "lastX": 0.679243498151926,
+   "lastX": 0.6845347191223536,
    "outcome": null
   },
   {
@@ -28417,7 +28450,7 @@
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "peakX": 1.150180776186757,
    "lowX": 0.9254326691863156,
-   "lastX": 0.9978948398664877,
+   "lastX": 0.9972149872092487,
    "outcome": null
   },
   {
@@ -28434,7 +28467,7 @@
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "peakX": 1.1458061232567787,
    "lowX": 0.9219128340251197,
-   "lastX": 0.9940993985972418,
+   "lastX": 0.9934221317243253,
    "outcome": null
   },
   {
@@ -28469,7 +28502,7 @@
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "peakX": 1.0758941345487176,
    "lowX": 0.6607344365303381,
-   "lastX": 0.703650395797925,
+   "lastX": 0.7018229037376499,
    "outcome": null
   },
   {
@@ -28554,7 +28587,7 @@
    "pool": "0x2b0d0183d017c58b924401ca8ac362f6e01f0e9e",
    "peakX": 1.4316407257008963,
    "lowX": 0.8783476290640121,
-   "lastX": 0.8806203468904832,
+   "lastX": 0.881553587549616,
    "outcome": null
   },
   {
@@ -28605,7 +28638,7 @@
    "pool": "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c",
    "peakX": 1.1932050553046587,
    "lowX": 0.7616328845907916,
-   "lastX": 0.7840267116218231,
+   "lastX": 0.790134180576912,
    "outcome": null
   },
   {
@@ -28639,7 +28672,7 @@
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "peakX": 1,
    "lowX": 0.7468755064888564,
-   "lastX": 0.7999613621804488,
+   "lastX": 0.7991893472608534,
    "outcome": null
   },
   {
@@ -28656,7 +28689,7 @@
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "peakX": 1,
    "lowX": 0.8253131078060508,
-   "lastX": 0.8675982597925611,
+   "lastX": 0.867007176485211,
    "outcome": null
   },
   {
@@ -28673,7 +28706,7 @@
    "pool": "0x7fb585f108d921de3b197cf7e26b5aebc96b035fec13f972b868e008ea062394",
    "peakX": 1.0108721517612709,
    "lowX": 0.9834622313801086,
-   "lastX": 0.9975835305773204,
+   "lastX": 0.996350860181898,
    "outcome": null
   },
   {
@@ -28690,16 +28723,16 @@
    "pool": "0xc39187cec78a076c41a4085598b4cc05be2ed9b04a3443167471fa0fc4984188",
    "peakX": 1,
    "lowX": 0.7752112864544386,
-   "lastX": 0.8407687588162067,
+   "lastX": 0.849254194068002,
    "outcome": null
   }
  ],
  "noPool": {},
  "eth": {
-  "price": 2244.26,
-  "h6": 0.07089763540779614,
-  "h24": -1.5083624809644314,
-  "d7": -5.683943332871055,
+  "price": 2243.34,
+  "h6": 0.029875104228449523,
+  "h24": -1.5487376186568258,
+  "d7": -5.722606755172288,
   "trend": "flat"
  },
  "ethHistory": [
@@ -30220,7 +30253,7 @@
     "x3": 1792962269353
    },
    "buyNotified": true,
-   "lastSeenAt": 1793442664786
+   "lastSeenAt": 1793443566003
   },
   "0x59dd09d4900c2e4b5f75b7c0d4e6796fcc234cb1": {
    "symbol": "hpe",
@@ -30279,7 +30312,7 @@
    "active": false,
    "milestones": {},
    "buyNotified": true,
-   "lastSeenAt": 1793442664786
+   "lastSeenAt": 1793443566003
   },
   "0xb9972ca7188e511174947e3936a5315ac7073277": {
    "symbol": "PROLOGUE",
@@ -30336,7 +30369,7 @@
    "active": true,
    "milestones": {},
    "buyNotified": true,
-   "lastSeenAt": 1793442664786
+   "lastSeenAt": 1793443566003
   },
   "0xf8bc08092c06db6148114dcf82af881f1085f92b": {
    "symbol": "WOOD",
@@ -30408,7 +30441,7 @@
     "x2": 1792560208996
    },
    "buyNotified": true,
-   "lastSeenAt": 1793442664786
+   "lastSeenAt": 1793443566003
   },
   "0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e": {
    "symbol": "gld",
@@ -30422,7 +30455,7 @@
    "active": true,
    "milestones": {},
    "buyNotified": true,
-   "lastSeenAt": 1793442664786
+   "lastSeenAt": 1793443566003
   },
   "0x96765066f6a040a21eb027167d2315b707c82633": {
    "symbol": "RVH",
@@ -30472,7 +30505,7 @@
    "firstPrice": 0.05002389244844,
    "milestones": {},
    "lastSentAt": 1792575966352,
-   "lastSeenAt": 1793442664786,
+   "lastSeenAt": 1793443566003,
    "lastScore": 72,
    "lastTier": "buy",
    "lastPrice": 0.05002389244844,
@@ -30486,7 +30519,7 @@
    "firstPrice": 910.916486145722,
    "milestones": {},
    "lastSentAt": 1792593965624,
-   "lastSeenAt": 1793442664786,
+   "lastSeenAt": 1793443566003,
    "lastScore": 67,
    "lastTier": "buy",
    "lastPrice": 914.394337585158,
@@ -30517,7 +30550,7 @@
    "firstPrice": 29.2781897586159,
    "milestones": {},
    "lastSentAt": 1793229365182,
-   "lastSeenAt": 1793442664786,
+   "lastSeenAt": 1793443566003,
    "lastScore": 82,
    "lastTier": "buy",
    "lastPrice": 29.2781897586159,
