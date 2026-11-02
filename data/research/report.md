@@ -1,9 +1,9 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-02 14:23 UTC from 220 coins._
+_Generated 2026-11-02 22:48 UTC from 220 coins._
 
 ## The base rate
-51 times a coin matched our rules — every setup found since research began, 2 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 112 of 220 coins.
-- **2 went 3–10x** within 30 days (our target)
+51 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 134 of 220 coins.
+- **0 went 3–10x** within 30 days (our target)
 - 1 went past 10x (outliers — listed, not used to learn)
 - 11 never reached 3x
 - Community check: 16 of 22 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
@@ -57,23 +57,21 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 
 ## Thrown out by the community check
 - $RIBBIT (DUD) — only 5 real buyers
+- $SCALE (DUD) — only 10 real buyers
 - $MORT (DUD) — only 6 real buyers
 - $UBTC (DUD) — only 9 real buyers
 - $UBTC (DUD) — only 1 real buyers
-- $MEMEOW (DUD) — only 3 real buyers
-- $MEMEOW (DUD) — only 2 real buyers
 
-## After a pump: pullback odds (from 153 past pumps)
+## After a pump: pullback odds (from 154 past pumps)
 - **+50–100% day** (47 examples): 79% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 55–101%) · low came after ~5 day(s) · 28% made a new high within 2 weeks · 30% gave back the whole move
-- **+100–200% day** (20 examples): 85% pulled back 30%+ within a week · typically gave back 100% of the move (middle half: 76–114%) · low came after ~6 day(s) · 30% made a new high within 2 weeks · 45% gave back the whole move
-- **+200+% day** (86 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 92–100%) · low came after ~5 day(s) · 13% made a new high within 2 weeks · 23% gave back the whole move
+- **+100–200% day** (22 examples): 86% pulled back 30%+ within a week · typically gave back 105% of the move (middle half: 76–119%) · low came after ~6 day(s) · 27% made a new high within 2 weeks · 50% gave back the whole move
+- **+200+% day** (85 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 92–100%) · low came after ~5 day(s) · 13% made a new high within 2 weeks · 22% gave back the whole move
 
 ## Smart wallets
 No wallet showed up early in multiple real winners yet — the sample grows every day.
 
 ## Notes
-- $INDEX: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $POO: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $TENOV: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $SCALE: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $WOOD: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
 
-_Wallet history: 10 setup(s) checked · history jump worked 0× / failed 13×._
+_Wallet history: 7 setup(s) checked · history jump worked 0× / failed 11×._
