@@ -1,11 +1,11 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-05 14:23 UTC from 220 coins._
+_Generated 2026-11-05 21:08 UTC from 220 coins._
 
 ## The base rate
-53 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 112 of 220 coins.
+53 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 115 of 220 coins.
 - **2 went 3–10x** within 30 days (our target)
 - 1 went past 10x (outliers — listed, not used to learn)
-- 11 never reached 3x
+- 13 never reached 3x
 - Community check: 16 of 22 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
 
 **Hit rate on real setups: 14%** (5 wins / 36). Any parameter is only worth adding if coins with it beat this.
@@ -68,11 +68,12 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 No wallet showed up early in multiple real winners yet — the sample grows every day.
 
 ## Notes
-- $DIH: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $🪶: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $mShare: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $RETAIL: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $HMM: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
-- $PEPONS: couldn't reach far enough back in its trading history (history jump unavailable) — wallet data skipped
+- $DIH: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $🪶: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $mShare: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $RETAIL: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $HMM: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $STAG: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
 
-_Wallet history: 3 setup(s) checked · history jump worked 0× / failed 13×._
+_Wallet history: 3 setup(s) checked · history jump worked 15× / failed 0×._
