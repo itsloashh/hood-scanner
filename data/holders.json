@@ -745,13 +745,13 @@
    }
   },
   "0x878fbde429e1b21522735ed9dcf25e752a119284": {
-   "at": 1793875608691,
+   "at": 1793898068926,
    "symbol": "AGENT CITY",
-   "holdersCount": 393,
+   "holdersCount": 394,
    "conc": {
     "top1Pct": 4.5391,
-    "top10Pct": 23.2872,
-    "largestContractPct": 9.9473,
+    "top10Pct": 23.5009,
+    "largestContractPct": 9.5484,
     "burnedPct": 2.7306,
     "devPctOnchain": null
    },
@@ -844,15 +844,21 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-05T16:31:09.227Z",
-  "targets": 6,
-  "ok": 6,
-  "failed": 0,
-  "errors": [],
+  "at": "2026-11-05T17:01:06.423Z",
+  "targets": 21,
+  "ok": 1,
+  "failed": 20,
+  "errors": [
+   "AMZN: HTTP 503 for https://api.blockscout.com/4663/api/v2/tokens/0x12f190a9f9d7d37a250758b26824b97ce941bf5",
+   "MSTR: HTTP 503 for https://api.blockscout.com/4663/api/v2/tokens/0xec262a75e413fafd0df80480274532c79d42da0",
+   "TSM: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "QQQ: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "DIH: api.blockscout.com skipped for the rest of this run (kept failing)"
+  ],
   "http": {
    "api.blockscout.com": {
-    "calls": 25,
-    "sec": 663
+    "calls": 8,
+    "sec": 3
    }
   }
  }
