@@ -261,13 +261,13 @@
    }
   },
   "0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e": {
-   "at": 1793896496685,
+   "at": 1793923434529,
    "symbol": "gld",
-   "holdersCount": 41450,
+   "holdersCount": 41431,
    "conc": {
-    "top1Pct": 4.6636,
-    "top10Pct": 13.6096,
-    "largestContractPct": 25.7646,
+    "top1Pct": 4.6963,
+    "top10Pct": 13.4071,
+    "largestContractPct": 26.147,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -291,13 +291,13 @@
    }
   },
   "0xec262a75e413fafd0df80480274532c79d42da09": {
-   "at": 1793900103399,
+   "at": 1793923876029,
    "symbol": "MSTR",
-   "holdersCount": 19307,
+   "holdersCount": 19313,
    "conc": {
-    "top1Pct": 12.5333,
-    "top10Pct": 21.8462,
-    "largestContractPct": 49.4934,
+    "top1Pct": 12.3653,
+    "top10Pct": 20.9237,
+    "largestContractPct": 48.7561,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -325,7 +325,7 @@
    }
   },
   "0x07ebb29a38fbcb41563817e5e19f2cec619c90d2": {
-   "at": 1793896288945,
+   "at": 1793923293692,
    "symbol": "BUN",
    "holdersCount": 5153,
    "conc": {
@@ -342,43 +342,47 @@
    }
   },
   "0xff080c8ce2e5feadaca0da81314ae59d232d4afd": {
-   "at": 1793896649404,
+   "at": 1793923587342,
    "symbol": "MU",
-   "holdersCount": 42196,
+   "holdersCount": 42192,
    "conc": {
-    "top1Pct": 9.3389,
-    "top10Pct": 23.2793,
-    "largestContractPct": 22.9103,
+    "top1Pct": 5.9078,
+    "top10Pct": 12.4418,
+    "largestContractPct": 23.4087,
     "burnedPct": 0,
     "devPctOnchain": null
    },
    "recentBurns": null
   },
   "0xc72b96e0e48ecd4dc75e1e45396e26300bc39681": {
-   "at": 1793896802058,
+   "at": 1793923740316,
    "symbol": "INTC",
-   "holdersCount": 31568,
+   "holdersCount": 31574,
    "conc": {
-    "top1Pct": 3.7525,
-    "top10Pct": 18.6382,
-    "largestContractPct": 17.943,
+    "top1Pct": 3.7165,
+    "top10Pct": 18.6981,
+    "largestContractPct": 18.1341,
     "burnedPct": 0,
     "devPctOnchain": null
    },
    "recentBurns": null
   },
   "0x12f190a9f9d7d37a250758b26824b97ce941bf54": {
-   "at": 1793900020243,
+   "at": 1793924004262,
    "symbol": "AMZN",
-   "holdersCount": 58147,
+   "holdersCount": 58131,
    "conc": {
-    "top1Pct": 8.2807,
-    "top10Pct": 25.5869,
-    "largestContractPct": 21.3753,
+    "top1Pct": 6.5331,
+    "top10Pct": 23.0629,
+    "largestContractPct": 22.6561,
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "recentBurns": null
+   "recentBurns": {
+    "count": 0,
+    "units": 0,
+    "lastTs": null
+   }
   },
   "0x86923f96303d656e4aa86d9d42d1e57ad2023fdc": {
    "at": 1793903621733,
@@ -765,13 +769,13 @@
    }
   },
   "0x878fbde429e1b21522735ed9dcf25e752a119284": {
-   "at": 1793898068926,
+   "at": 1793923742420,
    "symbol": "AGENT CITY",
-   "holdersCount": 394,
+   "holdersCount": 405,
    "conc": {
-    "top1Pct": 4.5391,
-    "top10Pct": 23.5009,
-    "largestContractPct": 9.5484,
+    "top1Pct": 2.6046,
+    "top10Pct": 20.4178,
+    "largestContractPct": 12.2151,
     "burnedPct": 2.7306,
     "devPctOnchain": null
    },
@@ -864,21 +868,15 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-05T23:31:05.850Z",
-  "targets": 7,
-  "ok": 0,
-  "failed": 7,
-  "errors": [
-   "BUN: HTTP 503 for https://api.blockscout.com/4663/api/v2/tokens/0x07ebb29a38fbcb41563817e5e19f2cec619c90d",
-   "gld: HTTP 503 for https://api.blockscout.com/4663/api/v2/tokens/0xc9a981fee1f9dec688bb123ccdecc63d0debfc4",
-   "MU: api.blockscout.com skipped for the rest of this run (kept failing)",
-   "INTC: api.blockscout.com skipped for the rest of this run (kept failing)",
-   "AGENT CITY: api.blockscout.com skipped for the rest of this run (kept failing)"
-  ],
+  "at": "2026-11-06T00:01:12.554Z",
+  "targets": 18,
+  "ok": 7,
+  "failed": 0,
+  "errors": [],
   "http": {
    "api.blockscout.com": {
-    "calls": 3,
-    "sec": 1
+    "calls": 30,
+    "sec": 718
    }
   }
  }
