@@ -138,13 +138,13 @@
    "recentBurns": null
   },
   "0xaf3d76f1834a1d425780943c99ea8a608f8a93f9": {
-   "at": 1794166542974,
+   "at": 1794190221349,
    "symbol": "AAPL",
-   "holdersCount": 88670,
+   "holdersCount": 88665,
    "conc": {
-    "top1Pct": 2.0128,
-    "top10Pct": 4.7531,
-    "largestContractPct": 26.2567,
+    "top1Pct": 2.0272,
+    "top10Pct": 4.6195,
+    "largestContractPct": 25.1666,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -198,13 +198,13 @@
    "recentBurns": null
   },
   "0x4a0e65a3eccec6dbe60ae065f2e7bb85fae35eea": {
-   "at": 1794164806857,
+   "at": 1794189811692,
    "symbol": "SPCX",
-   "holdersCount": 118840,
+   "holdersCount": 118813,
    "conc": {
-    "top1Pct": 3.5596,
-    "top10Pct": 12.9712,
-    "largestContractPct": 20.854,
+    "top1Pct": 3.7599,
+    "top10Pct": 13.2496,
+    "largestContractPct": 20.8923,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -353,13 +353,13 @@
    "recentBurns": null
   },
   "0x86923f96303d656e4aa86d9d42d1e57ad2023fdc": {
-   "at": 1794166419547,
+   "at": 1794190118654,
    "symbol": "AMD",
-   "holdersCount": 43792,
+   "holdersCount": 43785,
    "conc": {
     "top1Pct": 3.8995,
-    "top10Pct": 12.9624,
-    "largestContractPct": 23.3783,
+    "top10Pct": 13.0685,
+    "largestContractPct": 23.4569,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -546,13 +546,13 @@
    "recentBurns": null
   },
   "0x5d6ef090a1461b11c9427ac319260122d1c61e18": {
-   "at": 1794164648611,
+   "at": 1794189864390,
    "symbol": "ICOIN",
-   "holdersCount": 5377,
+   "holdersCount": 5379,
    "conc": {
     "top1Pct": 2.3905,
     "top10Pct": 13.0174,
-    "largestContractPct": 30.2976,
+    "largestContractPct": 30.3519,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -776,7 +776,7 @@
    "recentBurns": null
   },
   "0x66cef844f82a461444621f1fcb53efa9ed6dee18": {
-   "at": 1794164972938,
+   "at": 1794189960736,
    "symbol": "TENOV",
    "holdersCount": 25085,
    "conc": {
@@ -793,21 +793,17 @@
    }
   },
   "0x5173b8ea6923c2d40267890d45c46a3480954773": {
-   "at": 1794164602027,
+   "at": 1794189825501,
    "symbol": "WIF",
-   "holdersCount": 1614,
+   "holdersCount": 1622,
    "conc": {
     "top1Pct": 2.5128,
-    "top10Pct": 19.91,
+    "top10Pct": 19.9015,
     "largestContractPct": 8.1632,
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "recentBurns": {
-    "count": 38,
-    "units": 4569.6247,
-    "lastTs": 1794162479000
-   }
+   "recentBurns": null
   },
   "0x2cc0fac44b8252f6b10208b091aff2c94b4da77d": {
    "at": 1794188026074,
@@ -841,15 +837,18 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-09T01:31:08.615Z",
-  "targets": 12,
-  "ok": 7,
-  "failed": 0,
-  "errors": [],
+  "at": "2026-11-09T02:01:06.484Z",
+  "targets": 8,
+  "ok": 6,
+  "failed": 2,
+  "errors": [
+   "SHIT: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0x22eb9f1c5385ed74257da42d8021916c2d83713",
+   "HOOD: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0x32ac8c1d7672667d5ebdea22935f7b06fc8d496"
+  ],
   "http": {
    "api.blockscout.com": {
-    "calls": 29,
-    "sec": 664
+    "calls": 33,
+    "sec": 519
    }
   }
  }
