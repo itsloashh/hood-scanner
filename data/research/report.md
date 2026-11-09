@@ -1,31 +1,31 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-08 18:53 UTC from 220 coins._
+_Generated 2026-11-09 14:23 UTC from 220 coins._
 
 ## The base rate
-57 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 111 of 220 coins.
-- **1 went 3–10x** within 30 days (our target)
+58 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 101 of 220 coins.
+- **2 went 3–10x** within 30 days (our target)
 - 2 went past 10x (outliers — listed, not used to learn)
-- 11 never reached 3x
-- Community check: 18 of 24 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
+- 7 never reached 3x
+- Community check skipped (no wallet data this run).
 
-**Hit rate on real setups: 16%** (6 wins / 37). Any parameter is only worth adding if coins with it beat this.
+**Hit rate on real setups: 16%** (6 wins / 38). Any parameter is only worth adding if coins with it beat this.
 
 ## Which signals showed up before winners
 Ranked by how much more often they appear in 3–10x winners than in duds:
-- **Volume already rising on the setup day**: 2/6 winners vs 2/31 duds — 5.2× more common in winners
-- **Volume explosion (3×+) during the run** _(happens during the run — explains, can’t predict)_: 6/6 winners vs 9/31 duds — 3.4× more common in winners
-- **cat theme**: 1/6 winners vs 2/31 duds — 2.6× more common in winners
-- **hood theme**: 1/6 winners vs 7/31 duds — more common in duds
-- **Token burns in the 2 weeks before**: 0/6 winners vs 5/31 duds — more common in duds
-- **frog theme**: 0/6 winners vs 2/31 duds — more common in duds
-- **Token burns during the run** _(happens during the run — explains, can’t predict)_: 0/6 winners vs 5/31 duds — more common in duds
-- **Buyers up 50%+ week-over-week**: 0/6 winners vs 3/31 duds — more common in duds
-- **Paired with a stock token**: 0/6 winners vs 2/31 duds — more common in duds
+- **Volume already rising on the setup day**: 2/6 winners vs 2/32 duds — 5.3× more common in winners
+- **Volume explosion (3×+) during the run** _(happens during the run — explains, can’t predict)_: 6/6 winners vs 9/32 duds — 3.6× more common in winners
+- **cat theme**: 1/6 winners vs 2/32 duds — 2.7× more common in winners
+- **hood theme**: 1/6 winners vs 7/32 duds — more common in duds
+- **Token burns in the 2 weeks before**: 0/6 winners vs 5/32 duds — more common in duds
+- **frog theme**: 0/6 winners vs 2/32 duds — more common in duds
+- **Token burns during the run** _(happens during the run — explains, can’t predict)_: 0/6 winners vs 5/32 duds — more common in duds
+- **Buyers up 50%+ week-over-week**: 0/6 winners vs 3/32 duds — more common in duds
+- **Paired with a stock token**: 0/6 winners vs 2/32 duds — more common in duds
 
 ## Winners vs duds (middle value of each group)
 - **Volume on the setup day vs its 7-day average:** winners 0.9× vs duds 0.4×
 - **7-day price range (lower = tighter base):** winners 1.31× vs duds 1.34×
-- **Drop from all-time high:** winners 98% vs duds 91%
+- **Drop from all-time high:** winners 98% vs duds 92%
 - **Age:** winners 22 days vs duds 52 days
 - **Market cap:** winners $20k vs duds $45k
 
@@ -62,24 +62,21 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $JUGGERNAUT — 10× from $1375k (2026-07-31)
 - $PONS — 32× from $15690k (2026-08-04)
 
-## Thrown out by the community check
-- $RIBBIT (DUD) — only 5 real buyers
-- $HUMANITY (DUD) — only 9 real buyers
-- $SCALE (DUD) — only 13 real buyers
-- $SCALE (DUD) — only 10 real buyers
-
 ## After a pump: pullback odds (from 162 past pumps)
 - **+50–100% day** (50 examples): 78% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 55–102%) · low came after ~5 day(s) · 32% made a new high within 2 weeks · 30% gave back the whole move
 - **+100–200% day** (22 examples): 86% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 76–110%) · low came after ~6 day(s) · 32% made a new high within 2 weeks · 50% gave back the whole move
-- **+200+% day** (90 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 92–100%) · low came after ~4 day(s) · 12% made a new high within 2 weeks · 22% gave back the whole move
+- **+200+% day** (90 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 88–100%) · low came after ~4 day(s) · 12% made a new high within 2 weeks · 22% gave back the whole move
 
 ## Smart wallets
-No wallet showed up early in multiple real winners yet — the sample grows every day.
+Wallet history wasn’t available this run.
 
 ## Notes
-- $GENESIS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $STAG: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $HOOD: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $HMM: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $GENESIS: wallet history unavailable (network error for https://api.blockscout.com/4663/api/v2/tok)
+- $RETAIL: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $PEPONS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $STAG: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $GENESIS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
 
-_Wallet history: 6 setup(s) checked · history jump worked 12× / failed 0×._
+_Wallet history: 0 setup(s) checked · history jump worked 1× / failed 0×._
