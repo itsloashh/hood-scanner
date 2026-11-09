@@ -1,12 +1,12 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-09 14:23 UTC from 220 coins._
+_Generated 2026-11-09 23:28 UTC from 220 coins._
 
 ## The base rate
-58 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 101 of 220 coins.
-- **2 went 3–10x** within 30 days (our target)
+58 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 112 of 220 coins.
+- **1 went 3–10x** within 30 days (our target)
 - 2 went past 10x (outliers — listed, not used to learn)
 - 7 never reached 3x
-- Community check skipped (no wallet data this run).
+- Community check: 18 of 24 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
 
 **Hit rate on real setups: 16%** (6 wins / 38). Any parameter is only worth adding if coins with it beat this.
 
@@ -68,15 +68,12 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - **+200+% day** (90 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 88–100%) · low came after ~4 day(s) · 12% made a new high within 2 weeks · 22% gave back the whole move
 
 ## Smart wallets
-Wallet history wasn’t available this run.
+No wallet showed up early in multiple real winners yet — the sample grows every day.
 
 ## Notes
-- $HMM: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $GENESIS: wallet history unavailable (network error for https://api.blockscout.com/4663/api/v2/tok)
-- $RETAIL: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $PEPONS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $STAG: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $GENESIS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $GENESIS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $STAG: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $TENOV: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
 
-_Wallet history: 0 setup(s) checked · history jump worked 1× / failed 0×._
+_Wallet history: 2 setup(s) checked · history jump worked 8× / failed 0×._
