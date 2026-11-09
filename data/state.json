@@ -10532,10 +10532,6 @@
   ],
   "0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a": [
    [
-    1793733372070,
-    41769
-   ],
-   [
     1793740572088,
     41858
    ],
@@ -10769,6 +10765,10 @@
    ],
    [
     1794187867277,
+    41973
+   ],
+   [
+    1794195965695,
     41973
    ]
   ],
@@ -12555,10 +12555,6 @@
  },
  "volumeHistory": [
   {
-   "t": 1793547965694,
-   "v": 189625830.86502874
-  },
-  {
    "t": 1793556064926,
    "v": 191139190.32711205
   },
@@ -12889,72 +12885,75 @@
   {
    "t": 1794187867277,
    "v": 142631859.85382605
+  },
+  {
+   "t": 1794195965695,
+   "v": 155275335.71784747
   }
  ],
  "lastDigest": "2026-10-17",
- "runs": 2144,
+ "runs": 2145,
  "lastRun": {
-  "at": "2026-11-09T03:16:05.108Z",
-  "scanned": 340,
+  "at": "2026-11-09T03:46:05.695Z",
+  "scanned": 358,
   "quickPass": 44,
-  "deepPass": 10,
+  "deepPass": 2,
   "buy": 0,
   "watch": 0,
   "pump": 0,
   "ignition": 0,
-  "quality": 6,
-  "micro": 4,
-  "profileMiss": 3,
+  "quality": 2,
+  "micro": 0,
   "regime": "neutral",
   "universe": 240,
   "watchlist": 54,
   "topCuts": {
-   "too few buyers 24h": 221,
-   "almost no sellers (honeypot risk)": 153,
-   "liquidity too thin": 127,
-   "younger than 21d": 105,
-   "mcap under min (dead)": 102,
-   "already pumping": 37,
-   "copycat ticker": 33,
-   "mcap over max": 11
+   "too few buyers 24h": 227,
+   "almost no sellers (honeypot risk)": 163,
+   "liquidity too thin": 143,
+   "younger than 21d": 123,
+   "mcap under min (dead)": 89,
+   "already pumping": 48,
+   "copycat ticker": 41,
+   "mcap over max": 14
   },
   "holderData": {
    "blockscout": 0,
    "cached": 0,
-   "estimate": 4,
+   "estimate": 0,
    "none": 0,
-   "holdersJob": 21
+   "holdersJob": 6
   },
   "cacheHits": {
-   "info": 25,
-   "chart": 9
+   "info": 5,
+   "chart": 2
   },
   "ignitionSource": {
    "dexpaprika": 0,
-   "gecko": 3
+   "gecko": 0
   },
   "http": {
-   "geckoterminal": {
-    "calls": 56,
-    "sec": 24,
-    "waitSec": 339,
-    "backoffSec": 125,
-    "r429": 14
-   },
-   "dexpaprika": {
-    "calls": 3,
-    "sec": 0,
+   "blockscout": {
+    "calls": 15,
+    "sec": 157,
     "waitSec": 0,
-    "backoffSec": 0,
+    "backoffSec": 14,
     "r429": 0
+   },
+   "geckoterminal": {
+    "calls": 39,
+    "sec": 14,
+    "waitSec": 211,
+    "backoffSec": 96,
+    "r429": 10
    }
   },
   "phases": {
-   "discover+lists": 214,
+   "discover+lists": 435,
    "paper+wallets": 0,
-   "deepChecks": 246,
+   "deepChecks": 58,
    "pumps": 0,
-   "ignition": 28
+   "ignition": 0
   },
   "scorecard": {
    "buy/quality": {
@@ -13039,36 +13038,27 @@
    }
   },
   "eth": {
-   "price": 2228.53,
-   "h6": -0.2426195751919047,
-   "h24": -0.34031858470398024,
-   "d7": -2.1810887447217375,
+   "price": 2231.28,
+   "h6": -0.09805370119140289,
+   "h24": -0.18386053440337946,
+   "d7": -2.5603626343393304,
    "trend": "flat"
   },
-  "httpErrors": {
-   "api.geckoterminal.com": {
-    "count": 1,
-    "last": "HTTP 429"
-   },
-   "api.dexpaprika.com": {
-    "count": 3,
-    "last": "HTTP 402"
-   }
-  },
-  "outOfTime": false,
-  "seconds": 488,
+  "httpErrors": {},
+  "outOfTime": true,
+  "seconds": 492,
   "blockscout": {
    "key": true,
-   "calls": 0
+   "calls": 10
   },
   "quietBases": 12,
   "knownTickers": 344,
   "catalysts": 0,
   "wallets": {
-   "tracked": 6048,
+   "tracked": 6002,
    "smart": 4,
    "seeded": 0,
-   "tradePulls": 10
+   "tradePulls": 2
   }
  },
  "watchAlerts": {
@@ -13187,222 +13177,222 @@
   "0xec262a75e413fafd0df80480274532c79d42da09": {
    "pool": "0x319bac87e616a89e241c10aeb8afd4892a852cdd8b373cd9765ecddc40b87cfe",
    "symbol": "MSTR",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xc72b96e0e48ecd4dc75e1e45396e26300bc39681": {
    "pool": "0x7fb585f108d921de3b197cf7e26b5aebc96b035fec13f972b868e008ea062394",
    "symbol": "INTC",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x12f190a9f9d7d37a250758b26824b97ce941bf54": {
    "pool": "0x68beff3b4270ffbbb78a48d7670648909b9de6736456b0f450fee242e1d10a8b",
    "symbol": "AMZN",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x58ffe4a942d3885baa22d7520691f611ef09e7aa": {
    "pool": "0x4c862e5846659b086fe73896bbb9058513417e4e6938a1be93aeb7a768fa5754",
    "symbol": "TSM",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xe93237c50d904957cf27e7b1133b510c669c2e74": {
    "pool": "0x18074ca08154f613c70444ef22793ff1875e9bdc92bab25a5ee0f39107c77258",
    "symbol": "MSFT",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xd5f3879160bc7c32ebb4dc785f8a4f505888de68": {
    "pool": "0x8493982435e4273028008cd181c84c0d6a548f96792fdb5acddcbb6a8c82d305",
    "symbol": "QQQ",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x0c1ed62d7811e5b437e537ac9d0592469c119c74": {
    "pool": "0x2b3211e96d15212086e8333b447fbb35dc08348a",
    "symbol": "DIH",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x07ebb29a38fbcb41563817e5e19f2cec619c90d2": {
    "pool": "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c",
    "symbol": "BUN",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
    "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
    "symbol": "GENESIS",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x96765066f6a040a21eb027167d2315b707c82633": {
    "pool": "0xfbd1b5e73760b59b65c63cf8214bfd96eb4f4870",
    "symbol": "RVH",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x6330d8c3178a418788df01a47479c0ce7ccf450b": {
    "pool": "0x6707aeac7d0e519b083219d27bb427364363183a",
    "symbol": "COIN",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "symbol": "CANNACAT",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xdc45b71d7203c2e8baafc43a19bca0eb993bb54e": {
    "pool": "0x99c8f9fb1f73ccd0977fd39ff3508c387223b3be27aa984c09dd06c2f4674e4e",
    "symbol": "DARK",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x7648f37c2314466726a28f7a5edbdb8dc7b3e23f": {
    "pool": "0x3f9d7f67d98f9a5c9283d69a65ed0d5fddd179c2",
    "symbol": "CUCK",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691": {
    "pool": "0x77f0e97f94b742b7c2046efb6675eb9583a31b36316c8b7b070d0d04f11aa7b2",
    "symbol": "FLOCK",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3": {
    "pool": "0x6d0f67069596c7ef9d1ce6981c1b6dbcd9a91b0c5393aebe9dd07c35e412df30",
    "symbol": "GOOGL",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a": {
    "pool": "0xb8d9b6b622bb03dd06d95790553f327710a73d85d845a59fa9e652638ca96ae6",
    "symbol": "PLTR",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xdf0992e440dd0be65bd8439b609d6d4366bf1cb5": {
    "pool": "0x654e4143e82a5824445ade0824351c2a9acd95a8",
    "symbol": "CRCL",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x45242320dbb855eea8fd36804c6487e10e97fcf9": {
    "pool": "0x237609918f330add285b8bc5f8f2922283d1c4c5",
    "symbol": "TENDIES",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x84cab63bc87912e71ad199ff14a0ba45de68fef8": {
    "pool": "0x742282d7cd423bacc97e7f07121bbd7958d03059f8accfada01a0c5efc903397",
    "symbol": "SKHY",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x56910d4409f3a0c78c64dd8d0545ff0705389870": {
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "symbol": "Index",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x01e6301bc1118be90cc6bc2d1b5c0c44bb883111": {
    "pool": "0x5e4ae95442e07e3c996890515d32c50cb5c975cc001df477ec53da5d3fd28e48",
    "symbol": "IGNITION",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xff080c8ce2e5feadaca0da81314ae59d232d4afd": {
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "symbol": "MU",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xe934e36a439c94017b64a3fece66af12099abf50": {
    "pool": "0xd33c8fd38b06e989cdbd4dffdefab71c4bdd415b24964c8d69e38ff35b068f92",
    "symbol": "STONKBROKER",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x5e81213613b6b86eab4c6c50d718d34359459786": {
    "pool": "0xd9ab4b7fae6dc2f7020134ec744a8f53ef3e5e24",
    "symbol": "TTWO",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e": {
-   "pool": "0xba2f1ed4ceb2169d538d1e614d847e83c5a55913",
+   "pool": "0xfe281bbfa9aa658c1aa9c2ad1b0c62c4286f96c7cb1074296b54e869935a7a3a",
    "symbol": "gld",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x72be1277e198d0c476869253cb4e62807e14533c": {
    "pool": "0x5480a1684776826bc7c98123635ed38accedaa6adeb49f73bc5e87975c1ef995",
    "symbol": "RAETO",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xf8bc08092c06db6148114dcf82af881f1085f92b": {
    "pool": "0xbf3bb81de6285b8310a028d1c2cd38f9419d54c1",
    "symbol": "WOOD",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xccee82fe024c36fa15e1005ede3e9e4787e23d09": {
    "pool": "0x67983c0d78cea3a8b4a5cc283feeeefd278a8ae5c6504b983b0c72bde13d1c0c",
    "symbol": "HIMS",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x878fbde429e1b21522735ed9dcf25e752a119284": {
    "pool": "0x033ce00a47632145ae3eb147b8f58dcf57bf8f6de6bcd1045076ba6fdb93027f",
    "symbol": "AGENT CITY",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xc465130ac047cc363d3839b4de1c8f35cf8ae9fd": {
    "pool": "0x5394735ca0f081b9e17cdaf0b4c492daed942a3494f5cad2c5379fe341b81109",
    "symbol": "RIPPLES",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x7fe995a80075df3dc8ae11a9b82c7fe4202cd87f": {
    "pool": "0x2b0d0183d017c58b924401ca8ac362f6e01f0e9e",
    "symbol": "HMM",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x822cc93ffd030293e9842c30bbd678f530701867": {
    "pool": "0x1bad145c8f06444e0df81c28257cd20231bd1f16",
    "symbol": "BE",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x2cc0fac44b8252f6b10208b091aff2c94b4da77d": {
    "pool": "0xb09fa4f04032b9d9e690ac4a1d29523b5f9a72dc",
    "symbol": "INJOH",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xb9972ca7188e511174947e3936a5315ac7073277": {
    "pool": "0x8651e656738064177752a395dbde2b2a9e3fc469edc2a9212e6060c0990bb7eb",
    "symbol": "PROLOGUE",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xf177d86a28b520e3e396e4f3b96cd8e72d7dabd8": {
    "pool": "0xd0ce400b5a20071718f4220cd5e49700337fe8ccaeefe6cfcea65bba99b85e54",
    "symbol": "UNI",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x43b07d15ce533bec5476d70c22a78a1b2b662155": {
    "pool": "0xb40196272a6d2eb5edf6d93bc4dc39856ad95e0e",
    "symbol": "mrna",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x3458e003f6ed93df0f537b8acac6fbe08e41247f": {
    "pool": "0x91e9823a895a2d05a2c853fbd1619da089b36054f0a342039a0e8046608bbece",
    "symbol": "ROO",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xf95edd7d5b1616315b4bf49cb222573d4a618888": {
    "pool": "0x9f483b0bbada32893259cbbd66e4fbfc0fc57c4b59f5b755823a1b82cda5f7c4",
    "symbol": "POO",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xa3284897ad7c8fed700b04f573cf64e4f6c10f2c": {
    "pool": "0x274cfbb29af6f3fee7846b9c03d3969ad6822b46",
    "symbol": "NVDA",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x4ea005168d7f09a7a0ba9d1def21a479950e44c2": {
    "pool": "0x0a2121a50a09ed0796ae81f9c53ff9398355a398",
    "symbol": "COST",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xc0d6457c16cc70d6790dd43521c899c87ce02f35": {
    "pool": "0x8dc0387af606d84be8e4c2fc1da7bdc6d467337e9f3e075113f968922a190847",
    "symbol": "META",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0xad25ac6c84d497db898fa1e8387bf6af3532a1c4": {
    "pool": "0xfe709115a71c7f9c007f2ac9cb932071ff3b3117865122134e2c1bd96719734c",
    "symbol": "BABA",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x5d6ef090a1461b11c9427ac319260122d1c61e18": {
    "pool": "0xc39187cec78a076c41a4085598b4cc05be2ed9b04a3443167471fa0fc4984188",
    "symbol": "ICOIN",
-   "at": 1794194165108
+   "at": 1794195965695
   },
   "0x1b0e319c6a659f002271b69db8a7df2f911c153e": {
    "pool": "0xe9713f453adb9245b19559790c96f470a18f2fdf",
@@ -13513,7 +13503,6 @@
    "0x0c1ed62d7811e5b437e537ac9d0592469c119c74"
   ],
   "robinhoodapp": [
-   "0xff080c8ce2e5feadaca0da81314ae59d232d4afd",
    "0x822cc93ffd030293e9842c30bbd678f530701867",
    "0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a",
    "0xc72b96e0e48ecd4dc75e1e45396e26300bc39681",
@@ -13522,7 +13511,8 @@
    "0xc0d6457c16cc70d6790dd43521c899c87ce02f35",
    "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3",
    "0xe93237c50d904957cf27e7b1133b510c669c2e74",
-   "0xad25ac6c84d497db898fa1e8387bf6af3532a1c4"
+   "0xad25ac6c84d497db898fa1e8387bf6af3532a1c4",
+   "0x58ffe4a942d3885baa22d7520691f611ef09e7aa"
   ],
   "agentwormhole": [
    "0x3ba500f1ababbcf0f0247d06d1c56fd7e6c4c09d"
@@ -13640,63 +13630,6 @@
   ]
  },
  "funnel24h": [
-  {
-   "t": 1794108666247,
-   "scanned": 349,
-   "quickPass": 40,
-   "deepPass": 10,
-   "reasons": {
-    "mcap over max": 12,
-    "younger than 21d": 123,
-    "too few buyers 24h": 219,
-    "copycat ticker": 26,
-    "already pumping": 38,
-    "liquidity too thin": 144,
-    "quality lane: liquidity under $100k": 7,
-    "mcap under min (dead)": 106,
-    "flagged suspicious on GeckoTerminal": 4,
-    "almost no sellers (honeypot risk)": 145,
-    "quality lane: only 33% off its high (want 50–90%)": 1,
-    "quality lane: only 2% off its high (want 50–90%)": 1,
-    "quality lane: only 23% off its high (want 50–90%)": 1,
-    "top wallet too big": 5,
-    "quality lane: only 11% off its high (want 50–90%)": 1,
-    "quality lane: 91% off its high — too broken (want 50–90%)": 1,
-    "quality lane: under 5,000 holders": 2,
-    "quality lane: 90% off its high — too broken (want 50–90%)": 1,
-    "quality lane: only 17% off its high (want 50–90%)": 1,
-    "quality lane: only 35% off its high (want 50–90%)": 1,
-    "top 10 wallets too concentrated": 1
-   }
-  },
-  {
-   "t": 1794109565251,
-   "scanned": 380,
-   "quickPass": 40,
-   "deepPass": 6,
-   "reasons": {
-    "mcap over max": 14,
-    "younger than 21d": 151,
-    "too few buyers 24h": 221,
-    "copycat ticker": 31,
-    "already pumping": 48,
-    "liquidity too thin": 174,
-    "quality lane: liquidity under $100k": 6,
-    "mcap under min (dead)": 118,
-    "flagged suspicious on GeckoTerminal": 4,
-    "almost no sellers (honeypot risk)": 147,
-    "quality lane: only 33% off its high (want 50–90%)": 1,
-    "quality lane: only 20% off its high (want 50–90%)": 1,
-    "top 10 wallets too concentrated": 3,
-    "quality lane: only 23% off its high (want 50–90%)": 1,
-    "top wallet too big": 4,
-    "quality lane: only 11% off its high (want 50–90%)": 1,
-    "quality lane: 91% off its high — too broken (want 50–90%)": 1,
-    "quality lane: under 5,000 holders": 2,
-    "quality lane: 90% off its high — too broken (want 50–90%)": 1,
-    "quality lane: only 19% off its high (want 50–90%)": 1
-   }
-  },
   {
    "t": 1794110468729,
    "scanned": 351,
@@ -16292,9 +16225,331 @@
     "quality lane: only 17% off its high (want 50–90%)": 1,
     "quality lane: only 8% off its high (want 50–90%)": 1
    }
+  },
+  {
+   "t": 1794195965695,
+   "scanned": 358,
+   "quickPass": 44,
+   "deepPass": 2,
+   "reasons": {
+    "mcap over max": 14,
+    "younger than 21d": 123,
+    "too few buyers 24h": 227,
+    "almost no sellers (honeypot risk)": 163,
+    "copycat ticker": 41,
+    "flagged suspicious on GeckoTerminal": 4,
+    "mcap under min (dead)": 89,
+    "liquidity too thin": 143,
+    "already pumping": 48,
+    "quality lane: liquidity under $100k": 6,
+    "quality lane: only 32% off its high (want 50–90%)": 1,
+    "top wallet too big": 2,
+    "top 10 wallets too concentrated": 1,
+    "quality lane: only 36% off its high (want 50–90%)": 1
+   }
   }
  ],
  "universe": {
+  "0x4064b717b4cb9eab3bf9065cedcc403ae5881dda": {
+   "pool": "0xb10d0242472ed7a6575ba06dc60f609725a91548",
+   "symbol": "TCITY",
+   "at": 1794195965695
+  },
+  "0xc8910b25322858e1e15e8d25cebefca75dcc9f2a": {
+   "pool": "0x50bab61c1a593778a46f765105c9ed5fedd1070887ffdda1565689d3bf085f95",
+   "symbol": "BYCOCKET",
+   "at": 1794195965695
+  },
+  "0x2b8c1f0fc1567dfc490377be18f757f6ed4abb04": {
+   "pool": "0xd5723ee49b8f5ce317cd2d92fc8e658d43c9442e",
+   "symbol": "MOTION",
+   "at": 1794195965695
+  },
+  "0x56ca789dd6d04e19c8325cf278ad18e3f6757f00": {
+   "pool": "0xf8bd79f4b53473ba40636c7ed9553ddfbe223044",
+   "symbol": "WOFL",
+   "at": 1794195965695
+  },
+  "0xbcab72f268ce76ac32840f25cf7d433338a26bfd": {
+   "pool": "0x871b8dcb049c2621dc63d0286f66cd5b3f082d24",
+   "symbol": "PLAYR",
+   "at": 1794195965695
+  },
+  "0x995c361cbd966629edbbbafe27b93c84a2032e26": {
+   "pool": "0x05ea45992e5f86bb2d8e22f9540948ae5b8b7a7a",
+   "symbol": "HARMONIC",
+   "at": 1794195965695
+  },
+  "0xdae109b18129751a4283e5a72e183abfc728c024": {
+   "pool": "0x31c6cbb6dd23579711a7cf3aec61846622442cd8",
+   "symbol": "RIBBIT",
+   "at": 1794195965695
+  },
+  "0xdf53ef2bc3acbdcff2f423fcc209499c9ce0f8a3": {
+   "pool": "0xb3a2227f1e8833bd07f4e65edbeb201587b4fe30",
+   "symbol": "LOTS",
+   "at": 1794195965695
+  },
+  "0xbeeff033f34c046626b8d0a041844c5d1a5409dd": {
+   "pool": "0x197516c4812ba2a16efaa49a325e3f5e42be8bc17a729b51fba7add1601ad5d3",
+   "symbol": "steakUSDG",
+   "at": 1794195965695
+  },
+  "0x83ad2773478f0bf71c277147b62c2d0156e7e611": {
+   "pool": "0x00d09ed24f2161b0d2ffda54b2b556a6627f4d623b883152166200d50ee97278",
+   "symbol": "RMB",
+   "at": 1794195965695
+  },
+  "0x9dff0da886c7204480fa41ff546673d4cd1cda97": {
+   "pool": "0x1a7f5bec7b584d057167ae9e3790beead1ad6fbcd1ff448a3f4a0f50382d66ff",
+   "symbol": "HYPERCAT",
+   "at": 1794195965695
+  },
+  "0xaaf877c3db84f0463972a74be0674790dec42767": {
+   "pool": "0xe68aef7c131503af5ec3927a37644f013102cfea",
+   "symbol": "SI",
+   "at": 1794195965695
+  },
+  "0xbfc79a30fbb287d7ade4b4fe16b544d1eb2880ea": {
+   "pool": "0xfddf5528225e10ca5a35be281cbf01ed0ea3ba96",
+   "symbol": "HOOKR",
+   "at": 1794195965695
+  },
+  "0x00f13555befd9a150521778aefcdb70a65883ebb": {
+   "pool": "0x015ae0a6a1649f9ff2ed0522bde69725c8da36bd",
+   "symbol": "PGRP",
+   "at": 1794195965695
+  },
+  "0xf553178f864abed95acd723720986c7301e44fc7": {
+   "pool": "0xfb6f3ed059696a2e7d18a992a49bccf4f379eb11c0f83cddf5b3b8838580ccff",
+   "symbol": "JOLLY",
+   "at": 1794195965695
+  },
+  "0x4c1546a24cc10cec31d2a422130667f6c6a5f8c8": {
+   "pool": "0x7382eceeb99cf7a8da42cd7e1e14ebfd42ddd3f2",
+   "symbol": "PIZZA",
+   "at": 1794195965695
+  },
+  "0x5de6e7e9d9f28fe407278a6be657088375885345": {
+   "pool": "0xf9b0eab3e4d8737bdb5fa652affdab58d52e7175",
+   "symbol": "AI",
+   "at": 1794195965695
+  },
+  "0xd3384371c56fb9daf009d2289b8df4e8323fdc05": {
+   "pool": "0xffaf309044fd9fe5da328f97f87070b40b6d29480b9ad03286b6aef7d1086420",
+   "symbol": "COLLECT",
+   "at": 1794195965695
+  },
+  "0xf3d262740b0fa1b6c59551a4094d6d1f1c4f89ae": {
+   "pool": "0x25d14a7e15f60c24a29a2f0bb3658695071b7c3fb8e7ab5afb3cd70d96f7ce83",
+   "symbol": "HUMANITY",
+   "at": 1794195965695
+  },
+  "0xfdda9524963da01481f89f01cb51daaafff04161": {
+   "pool": "0xc77bb6e04b24877d4fa967cbf4dad3c369fea237f7d3b2620ecbc76549fb007a",
+   "symbol": "WOOF",
+   "at": 1794195965695
+  },
+  "0xa3284897ad7c8fed700b04f573cf64e4f6c10f2c": {
+   "pool": "0x274cfbb29af6f3fee7846b9c03d3969ad6822b46",
+   "symbol": "NVDA",
+   "at": 1794195965695
+  },
+  "0x643d018e4806127a0552cf447352173b09e64b02": {
+   "pool": "0x8992a14822964b4abe11af810870eb7b1eb7e763",
+   "symbol": "WALLET",
+   "at": 1794195965695
+  },
+  "0x5b316d4badefe7cba331ce7dea72ccf23b734eec": {
+   "pool": "0xb04a7f53cb6b9be9f1ba2aa1719805b5576e2703",
+   "symbol": "SI",
+   "at": 1794195965695
+  },
+  "0x169dbe9aa431db05a3f2086fb690e8bc1e064794": {
+   "pool": "0x5520c3dcb5d98730615747a9007f11605ee00cab3720541a5465ee087a3c8333",
+   "symbol": "darwin",
+   "at": 1794195965695
+  },
+  "0xe281ed3a1a01059532eca319d229d07053d57040": {
+   "pool": "0xaa136699524e4ac0cbbf5cb150db312add82a7555bf383f8b900fa7d0ae105f3",
+   "symbol": "RVHOOD",
+   "at": 1794195965695
+  },
+  "0xdf375fa412c3a15771428ad975d6743a73678d5e": {
+   "pool": "0x2163cb0d4be87c374c05cb0244e7980cd4bb493e",
+   "symbol": "trauma",
+   "at": 1794195965695
+  },
+  "0xf8e953c4877614f74e123ef5c3ec1359880c8697": {
+   "pool": "0xd4014dc8153d9a972eea51ef60611f24a622fb57",
+   "symbol": "TAO",
+   "at": 1794195965695
+  },
+  "0xf4ea5b8197af6a29a0e145d9df4949861720a8b0": {
+   "pool": "0x03388aae34cb4b7d39bbedfdb7d8f1b18e9aede6cdaf07bd55b9ca9e68e3637e",
+   "symbol": "FTR",
+   "at": 1794195965695
+  },
+  "0xddc66d450a48e1a17717c82304d5978bbc6b76a5": {
+   "pool": "0xc392764156d9d32b2ec523ebbb18d781364c31ed",
+   "symbol": "LFT",
+   "at": 1794195965695
+  },
+  "0xc567fe9bda82bfcc95e96f2cab8531c9933b7e79": {
+   "pool": "0x051eb567a4f64021b8967cb2709377befd9d8dd6",
+   "symbol": "SON",
+   "at": 1794195965695
+  },
+  "0x38732b051f9e16f42b8a1817884ae46525d9ec26": {
+   "pool": "0xfef99061934e104976503df4db8a955fef53c62e",
+   "symbol": "$USDG",
+   "at": 1794195965695
+  },
+  "0xb78101e4c162e447f00c11af47c9268d7d778663": {
+   "pool": "0xf4148c04c6dc7ac08dee07112dcb1bd7a8c2c706",
+   "symbol": "TORCH",
+   "at": 1794195965695
+  },
+  "0x299fbfbf2f5f876a463d2352587c240a4a961612": {
+   "pool": "0x54ab10ef9f31c1f1e49a5fbdbb84362624d994dc",
+   "symbol": "AI",
+   "at": 1794195965695
+  },
+  "0xd17c81cb01d44cc6e822936e8f098960001b47d2": {
+   "pool": "0xc19d1d77bfdaeb66c285a17286d325062c1cd0c7ce88c1fe60ef70797ee8f215",
+   "symbol": "HOODCATS",
+   "at": 1794195965695
+  },
+  "0x6cfe8050d64b02a21cf6cf2ef2a408489c86c10b": {
+   "pool": "0xeccced9bb64114a984827c679d0d699f3f7a53c3",
+   "symbol": "IBM",
+   "at": 1794195965695
+  },
+  "0x902424fe4fdfe69e15ce0510c6e6d1dd1bd5089d": {
+   "pool": "0xa8d8eaa43683c501875252dc0808cf9c26b328c8",
+   "symbol": "VEMET",
+   "at": 1794195965695
+  },
+  "0xe265d2588d2c7468daf91fa352e023bc677c4352": {
+   "pool": "0xedc5ce358a08bb647e15c08e2d4893ff5970ecde",
+   "symbol": "TRUMP2028",
+   "at": 1794195965695
+  },
+  "0xa3ae236b74da831cb325e752a1274e2b9c77ff33": {
+   "pool": "0x09ade09083d55830972e27cc4c33271b7062f80e",
+   "symbol": "TASTE",
+   "at": 1794195965695
+  },
+  "0xa5917df0dba46a00eb19382c095ce88d0358deaf": {
+   "pool": "0x7ab7d18226af8df86db16d9709a3a4d9a8c6a0235b07ff70a658103aa57d66c2",
+   "symbol": "TRUMP",
+   "at": 1794195965695
+  },
+  "0x32ac8c1d7672667d5ebdea22935f7b06fc8d496f": {
+   "pool": "0x7fb39eb653999feb9f0d3b1410848911383dfc681f3585229df4aa5b560bf0ba",
+   "symbol": "HOOD",
+   "at": 1794195965695
+  },
+  "0x4653f1ad6ef97bfe5f688f16f831aa598ddc5dd4": {
+   "pool": "0x4d2898cda4b02840baae1674c62c562970cb87409577d5f93a3bbfb1a3b783b6",
+   "symbol": "ACAT",
+   "at": 1794195965695
+  },
+  "0xde40339d9e52a640dc9328120adf88c560a287ab": {
+   "pool": "0x62c6e7bb2f8d6a2ed6525a4dd3ed24d0cbf5f512",
+   "symbol": "V4",
+   "at": 1794195965695
+  },
+  "0xe13d47f19e0347701aa6fe3bf59fc43d244725d8": {
+   "pool": "0xd1fa9c139660dbb2081cc23cb2c57ae1d4f7c92f70b77ac4bc2cff3330ebfcc6",
+   "symbol": "OWL",
+   "at": 1794195965695
+  },
+  "0x68a4c27f4492c98b5167022e5e474a081dcc5636": {
+   "pool": "0x53026be39a41abbfad16085d347336c2d61ce800",
+   "symbol": "AAA",
+   "at": 1794195965695
+  },
+  "0xf9f9ddd944b96210bd80e5f64df7d6b20e806e80": {
+   "pool": "0xabb2b7c7e4d1fd1c7f11cd6118f2a08eaed8455a87aee2dbe423a16605efdae5",
+   "symbol": "SCALE",
+   "at": 1794195965695
+  },
+  "0x5389b2b0db1c76190a939a06288107c8982eb150": {
+   "pool": "0x5469180aaccb03c469240979573f22d03a9ff6c145121b4fc6c86b5d249c12cc",
+   "symbol": "$BEBE",
+   "at": 1794195965695
+  },
+  "0x44d6ded7d1f4b99b36c4200c41d62d406c1c90de": {
+   "pool": "0x05a71d9fe852f4cd2bba2ba3e7fcb45e0d6d394a",
+   "symbol": "HOODNIGHT",
+   "at": 1794195965695
+  },
+  "0x96cf88f8f2c393d6635f1760a9e3267c597aa9b6": {
+   "pool": "0x7964f53c40536dedbb33f5aac059ee7f8f29049e",
+   "symbol": "ROBOTS",
+   "at": 1794195965695
+  },
+  "0xfe97535862ee0943e2cb1c74028707aa16d3ee55": {
+   "pool": "0xdb2d60e9defd39215180aac5aa779fcdfe1f75cd",
+   "symbol": "MOONCHZ",
+   "at": 1794195965695
+  },
+  "0xa9ea518a2663ef891e590f9dfab5c10a651ac2d8": {
+   "pool": "0x948cb77072e853f5ffd44f144a11e88851bc7325",
+   "symbol": "POC",
+   "at": 1794195965695
+  },
+  "0xc2b2c3488bb7f1fc9e202b3d44f38eb500a41f57": {
+   "pool": "0x158dc87b32a944cab07c80eb72777973ed1ba00fd9b2a6bc7fa7cef9689691a0",
+   "symbol": "MORT",
+   "at": 1794195965695
+  },
+  "0x2e911d81874c52a4e2fbcff38661cfe0185457be": {
+   "pool": "0xad0670da67d3942201c70bce33bbc974a81a72f2324e932a543619f92e8864c0",
+   "symbol": "SPCX690",
+   "at": 1794195965695
+  },
+  "0xac89fdbebf8f67dcca1362abd970814d8ffdab39": {
+   "pool": "0xbaf1c29737479977b64ff9ecf6fec0452df31753468912a2a9873197a6e1b3d3",
+   "symbol": "UBTC",
+   "at": 1794195965695
+  },
+  "0x26a9c2e639a71323787fd8da96da602ac045b63b": {
+   "pool": "0x974891f9223fd5d6e045110c1cc643d1fe1668dbe216bc68601a7c5376e91a4e",
+   "symbol": "USTR",
+   "at": 1794195965695
+  },
+  "0x3267184ab2ef6d8e57b0edb0dd6a97e4b28128c1": {
+   "pool": "0xd36c780c1de3ae0314fbc5c707400a931586eaf1",
+   "symbol": "RHB",
+   "at": 1794195965695
+  },
+  "0x6c8155e42f2fa0844cf27f35748769cf2fe1a1c3": {
+   "pool": "0x638579b0a262f234a6a28be75662e7775ad35a38",
+   "symbol": "TRUMPCAT",
+   "at": 1794195965695
+  },
+  "0x48025d90af58c01e9ad15b90d1d0de68b0028904": {
+   "pool": "0x3a04d45f9b6c020c6e49983c6eac77e501f97655",
+   "symbol": "ROSEM",
+   "at": 1794195965695
+  },
+  "0xe91caf4b5bc0a8e23d86dd598c234c7cf10e32dd": {
+   "pool": "0x9e3d0770b6b48e1f06b8ca6c9b26c60d80702539",
+   "symbol": "ZERO",
+   "at": 1794195965695
+  },
+  "0x970c58c9f85beca9b2e7444e1960cc17b3ca7d15": {
+   "pool": "0x7aa0af0921a182b08a95b8ae7b990966834141b4",
+   "symbol": "MANCER",
+   "at": 1794195965695
+  },
+  "0x97596e9ad3fef8f5f3edf06c44f31da589e487ad": {
+   "pool": "0x47bbb97d2117285597c1a8730a31453183659168",
+   "symbol": "KIO",
+   "at": 1794195965695
+  },
   "0xc67dd720c6f8f9586ec16a9ae6c3d86c426ec171": {
    "pool": "0xa34df0927d1778e2e846a704a937575fe48aa1a3",
    "symbol": "GRIFT",
@@ -17194,310 +17449,10 @@
    "pool": "0x0a392677813bbd8cc1ecdbe7326465e371636276",
    "symbol": "CCC",
    "at": 1794163566557
-  },
-  "0xd33df4a9dbae9825814700f465bb09f96b5040ab": {
-   "pool": "0xffcfecc9f17ff166feb427a078788cacc56c50c7",
-   "symbol": "CHILLCAT",
-   "at": 1794163566557
-  },
-  "0x66cef844f82a461444621f1fcb53efa9ed6dee18": {
-   "pool": "0x6b102c19aab67775ab144aa160b8aad6f6f9b481",
-   "symbol": "TENOV",
-   "at": 1794163566557
-  },
-  "0x5780338205f95738fa7e111cb270fda5d12fb53b": {
-   "pool": "0xc410b0b120b22a3183b51b931da226a5329fccdf",
-   "symbol": "SPX",
-   "at": 1794163566557
-  },
-  "0x732000572a654c4defdbbd2b30c91c64096aba52": {
-   "pool": "0x83fb5120df5b8e7638aed630b79fd3597495dc83",
-   "symbol": "NOVAAI",
-   "at": 1794163566557
-  },
-  "0x4b172e81cd2d8948f5c25b45bc12679b4f86e22f": {
-   "pool": "0x56d168bd3f4b98a62c740fa9a92f83a709bb3c26",
-   "symbol": "STARSHIP",
-   "at": 1794163566557
-  },
-  "0xc96591de59a62246fff2ab15f95370d488e863fa": {
-   "pool": "0x6c761951fb52e8a17ffe273513d5893cd794edbb20b7309397432ad46c816cd1",
-   "symbol": "DOG",
-   "at": 1794155466062
-  },
-  "0x061ee80b757235729cb1d21bd19cc82db027dc89": {
-   "pool": "0xa3a3895055dbc54d0aa84790c37c62820dd502eb",
-   "symbol": "GUY",
-   "at": 1794155466062
-  },
-  "0x60fa6d6636cc006dd04bdf4b8f4b9a293b5ec7d8": {
-   "pool": "0xac896d83db3575b59ef18e7f5ff591f00d4e0cff",
-   "symbol": "PICKLE",
-   "at": 1794155466062
-  },
-  "0xfde368debe9e80f80785064a65719cec1f809dec": {
-   "pool": "0xc7b8d8176ec8bd0658e4c2b6f8e269bcd7b1b444bc2b1e68b653e128481f6454",
-   "symbol": "PEPONS",
-   "at": 1794155466062
-  },
-  "0x41b5cb9acf172009a361acba82bdcaf12d554371": {
-   "pool": "0x78ca85dd5c2c1e73f098b33ea5672965c31ecf25",
-   "symbol": "DOG",
-   "at": 1794155466062
-  },
-  "0x6b3a8a50f2b7717ba7d0db5298124e16151a9a17": {
-   "pool": "0x0e0390b956b0c828b35a99759a1a29e19bddf224",
-   "symbol": "JUGGERNAUT",
-   "at": 1794155466062
-  },
-  "0x3c00903687fa63f1becc9834be02afee4fe66112": {
-   "pool": "0xb9d492f6d9927466547061cb87516aa2fd973ccb",
-   "symbol": "FULL",
-   "at": 1794155466062
-  },
-  "0xfba812101803828c91a6f80b3a85eb46af4cbf31": {
-   "pool": "0x9463cff680dc69a681478ec73617f5f859fc74f7",
-   "symbol": "BONER",
-   "at": 1794155466062
-  },
-  "0x7db1dde7e6de95c1b42c3f77bdf6146c0280353c": {
-   "pool": "0x0757883f57db0c7f8045c77dedbec22b5b9168e7",
-   "symbol": "WOFL",
-   "at": 1794155466062
-  },
-  "0x243f2e2cdbc45161277e168a229c0d41f81b0b8f": {
-   "pool": "0x77c019fd8ae1d9dfb6da8a0fc4512bd05d9a756791f3553b108d2228838bc5bd",
-   "symbol": "SI",
-   "at": 1794155466062
-  },
-  "0xee03f50c7654c35a51b02a80890d625a1d317e34": {
-   "pool": "0xcbdee9b86119db44b86dfc15e1554504a81aba0b",
-   "symbol": "JUGGERNAUT",
-   "at": 1794155466062
-  },
-  "0xfc0dda7df2d57321db308ba7c751e9606d4fc71c": {
-   "pool": "0xd5d1c286eb982c8bc8ea826a39d327646d213db7",
-   "symbol": "PICKLE",
-   "at": 1794155466062
-  },
-  "0x0bbfbd4d8c05738643ecba7757b9d607dbd8986d": {
-   "pool": "0x2354be944a44700310e711e69be44ba588cfa16f",
-   "symbol": "ORBIO",
-   "at": 1794155466062
-  },
-  "0x603d9b976b06d94f1376cc8fb913a65a35c55f76": {
-   "pool": "0x079e1712696fc705ef74d9a72eaa8225316aacc8",
-   "symbol": "GLDSTN",
-   "at": 1794155466062
-  },
-  "0x6f4fc8d1bebe1cbf28fb6fefd1d4428c283c99d5": {
-   "pool": "0x795b8fabc4b7dde55c6313b894523bf2034c282f56da29e4d4e3151caf0f2b33",
-   "symbol": "LORD",
-   "at": 1794155466062
-  },
-  "0x02c3c77f724c699742218d38081c73286ecd0150": {
-   "pool": "0xe591443136ebb18214e9e4ef7aa1e7170823f65079af63c3d9fb0239ea709835",
-   "symbol": "USDCash",
-   "at": 1794155466062
-  },
-  "0xaf941235d026ce00e5ae1b94b007783047a73011": {
-   "pool": "0x9c578769d8e0365905e5d042476efe9600e150c1",
-   "symbol": "DUCK",
-   "at": 1794155466062
-  },
-  "0x6785e1738f04eab71fc0cb8d2be5d727bc32bf91": {
-   "pool": "0x09da18b19501f1016dbf9151e6b8b72d1810ba74",
-   "symbol": "Maisy",
-   "at": 1794155466062
-  },
-  "0xd2a577e92438fd0c1f2485f4fb91b9f866eb1e6c": {
-   "pool": "0x413e39d292f8b2616dbf1ff7ea4e16bbc33f3389",
-   "symbol": "PEPONS",
-   "at": 1794155466062
-  },
-  "0xe467ca1ef5c266e436cc34a8c771279cd4b554a7": {
-   "pool": "0xfb72412e5f22d628ed60369ba19ee46843220ff2",
-   "symbol": "VLAD",
-   "at": 1794155466062
-  },
-  "0x2d3197f2c7e5c7613a3fb309285ef502c376751a": {
-   "pool": "0x77196d6f70b06e77809b87532819b164f3b2e72c",
-   "symbol": "MEWOW",
-   "at": 1794155466062
-  },
-  "0xcd68c7f692e1d2b824898556ddab50ff5e71102f": {
-   "pool": "0x46945735447d1d254ba182b4d5005534d935b805a05a15f20e68e32a1ff603a4",
-   "symbol": "musebook",
-   "at": 1794155466062
-  },
-  "0xe5b7faf4a748e332ef3d009906dd12ddfa827766": {
-   "pool": "0xe13c69ec49b6cf98ea6c520a596d266028892879",
-   "symbol": "SOCHO",
-   "at": 1794155466062
-  },
-  "0xc77c8fa9e6a9954348f2ffe115d2cf566ee5358d": {
-   "pool": "0xde78b2199c83f1bba5413410a6dbfc0b6318bd7a5ef0b91246d600c88025fc9d",
-   "symbol": "CLAUS",
-   "at": 1794155466062
-  },
-  "0x27efeae1817d90974623cb2ed455c424beffa5ab": {
-   "pool": "0x3d259f5b3c2f2106ce619453fed15046492242fb",
-   "symbol": "FRONG",
-   "at": 1794155466062
-  },
-  "0x2a68c7843957b62d51c9cb1eff073181d12af58f": {
-   "pool": "0x7e01ac6d40b25322752431c7e7fea9afe0fc39ef",
-   "symbol": "BLINK",
-   "at": 1794155466062
-  },
-  "0x23be57302b9686c4f7421b597458132b761c4b4b": {
-   "pool": "0x5317083f9344e5f8f83d5a4a32a47dab5f5d3922",
-   "symbol": "ODYSSEY",
-   "at": 1794155466062
-  },
-  "0xfdf8844ee3208fba0a1910b0ba23c3d1786b9bc6": {
-   "pool": "0xbf2d7990d19fcb75a4d28a582468832117a756e3",
-   "symbol": "MOLE",
-   "at": 1794155466062
-  },
-  "0x9759177d3f4a349916cc2dba4ada8ce4c93c5e81": {
-   "pool": "0x83bf273d59eaac5c214c4d0f2dbfb611a9554850d1806664118404fa9ee8ab96",
-   "symbol": "FTR",
-   "at": 1794155466062
-  },
-  "0x8925a9744458ce38df7a5bbf36d7bfcd39e2fe66": {
-   "pool": "0xb515b9b06e3823fe77b892531422017fe5d8e3e7",
-   "symbol": "TA",
-   "at": 1794155466062
-  },
-  "0x63b39edb63b658aaff152a40c2036815909591a0": {
-   "pool": "0x85a709228828ee347845168e9ba77d4df9506ad8",
-   "symbol": "Kierkegaard",
-   "at": 1794155466062
-  },
-  "0x079e2ee16985a66cea536f7b8812a2718e0a7aab": {
-   "pool": "0x0b062c40234f2775238047240934f867e735b359",
-   "symbol": "ZPU",
-   "at": 1794155466062
-  },
-  "0x0a4a906fab6ff22e02f2f076cec678feeb8f56fb": {
-   "pool": "0x1c81284ebfda654300a01787d60ed5163d87835b",
-   "symbol": "👉👈",
-   "at": 1794155466062
-  },
-  "0x5a3d45dc75f8138b931046f07b12ea18fcfd1691": {
-   "pool": "0x8b7f66f91b90bb7594616a0570c82ede01194a4e",
-   "symbol": "FTR",
-   "at": 1794155466062
-  },
-  "0x031ca18ef2cae7de7eb61046102c9081431610b1": {
-   "pool": "0x6ecdf511dcc80cc76f3d757f4774abd2f2607d3e",
-   "symbol": "FRONG",
-   "at": 1794155466062
-  },
-  "0xcc142366735c882f7885d3c747db99e45e13e453": {
-   "pool": "0x201b25906859a5d53fb19aa50974f5e124541d0a",
-   "symbol": "STAG",
-   "at": 1794155466062
-  },
-  "0xe6948baffb9f7470946da43285048d20e66456be": {
-   "pool": "0x3425d43d90482d3371a699e5b5c0ca8b92bf8ba0",
-   "symbol": "BrokeCat",
-   "at": 1794155466062
-  },
-  "0x54fa31a4c62687d815608644bdc778ae45f11b75": {
-   "pool": "0xeb732e05c70af07d9d9cd952a7a790d0d97beae8",
-   "symbol": "Dog",
-   "at": 1794155466062
-  },
-  "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
-   "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
-   "symbol": "GENESIS",
-   "at": 1794155466062
-  },
-  "0x535ee963aa38a6b5f6b82cfe61015931753985a1": {
-   "pool": "0x48216363344e2d60c34dc80cc95c6f8f25ff0080c11ac002a95391e522376b3f",
-   "symbol": "HUMANITY",
-   "at": 1794155466062
-  },
-  "0x1c4af5c51b7206aefdaba810ebbf383ea4c6ff5c": {
-   "pool": "0xe1c99979a9c2c5836a837bbbc13141cff7d07717",
-   "symbol": "Instagram",
-   "at": 1794155466062
-  },
-  "0x3dbf478db73aa93139d56087efb780ee5d5e3181": {
-   "pool": "0x735018ed61d487935bd07f0ad8fa87398504c93d",
-   "symbol": "HOODMENT",
-   "at": 1794155466062
-  },
-  "0xc248ce01879dc0378362722bdc6d8aa28451f664": {
-   "pool": "0xa332c28bd7abfb472b18d2fb5ecd2a15e88960ed",
-   "symbol": "QuitGPT",
-   "at": 1794155466062
-  },
-  "0x878d37072a853d6651eb4c7998288e42706686bd": {
-   "pool": "0x917577c560a15543da9369b4a57360701fa55514",
-   "symbol": "GOBLIN",
-   "at": 1794155466062
-  },
-  "0x60e85bfff9d886871fa2e75111136bc5f397d143": {
-   "pool": "0x8eec9fc7ba8efb3e7bc86aaf1b566b0db1b3add5",
-   "symbol": "SPRD",
-   "at": 1794155466062
-  },
-  "0x077ab03da9d30c8f5c4e4fe176c827f16dc0778d": {
-   "pool": "0x3a083bede6b3b4c3257db36e512fd79829df67ba586aa2ad13971159c293f7a5",
-   "symbol": "TapeFour",
-   "at": 1794155466062
-  },
-  "0x1753b758d65599036e254c48d767e7f20cc1f129": {
-   "pool": "0x60c089d6f86fd04af3cf6583c6b200a623617e2a",
-   "symbol": "Runner",
-   "at": 1794155466062
-  },
-  "0x385f4f8ae47651ce5f58f5265395a669f8281e18": {
-   "pool": "0x27ccf0a6d1ee74840220715bcca7d3b01e0d33aa30d0259b47ae1585b3f4c071",
-   "symbol": "AMC",
-   "at": 1794155466062
-  },
-  "0x32c3ce734cf52f9429c8a8ec2982e4fd714960ed": {
-   "pool": "0xb4998dcca90f1249bc4cf0df2b732bf5034f82da",
-   "symbol": "WALLET",
-   "at": 1794155466062
-  },
-  "0x19ccff8e14384d2ccc43ce453034492cceda4ce2": {
-   "pool": "0xbd1022a99a7a1c365809e691746cd1550e058176",
-   "symbol": "OG",
-   "at": 1794155466062
-  },
-  "0xba1bb4d7e360c066cb1c7fab49790cc9c1717128": {
-   "pool": "0x4d3f965e9b3a2eb4af7606928f861f2ed554f0cb",
-   "symbol": "HERD",
-   "at": 1794155466062
-  },
-  "0xd286370f6013f78df2b770319f0874723ae944d9": {
-   "pool": "0x4411ad619c4d28b6b69e7d74c8745166eb654945b6c25758219234ffb702a611",
-   "symbol": "DUCAT",
-   "at": 1794155466062
-  },
-  "0x56ba67bdbafa7ef5b154cb0bd73b0aaf5e09ba11": {
-   "pool": "0xdb07364096829b279ffb4620f08bfe281f0c0b57",
-   "symbol": "DSD",
-   "at": 1794155466062
-  },
-  "0x45f24ad681e5c468330eceea03573cd5056f2142": {
-   "pool": "0x2d620c391c0e97530e2f3c9015556ccf81669727",
-   "symbol": "DREAM",
-   "at": 1794155466062
-  },
-  "0xdf4be6b1269d3f17b9bf64d126bd40df5d71b027": {
-   "pool": "0x5f28bdaad0a1959066c38143004183d5e477e372",
-   "symbol": "Koda",
-   "at": 1794155466062
   }
  },
- "lastDiscoverAt": 1794187867277,
- "lastSnapshotAt": 1794191468916,
+ "lastDiscoverAt": 1794195965695,
+ "lastSnapshotAt": 1794195965695,
  "holderCache": {},
  "burnCache": {},
  "lastDigestAt": 1794182465890,
@@ -17508,8 +17463,17 @@
   }
  },
  "lastDiscovery": {
-  "at": "2026-11-09T01:31:07.277Z",
-  "error": "network error for https://api.blockscout.com/4663/api/v2/tokens?type=ERC-20&sort=holders_count&order=desc&apikey=*** The operation was aborted due to timeout"
+  "at": "2026-11-09T03:46:05.695Z",
+  "listed": 500,
+  "sample": [
+   "DIH:1617241",
+   "Monkey:1206441",
+   "DOG:930782",
+   "mShare:638866",
+   "🪶:621090"
+  ],
+  "fresh": 63,
+  "withPools": 60
  },
  "quietBases": {
   "0xe934e36a439c94017b64a3fece66af12099abf50": {
@@ -17633,10 +17597,10 @@
    "pool": "0x67983c0d78cea3a8b4a5cc283feeeefd278a8ae5c6504b983b0c72bde13d1c0c",
    "symbol": "HIMS",
    "lane": "quality",
-   "at": 1794194165108,
+   "at": 1794195965695,
    "baseHigh": 28.570914582270298,
    "baseHourVol": 32186.615661139123,
-   "drawdownPct": 78.04439598914689,
+   "drawdownPct": 77.96209028789463,
    "volTrend": 0.6547656712254851,
    "score": 64,
    "type": "quiet",
@@ -17646,10 +17610,10 @@
    "pool": "0x7fb585f108d921de3b197cf7e26b5aebc96b035fec13f972b868e008ea062394",
    "symbol": "INTC",
    "lane": "quality",
-   "at": 1794194165108,
+   "at": 1794195965695,
    "baseHigh": 63.14289265252109,
    "baseHourVol": 13693.88850588676,
-   "drawdownPct": 56.50552169759096,
+   "drawdownPct": 56.47139778894497,
    "volTrend": 0.6172840537331866,
    "score": 59,
    "type": "quiet",
@@ -17838,6 +17802,9 @@
    "0x95bf99a22f949b0b49cfada724c87b4b04145934",
    "0x9f8e71a10d48000701c43009f456156e33b44be7"
   ],
+  "LORD": [
+   "0x6f4fc8d1bebe1cbf28fb6fefd1d4428c283c99d5"
+  ],
   "HARMONIC": [
    "0x8dc78e97cc70e6b71379cab359d13d12a8c0aaf8",
    "0x995c361cbd966629edbbbafe27b93c84a2032e26",
@@ -17910,11 +17877,11 @@
   "ANT": [
    "0xa0fbf6b10d2021167ed7b3d0f61c1d8305c7898e"
   ],
-  "IF": [
-   "0x7f997d0d842748a3187ce6bc770097829735b5f0"
-  ],
   "PLAYR": [
    "0xbcab72f268ce76ac32840f25cf7d433338a26bfd"
+  ],
+  "IF": [
+   "0x7f997d0d842748a3187ce6bc770097829735b5f0"
   ],
   "AGE": [
    "0xa6b2bc6e9de767c7734eb9e15cda1ae371a079e7"
@@ -18074,9 +18041,6 @@
   "TIKTOK": [
    "0xf6ba88de6bdeb13ad28aa06241037b63740903f9",
    "0x10a6144f905c2754d615913dd1f5c105b8e0c946"
-  ],
-  "LORD": [
-   "0x6f4fc8d1bebe1cbf28fb6fefd1d4428c283c99d5"
   ],
   "WAGMI": [
    "0xe3a7d490324b8a3da0f71a63bfa08ae9e57b1cd9"
@@ -18276,11 +18240,11 @@
   "TA": [
    "0x8925a9744458ce38df7a5bbf36d7bfcd39e2fe66"
   ],
-  "KIERKEGAARD": [
-   "0x63b39edb63b658aaff152a40c2036815909591a0"
-  ],
   "ZPU": [
    "0x079e2ee16985a66cea536f7b8812a2718e0a7aab"
+  ],
+  "KIERKEGAARD": [
+   "0x63b39edb63b658aaff152a40c2036815909591a0"
   ],
   "👉👈": [
    "0x0a4a906fab6ff22e02f2f076cec678feeb8f56fb"
@@ -18605,11 +18569,11 @@
   "DUCAT": [
    "0xd286370f6013f78df2b770319f0874723ae944d9"
   ],
-  "NET": [
-   "0xb0fcdd27fe6faae2d6f372567b5de33737815928"
-  ],
   "DSD": [
    "0x56ba67bdbafa7ef5b154cb0bd73b0aaf5e09ba11"
+  ],
+  "NET": [
+   "0xb0fcdd27fe6faae2d6f372567b5de33737815928"
   ],
   "DREAM": [
    "0x45f24ad681e5c468330eceea03573cd5056f2142",
@@ -18867,10 +18831,10 @@
    }
   },
   "0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a": {
-   "at": 1794187867277,
+   "at": 1794195965695,
    "info": {
-    "holders": 41885,
-    "top10PctRaw": 82.9315,
+    "holders": 41893,
+    "top10PctRaw": 82.8673,
     "twitter": "RobinhoodApp",
     "telegram": null,
     "websites": [
@@ -18878,27 +18842,6 @@
     ],
     "discord": null,
     "gtScore": 47.23809523809524,
-    "isHoneypot": "unknown",
-    "devAddress": null,
-    "devPct": null,
-    "categories": [
-     "Robinhood Tokenized Securities"
-    ],
-    "description": ""
-   }
-  },
-  "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3": {
-   "at": 1794187867277,
-   "info": {
-    "holders": 74550,
-    "top10PctRaw": 67.1719,
-    "twitter": "RobinhoodApp",
-    "telegram": null,
-    "websites": [
-     "https://robinhood.com/us/en"
-    ],
-    "discord": null,
-    "gtScore": 50.28571428571429,
     "isHoneypot": "unknown",
     "devAddress": null,
     "devPct": null,
@@ -19065,65 +19008,6 @@
     "description": ""
    }
   },
-  "0xc9a981fee1f9dec688bb123ccdecc63d0debfc4e": {
-   "at": 1794187867277,
-   "info": {
-    "holders": 41486,
-    "top10PctRaw": 76.9413,
-    "twitter": "RobinhoodCrypto",
-    "telegram": null,
-    "websites": [
-     "https://docs.robinhood.com/rhj"
-    ],
-    "discord": null,
-    "gtScore": 60.952380952380956,
-    "isHoneypot": "unknown",
-    "devAddress": null,
-    "devPct": null,
-    "categories": [],
-    "description": "Robinhood GLD is a tokenized representation of SPDR Gold Shares (GLD) common stock, issued on Robinhood Chain, Robinhood's own blockchain built to bring tokenized real-world assets on-chain. Each token is designed to track the price of the underlying GLD share, giving holders on-chain price exposure to SPDR Gold Shares's stock. The token is freely transferable and composable across the Robinhood Chain ecosystem. It's part of Robinhood's broader initiative to expand access to tokenized U.S. equities via blockchain technology, alongside a wider lineup of tokenized stock tokens launching on the s"
-   }
-  },
-  "0x1139d423c1706bdead91f03507f521635591ed92": {
-   "at": 1794187867277,
-   "info": {
-    "holders": 843,
-    "top10PctRaw": 41.7011,
-    "twitter": "CannaCatMeme",
-    "telegram": "cannacatmeme",
-    "websites": [
-     "https://cannacat.fun"
-    ],
-    "discord": null,
-    "gtScore": 44.19047619047619,
-    "isHoneypot": false,
-    "devAddress": "0x373bee4f38554fb4f2ecbd47bd03d80a48806643",
-    "devPct": 4.13,
-    "categories": [],
-    "description": "$CANNACAT is the token powering the CannaCat ecosystem connecting meme culture, the 420 CannaCats NFT collection, community rewards, staking, and The Vault.\n\nBuilt on Robinhood Chain, $CANNACAT is designed around a simple idea: build together, reward participation, and grow the Collective.\n\n🐈‍⬛ One Cat. One Collective. One Flywheel.\n\n\nCannaCoin TM. since 2014"
-   }
-  },
-  "0xd5f3879160bc7c32ebb4dc785f8a4f505888de68": {
-   "at": 1794187867277,
-   "info": {
-    "holders": 29157,
-    "top10PctRaw": 70.7061,
-    "twitter": "RobinhoodApp",
-    "telegram": null,
-    "websites": [
-     "https://robinhood.com/us/en"
-    ],
-    "discord": null,
-    "gtScore": 58.41269841269842,
-    "isHoneypot": "unknown",
-    "devAddress": null,
-    "devPct": null,
-    "categories": [
-     "Robinhood Tokenized Securities"
-    ],
-    "description": ""
-   }
-  },
   "0xc72b96e0e48ecd4dc75e1e45396e26300bc39681": {
    "at": 1794189666890,
    "info": {
@@ -19227,27 +19111,6 @@
      "Robinhood Tokenized Securities"
     ],
     "description": "Robinhood SKYHY is a tokenized representation of SK Hynix (SKYHY) common stock, issued on Robinhood Chain, Robinhood's own blockchain built to bring tokenized real-world assets on-chain. Each token is designed to track the price of the underlying SKYHY share, giving holders on-chain price exposure to SK Hynix's stock. The token is freely transferable and composable across the Robinhood Chain ecosystem. It's part of Robinhood's broader initiative to expand access to tokenized U.S. equities via blockchain technology, alongside a wider lineup of tokenized stock tokens launching on the same networ"
-   }
-  },
-  "0x5e81213613b6b86eab4c6c50d718d34359459786": {
-   "at": 1794186966227,
-   "info": {
-    "holders": 13208,
-    "top10PctRaw": 75.6552,
-    "twitter": "RobinhoodApp",
-    "telegram": null,
-    "websites": [
-     "https://robinhood.com/us/en"
-    ],
-    "discord": null,
-    "gtScore": 44.800000000000004,
-    "isHoneypot": "unknown",
-    "devAddress": null,
-    "devPct": null,
-    "categories": [
-     "Robinhood Tokenized Securities"
-    ],
-    "description": ""
    }
   },
   "0xe93237c50d904957cf27e7b1133b510c669c2e74": {
@@ -24768,7 +24631,7 @@
    ]
   },
   "0xb8d9b6b622bb03dd06d95790553f327710a73d85d845a59fa9e652638ca96ae6": {
-   "at": 1794191468916,
+   "at": 1794195965695,
    "c": [
     [
      1786492800000,
@@ -25485,15 +25348,15 @@
     [
      1794182400000,
      158.86048222179198,
-     162.337922704413,
+     162.56509773552096,
      158.147094888268,
-     161.876581697838,
-     46923.20618901834
+     162.034615098944,
+     50124.725585844484
     ]
    ]
   },
   "0x6707aeac7d0e519b083219d27bb427364363183a": {
-   "at": 1794191468916,
+   "at": 1794195965695,
    "c": [
     [
      1786492800000,
@@ -26212,2630 +26075,8 @@
      131.06045545150496,
      133.732867834693,
      130.561805477039,
-     133.319132637211,
-     58607.609642731506
-    ]
-   ]
-  },
-  "0x6d0f67069596c7ef9d1ce6981c1b6dbcd9a91b0c5393aebe9dd07c35e412df30": {
-   "at": 1794191468916,
-   "c": [
-    [
-     1790726400000,
-     342.263751352216,
-     351.016832432286,
-     342.263751352216,
-     351.016832432286,
-     0.14966690253342718
-    ],
-    [
-     1790812800000,
-     351.016832432286,
-     352.80151114980396,
-     335.631668283791,
-     339.240016747893,
-     318849.9638042202
-    ],
-    [
-     1790899200000,
-     339.240016747893,
-     346.186963392343,
-     336.50374287316794,
-     343.578685309509,
-     587594.96793969
-    ],
-    [
-     1790985600000,
-     343.578685309509,
-     348.320583096298,
-     339.438038214371,
-     344.12258616061393,
-     165024.61230553142
-    ],
-    [
-     1791072000000,
-     344.12258616061393,
-     350.408084382324,
-     341.48705457915895,
-     343.503406663102,
-     108916.37053317513
-    ],
-    [
-     1791158400000,
-     343.503406663102,
-     348.13920428622396,
-     339.069139940676,
-     341.91056388969093,
-     589741.8765989954
-    ],
-    [
-     1791244800000,
-     341.91056388969093,
-     351.37512950569993,
-     340.37957771518495,
-     348.004838955918,
-     579185.065250129
-    ],
-    [
-     1791331200000,
-     348.004838955918,
-     353.72914188792697,
-     342.239506321215,
-     351.554118147921,
-     649859.6108211516
-    ],
-    [
-     1791417600000,
-     351.554118147921,
-     356.69249296263797,
-     344.347607606481,
-     349.14592692106396,
-     1180369.8822703443
-    ],
-    [
-     1791504000000,
-     349.14592692106396,
-     355.494865314624,
-     345.850830053315,
-     347.713238987274,
-     585453.3765146945
-    ],
-    [
-     1791590400000,
-     347.713238987274,
-     356.55712492827496,
-     347.390293305428,
-     356.43755131563495,
-     91082.05463140478
-    ],
-    [
-     1791676800000,
-     356.43755131563495,
-     357.09085231984,
-     348.199376798269,
-     352.58986372212996,
-     88552.54687686691
-    ],
-    [
-     1791763200000,
-     352.58986372212996,
-     359.80735955142694,
-     346.247882541047,
-     353.48339428076895,
-     847995.6466580676
-    ],
-    [
-     1791849600000,
-     353.48339428076895,
-     359.942993263901,
-     347.084809105928,
-     354.65293183979196,
-     1200049.8466766716
-    ],
-    [
-     1791936000000,
-     354.65293183979196,
-     361.670156998761,
-     344.34762877597797,
-     344.576896716616,
-     768171.5143105788
-    ],
-    [
-     1792022400000,
-     344.576896716616,
-     356.49702294380495,
-     336.45085580867794,
-     347.995171725876,
-     979135.4145306073
-    ],
-    [
-     1792108800000,
-     347.995171725876,
-     355.814367515783,
-     335.57858385643596,
-     339.43217054424395,
-     837108.6178932111
-    ],
-    [
-     1792195200000,
-     339.43217054424395,
-     346.453348700811,
-     334.72417916336997,
-     343.084241830782,
-     155024.5400887411
-    ],
-    [
-     1792281600000,
-     343.084241830782,
-     348.972969540852,
-     332.343942937082,
-     343.22818473219996,
-     222799.95965705675
-    ],
-    [
-     1792368000000,
-     343.22818473219996,
-     349.91035090560797,
-     337.459373355136,
-     344.884860289117,
-     679372.6922831633
-    ],
-    [
-     1792454400000,
-     344.884860289117,
-     350.114561182645,
-     336.41332396360394,
-     339.09399983463,
-     885954.9628689565
-    ],
-    [
-     1792540800000,
-     339.09399983463,
-     346.96448100504597,
-     329.03291883579897,
-     333.673502081057,
-     989202.7270560352
-    ],
-    [
-     1792627200000,
-     333.673502081057,
-     334.997123813619,
-     321.378777099804,
-     322.12467065277997,
-     704363.4489753314
-    ],
-    [
-     1792713600000,
-     322.12467065277997,
-     331.087078399475,
-     314.81308315340397,
-     321.325762695569,
-     731313.449811032
-    ],
-    [
-     1792800000000,
-     321.325762695569,
-     326.72694889849197,
-     317.01910205837595,
-     320.861705069938,
-     439872.71882707934
-    ],
-    [
-     1792886400000,
-     320.861705069938,
-     326.470677669328,
-     315.24615903297996,
-     321.040577757221,
-     330790.766775679
-    ],
-    [
-     1792972800000,
-     321.040577757221,
-     327.191759525693,
-     314.89771264630696,
-     318.07919710671894,
-     873492.2458796896
-    ],
-    [
-     1793059200000,
-     318.07919710671894,
-     326.00112982894194,
-     312.985386245627,
-     324.82159746902,
-     1330889.2826298813
-    ],
-    [
-     1793145600000,
-     324.82159746902,
-     330.780309941981,
-     286.959120173579,
-     294.90181349140295,
-     3896539.6197265633
-    ],
-    [
-     1793232000000,
-     294.90181349140295,
-     354.80209593698595,
-     277.34376337389,
-     282.148673933275,
-     2901385.8000900196
-    ],
-    [
-     1793318400000,
-     282.148673933275,
-     287.629089260121,
-     276.21934252799196,
-     278.663397463812,
-     1558942.4204156513
-    ],
-    [
-     1793404800000,
-     278.663397463812,
-     287.10322128545096,
-     277.739156368516,
-     283.154654640144,
-     270227.537842834
-    ],
-    [
-     1793491200000,
-     283.154654640144,
-     288.453630290976,
-     279.817014091303,
-     283.384025682624,
-     390367.1639728123
-    ],
-    [
-     1793577600000,
-     283.384025682624,
-     288.029584154508,
-     278.356958393472,
-     278.94757929542794,
-     1071848.1820933088
-    ],
-    [
-     1793664000000,
-     278.94757929542794,
-     283.65391930154095,
-     275.34068379962696,
-     280.36687693188,
-     1278224.460366538
-    ],
-    [
-     1793750400000,
-     280.36687693188,
-     299.057275232517,
-     269.76762788993597,
-     291.582345777897,
-     1697173.1205542318
-    ],
-    [
-     1793836800000,
-     291.582345777897,
-     295.922674436933,
-     277.390376268673,
-     278.371353228981,
-     2141277.1829869617
-    ],
-    [
-     1793923200000,
-     278.371353228981,
-     292.26330856475596,
-     277.22607611200596,
-     285.94531543956896,
-     1343536.9694925076
-    ],
-    [
-     1794009600000,
-     285.94531543956896,
-     291.527048020076,
-     282.585417524513,
-     283.360936468402,
-     365122.4054502885
-    ],
-    [
-     1794096000000,
-     283.360936468402,
-     289.502095323306,
-     277.38198696883796,
-     282.890430834308,
-     521789.6374622094
-    ],
-    [
-     1794182400000,
-     282.890430834308,
-     289.003961281181,
-     279.19264307369997,
-     289.00127731638497,
-     179979.9164286579
-    ]
-   ]
-  },
-  "0x8dc0387af606d84be8e4c2fc1da7bdc6d467337e9f3e075113f968922a190847": {
-   "at": 1794191468916,
-   "c": [
-    [
-     1790553600000,
-     737.077850980549,
-     737.077850980549,
-     737.077850980549,
-     737.077850980549,
-     0.0073351018023957585
-    ],
-    [
-     1790640000000,
-     737.077850980549,
-     737.077850980549,
-     718.524765293932,
-     718.524765293932,
-     0.1823417779562376
-    ],
-    [
-     1790812800000,
-     718.524765293932,
-     734.3584933131759,
-     718.524765293932,
-     726.194520680731,
-     174217.4771357992
-    ],
-    [
-     1790899200000,
-     726.194520680731,
-     740.0350816436719,
-     724.672765767151,
-     726.825980515657,
-     427181.63410495315
-    ],
-    [
-     1790985600000,
-     726.825980515657,
-     731.279028358332,
-     726.347492281177,
-     730.4817331687959,
-     75686.66569822095
-    ],
-    [
-     1791072000000,
-     730.4817331687959,
-     731.7159438281689,
-     727.54267401313,
-     729.154338774741,
-     126535.13437156535
-    ],
-    [
-     1791158400000,
-     729.154338774741,
-     746.6453399598299,
-     724.3944740264529,
-     743.6420814535439,
-     571819.6028323149
-    ],
-    [
-     1791244800000,
-     743.6420814535439,
-     752.2793625031139,
-     734.4951465620819,
-     739.1989741298189,
-     664144.5376362839
-    ],
-    [
-     1791331200000,
-     739.1989741298189,
-     743.741228914036,
-     718.475913109167,
-     724.037079803093,
-     572469.7920007625
-    ],
-    [
-     1791417600000,
-     724.037079803093,
-     733.766244415839,
-     711.0705976542059,
-     720.1058802494429,
-     1030790.3502850723
-    ],
-    [
-     1791504000000,
-     720.1058802494429,
-     727.996727398436,
-     716.4572998632229,
-     718.7613638311599,
-     768032.0861822539
-    ],
-    [
-     1791590400000,
-     718.7613638311599,
-     720.625832975573,
-     716.783149456964,
-     718.6339389438849,
-     99790.57133950734
-    ],
-    [
-     1791676800000,
-     718.6339389438849,
-     724.5509854103609,
-     714.911968867763,
-     722.9334050874579,
-     104331.04880132782
-    ],
-    [
-     1791763200000,
-     722.9334050874579,
-     752.0756885256359,
-     719.637540855651,
-     740.827786430997,
-     1602169.617313656
-    ],
-    [
-     1791849600000,
-     740.827786430997,
-     771.3972467411689,
-     732.5575169940499,
-     763.07659352973,
-     1024587.4625147498
-    ],
-    [
-     1791936000000,
-     763.07659352973,
-     770.0003714840029,
-     731.671105848636,
-     731.854113956568,
-     587758.560745962
-    ],
-    [
-     1792022400000,
-     731.854113956568,
-     747.1588972100609,
-     718.683615897671,
-     733.6251099283579,
-     773170.2725576711
-    ],
-    [
-     1792108800000,
-     733.6251099283579,
-     743.107200361746,
-     703.3504834419259,
-     706.292204889593,
-     613078.5001526364
-    ],
-    [
-     1792195200000,
-     706.292204889593,
-     710.733972277909,
-     699.182565286827,
-     704.402916612316,
-     247629.84380567126
-    ],
-    [
-     1792281600000,
-     704.402916612316,
-     713.234768751158,
-     697.4190265401489,
-     712.692468475448,
-     232443.79274600637
-    ],
-    [
-     1792368000000,
-     712.692468475448,
-     719.8798436012049,
-     693.690049550806,
-     705.9111742016499,
-     543155.4245983645
-    ],
-    [
-     1792454400000,
-     705.9111742016499,
-     708.835052830318,
-     681.734397000004,
-     695.363478196613,
-     621259.6592622098
-    ],
-    [
-     1792540800000,
-     695.363478196613,
-     748.409241776791,
-     688.472398584476,
-     713.402574191372,
-     2096237.4993203897
-    ],
-    [
-     1792627200000,
-     713.402574191372,
-     716.715240914792,
-     640.302196595506,
-     645.4821899841659,
-     2114162.6464324575
-    ],
-    [
-     1792713600000,
-     645.4821899841659,
-     650.933700015876,
-     634.186527069831,
-     640.1779768927489,
-     590046.4356379815
-    ],
-    [
-     1792800000000,
-     640.1779768927489,
-     644.7272324242849,
-     636.371184124639,
-     643.081627937794,
-     314691.48024947545
-    ],
-    [
-     1792886400000,
-     643.081627937794,
-     645.594098367332,
-     639.1708225874848,
-     640.9155665582359,
-     154563.86682265846
-    ],
-    [
-     1792972800000,
-     640.9155665582359,
-     662.296596212192,
-     615.89783928585,
-     632.334653458846,
-     3044896.732391223
-    ],
-    [
-     1793059200000,
-     632.334653458846,
-     635.432055004733,
-     617.989445584201,
-     619.878890847133,
-     1023470.4702222293
-    ],
-    [
-     1793145600000,
-     619.878890847133,
-     624.560162759053,
-     608.263103964984,
-     616.131825933594,
-     816176.7736963937
-    ],
-    [
-     1793232000000,
-     616.131825933594,
-     781.190146984029,
-     613.564278595577,
-     624.002581016955,
-     983313.8106679523
-    ],
-    [
-     1793318400000,
-     624.002581016955,
-     627.675714578526,
-     610.181666041113,
-     613.85628292881,
-     871428.2862564581
-    ],
-    [
-     1793404800000,
-     613.85628292881,
-     615.689082039622,
-     611.5192763895959,
-     614.2260375261889,
-     123149.73112623957
-    ],
-    [
-     1793491200000,
-     614.2260375261889,
-     616.4124778947769,
-     612.862985921949,
-     615.883692600306,
-     177364.97024685703
-    ],
-    [
-     1793577600000,
-     615.883692600306,
-     621.2997684527429,
-     606.2335072108839,
-     609.3778661429469,
-     841281.6524833925
-    ],
-    [
-     1793664000000,
-     609.3778661429469,
-     626.870016923362,
-     604.1716053735739,
-     623.9033045623439,
-     620974.8634766424
-    ],
-    [
-     1793750400000,
-     623.9033045623439,
-     642.381136747105,
-     605.1638817906539,
-     631.956154367314,
-     1503602.437996117
-    ],
-    [
-     1793836800000,
-     631.956154367314,
-     640.5597273916709,
-     583.9177983798409,
-     595.8072251637859,
-     1634384.5414205035
-    ],
-    [
-     1793923200000,
-     595.8072251637859,
-     625.2166916869419,
-     595.8072251637859,
-     612.5171928877099,
-     1114701.597538371
-    ],
-    [
-     1794009600000,
-     612.5171928877099,
-     614.146188360091,
-     609.5699559267659,
-     611.889726261293,
-     1154141.0635840115
-    ],
-    [
-     1794096000000,
-     611.889726261293,
-     616.892590792032,
-     599.5069654860879,
-     610.489427556734,
-     653190.642908412
-    ],
-    [
-     1794182400000,
-     610.489427556734,
-     616.7542656706839,
-     608.591169314182,
-     616.0666859252319,
-     143630.58986672238
-    ]
-   ]
-  },
-  "0x8493982435e4273028008cd181c84c0d6a548f96792fdb5acddcbb6a8c82d305": {
-   "at": 1794191468916,
-   "c": [
-    [
-     1789603200000,
-     709.128800298104,
-     720.3463375112909,
-     709.128800298104,
-     716.646131891293,
-     383428.6773136493
-    ],
-    [
-     1789689600000,
-     716.646131891293,
-     733.770792745563,
-     711.999049458673,
-     723.51182293428,
-     923297.3484549529
-    ],
-    [
-     1789776000000,
-     723.51182293428,
-     725.747910519764,
-     717.9601795816329,
-     722.558536308894,
-     235401.38148428313
-    ],
-    [
-     1789862400000,
-     722.558536308894,
-     726.470615428197,
-     717.627434120281,
-     723.007967124321,
-     219808.19197830654
-    ],
-    [
-     1789948800000,
-     723.007967124321,
-     746.006594569414,
-     720.9727776838499,
-     743.3795084139559,
-     459106.84784678655
-    ],
-    [
-     1790035200000,
-     743.3795084139559,
-     750.9498061132829,
-     738.0072229447759,
-     748.662776751224,
-     301336.1553639238
-    ],
-    [
-     1790121600000,
-     748.662776751224,
-     751.2246447181969,
-     734.491527241437,
-     742.909018172125,
-     241932.909641668
-    ],
-    [
-     1790208000000,
-     742.909018172125,
-     744.9240386261939,
-     730.561869439689,
-     744.897547603865,
-     354660.4712686613
-    ],
-    [
-     1790294400000,
-     744.897547603865,
-     750.691551649441,
-     738.6151448063409,
-     749.95611192012,
-     265531.10313754936
-    ],
-    [
-     1790380800000,
-     749.95611192012,
-     749.95611192012,
-     740.9759245406249,
-     744.0885418198909,
-     130819.81341364366
-    ],
-    [
-     1790467200000,
-     744.0885418198909,
-     748.8394079469749,
-     739.781855444664,
-     742.9975391948739,
-     113610.27789791925
-    ],
-    [
-     1790553600000,
-     742.9975391948739,
-     747.6642887774469,
-     731.4466438848119,
-     737.313018787274,
-     440926.2351174571
-    ],
-    [
-     1790640000000,
-     737.313018787274,
-     742.7726814939489,
-     731.830060379634,
-     737.0156284018559,
-     319760.9628592306
-    ],
-    [
-     1790726400000,
-     737.0156284018559,
-     748.278545269364,
-     732.79303996739,
-     739.5321179309199,
-     557338.3079584703
-    ],
-    [
-     1790812800000,
-     739.5321179309199,
-     752.9818372192109,
-     734.8591061718789,
-     742.7427945616099,
-     565583.5981032363
-    ],
-    [
-     1790899200000,
-     742.7427945616099,
-     756.677530256595,
-     739.0033096287809,
-     748.828571957573,
-     298702.51617744763
-    ],
-    [
-     1790985600000,
-     748.828571957573,
-     754.135027927793,
-     747.2995826994429,
-     749.630518443659,
-     104081.8532581952
-    ],
-    [
-     1791072000000,
-     749.630518443659,
-     755.544968686477,
-     748.4398569521329,
-     753.927076247721,
-     226499.3820741791
-    ],
-    [
-     1791158400000,
-     753.927076247721,
-     760.003495936168,
-     745.4596068945019,
-     756.3054343060529,
-     720969.5858437101
-    ],
-    [
-     1791244800000,
-     756.3054343060529,
-     764.2828869646829,
-     752.560170966633,
-     759.9950424636219,
-     753253.217173847
-    ],
-    [
-     1791331200000,
-     759.9950424636219,
-     772.2656186717539,
-     748.568856033127,
-     757.167387055687,
-     581766.4016482764
-    ],
-    [
-     1791417600000,
-     757.167387055687,
-     762.217664820864,
-     742.4765955946409,
-     746.320583148118,
-     1151252.7900065407
-    ],
-    [
-     1791504000000,
-     746.320583148118,
-     756.351264133315,
-     745.978530248569,
-     751.5504994982319,
-     902866.1192617306
-    ],
-    [
-     1791590400000,
-     751.5504994982319,
-     756.327521387241,
-     747.630255910385,
-     751.7576170291359,
-     305761.5920687852
-    ],
-    [
-     1791676800000,
-     751.7576170291359,
-     756.705912228943,
-     746.7992296375189,
-     754.8942847851949,
-     289094.8999066074
-    ],
-    [
-     1791763200000,
-     754.8942847851949,
-     758.467607055097,
-     742.511041734384,
-     742.511041734384,
-     762037.844105865
-    ],
-    [
-     1791849600000,
-     742.511041734384,
-     749.242813160335,
-     738.2050789172249,
-     744.1710779535549,
-     1130214.2209927323
-    ],
-    [
-     1791936000000,
-     744.1710779535549,
-     749.2735349801989,
-     722.8731136350879,
-     722.884377431491,
-     1317070.1762279153
-    ],
-    [
-     1792022400000,
-     722.884377431491,
-     739.2881170236119,
-     715.0565604452989,
-     724.4372570926189,
-     1683697.2915246221
-    ],
-    [
-     1792108800000,
-     724.4372570926189,
-     733.0463517915849,
-     706.2270879039849,
-     709.434623575895,
-     1019617.6048045619
-    ],
-    [
-     1792195200000,
-     709.434623575895,
-     714.3602871759219,
-     698.277427315609,
-     707.7802711595389,
-     351651.42618179845
-    ],
-    [
-     1792281600000,
-     707.7802711595389,
-     717.5917271176119,
-     702.535635867817,
-     715.4232329259099,
-     566935.4357355325
-    ],
-    [
-     1792368000000,
-     715.4232329259099,
-     726.2475659335989,
-     713.8331012058339,
-     722.1497526711679,
-     866967.4017896648
-    ],
-    [
-     1792454400000,
-     722.1497526711679,
-     725.435898103285,
-     711.169608797008,
-     723.563150347809,
-     1358951.2369364107
-    ],
-    [
-     1792540800000,
-     723.563150347809,
-     730.6720435216209,
-     718.358752567857,
-     721.0595263006089,
-     2239876.6222643526
-    ],
-    [
-     1792627200000,
-     721.0595263006089,
-     724.1126005202149,
-     700.431982090316,
-     704.4443527291139,
-     1233728.2971367517
-    ],
-    [
-     1792713600000,
-     704.4443527291139,
-     712.0646818012659,
-     701.163515352516,
-     705.1662129283329,
-     1658119.7865355432
-    ],
-    [
-     1792800000000,
-     705.1662129283329,
-     709.250816832055,
-     699.9638601048499,
-     708.1764836219419,
-     958925.5461312844
-    ],
-    [
-     1792886400000,
-     708.1764836219419,
-     711.9626606065339,
-     700.311424705024,
-     705.1908581136389,
-     3287106.79739084
-    ],
-    [
-     1792972800000,
-     705.1908581136389,
-     719.0308958427349,
-     698.393374233129,
-     718.1722399516319,
-     3086098.729584731
-    ],
-    [
-     1793059200000,
-     718.1722399516319,
-     725.570751404125,
-     706.2605907693289,
-     721.91904723486,
-     1845101.8860379485
-    ],
-    [
-     1793145600000,
-     721.91904723486,
-     729.4344796405089,
-     715.6854569800619,
-     718.191445479579,
-     2889842.0832914254
-    ],
-    [
-     1793232000000,
-     718.191445479579,
-     850.31695542592,
-     702.758568246499,
-     709.0701650740299,
-     4106242.31158163
-    ],
-    [
-     1793318400000,
-     709.0701650740299,
-     712.397555961838,
-     682.497162727784,
-     696.0388903279069,
-     2714549.7364425315
-    ],
-    [
-     1793404800000,
-     696.0388903279069,
-     698.0692392937459,
-     689.840746678516,
-     694.409068343756,
-     521914.4175292451
-    ],
-    [
-     1793491200000,
-     694.409068343756,
-     700.2535499261559,
-     690.349575889682,
-     695.8261837005559,
-     977061.9882888126
-    ],
-    [
-     1793577600000,
-     695.8261837005559,
-     700.4168450304719,
-     680.2479261304879,
-     681.2106697815349,
-     2807169.397445882
-    ],
-    [
-     1793664000000,
-     681.2106697815349,
-     693.324292169041,
-     677.5878074691179,
-     687.666680160069,
-     2883595.451033176
-    ],
-    [
-     1793750400000,
-     687.666680160069,
-     706.472311427984,
-     667.7308467389879,
-     692.2221371401979,
-     2337091.947067015
-    ],
-    [
-     1793836800000,
-     692.2221371401979,
-     695.0683345028809,
-     640.172426774982,
-     645.636678072411,
-     3296159.0168691715
-    ],
-    [
-     1793923200000,
-     645.636678072411,
-     667.459007630594,
-     643.177065838782,
-     655.621241607225,
-     2043801.4477360994
-    ],
-    [
-     1794009600000,
-     655.621241607225,
-     662.080491183522,
-     653.149230806048,
-     656.8777142179069,
-     346892.4939002427
-    ],
-    [
-     1794096000000,
-     656.8777142179069,
-     662.669509893688,
-     643.008573730871,
-     655.2666209971279,
-     1077351.5937886247
-    ],
-    [
-     1794182400000,
-     655.2666209971279,
-     664.113020091001,
-     652.7274192992139,
-     664.113020091001,
-     418660.00600877905
-    ]
-   ]
-  },
-  "0x68beff3b4270ffbbb78a48d7670648909b9de6736456b0f450fee242e1d10a8b": {
-   "at": 1794191468916,
-   "c": [
-    [
-     1786492800000,
-     272.184199503215,
-     274.968357697052,
-     266.37153143281097,
-     267.406030734605,
-     140729.94357926573
-    ],
-    [
-     1786579200000,
-     267.406030734605,
-     270.81840113785995,
-     264.785205608179,
-     265.417093476566,
-     113416.54253508155
-    ],
-    [
-     1786665600000,
-     265.417093476566,
-     267.60892227069996,
-     262.268302111352,
-     264.309122362543,
-     132856.97367016412
-    ],
-    [
-     1786752000000,
-     264.309122362543,
-     265.06467999169496,
-     262.602558687596,
-     263.225011267092,
-     18895.17705877584
-    ],
-    [
-     1786838400000,
-     263.225011267092,
-     265.770832820884,
-     262.47648230142096,
-     263.774119198105,
-     27619.603650813737
-    ],
-    [
-     1786924800000,
-     263.774119198105,
-     268.17598199531596,
-     258.656659679597,
-     260.06644059473496,
-     142942.08458450346
-    ],
-    [
-     1787011200000,
-     260.06644059473496,
-     262.79605876866395,
-     257.576631941186,
-     259.282203827343,
-     156570.35647736304
-    ],
-    [
-     1787097600000,
-     259.282203827343,
-     274.935902359259,
-     258.597239029751,
-     267.74409855691,
-     115884.64464089692
-    ],
-    [
-     1787184000000,
-     267.74409855691,
-     270.555587299285,
-     259.17783497982697,
-     261.76100859549297,
-     130557.94048747487
-    ],
-    [
-     1787270400000,
-     261.76100859549297,
-     264.394227378417,
-     255.46570604085701,
-     260.460189559891,
-     128085.65780974628
-    ],
-    [
-     1787356800000,
-     260.460189559891,
-     270.17130768822096,
-     256.043911813742,
-     260.307835520081,
-     36062.56238078514
-    ],
-    [
-     1787443200000,
-     260.307835520081,
-     263.637851297519,
-     256.02453126070793,
-     259.92155502008103,
-     53753.42116729039
-    ],
-    [
-     1787529600000,
-     259.92155502008103,
-     264.758188444481,
-     256.94823794598796,
-     261.29394353427,
-     246274.05050610297
-    ],
-    [
-     1787616000000,
-     261.29394353427,
-     266.85957888939697,
-     259.31468610848,
-     261.673668550161,
-     96288.27064338027
-    ],
-    [
-     1787702400000,
-     261.673668550161,
-     263.42469845623395,
-     245.532538030567,
-     261.170104334915,
-     226345.1534816053
-    ],
-    [
-     1787788800000,
-     261.170104334915,
-     267.00094843066796,
-     255.01479546377297,
-     255.96000613222196,
-     266030.4653318748
-    ],
-    [
-     1787875200000,
-     255.96000613222196,
-     274.453180012724,
-     255.028534918662,
-     266.08980841170495,
-     885688.9308291966
-    ],
-    [
-     1787961600000,
-     266.08980841170495,
-     268.86802157038596,
-     263.275559130785,
-     265.44766769934796,
-     1256225.8729602501
-    ],
-    [
-     1788048000000,
-     265.44766769934796,
-     276.12180114609595,
-     259.931936580504,
-     265.1075330327769,
-     609007.7305223333
-    ],
-    [
-     1788134400000,
-     265.1075330327769,
-     277.259555082614,
-     257.10232911218395,
-     260.973229462365,
-     1006726.1631377508
-    ],
-    [
-     1788220800000,
-     260.973229462365,
-     263.894518851446,
-     252.7476109552,
-     256.211725802456,
-     1645898.1689475635
-    ],
-    [
-     1788307200000,
-     256.211725802456,
-     257.08982750012797,
-     242.96860700208398,
-     255.12254243315198,
-     1032108.0381067502
-    ],
-    [
-     1788393600000,
-     255.12254243315198,
-     261.121755498185,
-     252.780276131956,
-     259.82663214936196,
-     840745.5575496199
-    ],
-    [
-     1788480000000,
-     259.82663214936196,
-     263.810624807595,
-     253.62455349440597,
-     257.41099578511296,
-     2597069.909807538
-    ],
-    [
-     1788566400000,
-     257.41099578511296,
-     263.23661303414497,
-     255.920882156188,
-     260.968214673966,
-     1047449.0688726589
-    ],
-    [
-     1788652800000,
-     260.968214673966,
-     261.87129974887296,
-     257.419683803699,
-     258.75992157817296,
-     811514.3253392248
-    ],
-    [
-     1788739200000,
-     258.75992157817296,
-     260.627414504155,
-     256.597884372348,
-     257.36995521635,
-     572097.8312754271
-    ],
-    [
-     1788825600000,
-     257.36995521635,
-     259.513934466923,
-     253.47729827050196,
-     257.929923172246,
-     1193287.433026853
-    ],
-    [
-     1788912000000,
-     257.929923172246,
-     258.585284505737,
-     249.538293423657,
-     251.396594961434,
-     608552.7557114194
-    ],
-    [
-     1788998400000,
-     251.396594961434,
-     254.41650930144098,
-     250.07209812628895,
-     250.73364844881294,
-     696586.984102825
-    ],
-    [
-     1789084800000,
-     250.73364844881294,
-     266.12055954628295,
-     250.67085528482397,
-     258.011932804547,
-     611103.2298657676
-    ],
-    [
-     1789171200000,
-     258.011932804547,
-     258.323599137863,
-     255.00408766561196,
-     256.001821860336,
-     952164.8948321278
-    ],
-    [
-     1789257600000,
-     256.001821860336,
-     257.946749010278,
-     252.10388247173597,
-     253.115043779297,
-     679939.4774724081
-    ],
-    [
-     1789344000000,
-     253.115043779297,
-     258.017222832781,
-     250.90131142379397,
-     254.634053617481,
-     651649.1099260411
-    ],
-    [
-     1789430400000,
-     254.634053617481,
-     261.80341040350197,
-     246.59355309288097,
-     251.74965225929597,
-     655717.2221978265
-    ],
-    [
-     1789516800000,
-     251.74965225929597,
-     253.70981303509797,
-     244.34209186223399,
-     253.28113585248798,
-     415334.27968821785
-    ],
-    [
-     1789603200000,
-     253.28113585248798,
-     259.79422862949093,
-     247.67240665219896,
-     254.12292929595895,
-     768032.939601184
-    ],
-    [
-     1789689600000,
-     254.12292929595895,
-     268.18276109399494,
-     250.408938466396,
-     254.360672678047,
-     752676.5163095262
-    ],
-    [
-     1789776000000,
-     254.360672678047,
-     268.36185899044096,
-     253.646981312863,
-     265.26321200446097,
-     375494.6188228296
-    ],
-    [
-     1789862400000,
-     265.26321200446097,
-     266.38057810204,
-     252.311529787071,
-     265.796398429361,
-     493374.2349245889
-    ],
-    [
-     1789948800000,
-     265.796398429361,
-     271.81580759464,
-     254.33415322328398,
-     259.17915857459997,
-     868455.149113455
-    ],
-    [
-     1790035200000,
-     259.17915857459997,
-     269.59682380333095,
-     253.93525966814897,
-     266.422425141751,
-     637885.8203870908
-    ],
-    [
-     1790121600000,
-     266.422425141751,
-     270.14140990788496,
-     248.04434966987802,
-     248.32829933685997,
-     619164.0872186159
-    ],
-    [
-     1790208000000,
-     248.32829933685997,
-     261.245053811309,
-     245.72051715063895,
-     249.369709607414,
-     377340.7418577874
-    ],
-    [
-     1790294400000,
-     249.369709607414,
-     264.45481994038295,
-     247.41460640229695,
-     250.10496483563,
-     499245.52136759233
-    ],
-    [
-     1790380800000,
-     250.10496483563,
-     261.21054357226,
-     249.18723885590097,
-     249.646593864366,
-     195064.89030247618
-    ],
-    [
-     1790467200000,
-     249.646593864366,
-     262.1336707957,
-     248.79767914763696,
-     249.49044245751,
-     133465.11903007305
-    ],
-    [
-     1790553600000,
-     249.49044245751,
-     260.13549932028195,
-     245.28578777013,
-     246.82205788469295,
-     426857.7555548776
-    ],
-    [
-     1790640000000,
-     246.82205788469295,
-     260.331121802427,
-     245.61205365191998,
-     247.520665108354,
-     520704.3770340614
-    ],
-    [
-     1790726400000,
-     247.520665108354,
-     255.65425182788096,
-     245.962424189899,
-     250.11869410833296,
-     504105.90905731794
-    ],
-    [
-     1790812800000,
-     250.11869410833296,
-     253.92300014394598,
-     246.159356344901,
-     248.74223734019802,
-     483207.02613419486
-    ],
-    [
-     1790899200000,
-     248.74223734019802,
-     258.4134888166,
-     247.84142230508297,
-     248.61367678254396,
-     562478.1531471955
-    ],
-    [
-     1790985600000,
-     248.61367678254396,
-     252.188068120311,
-     248.434830754863,
-     251.96407977964898,
-     218455.13548841755
-    ],
-    [
-     1791072000000,
-     251.96407977964898,
-     254.701426446407,
-     250.507395398571,
-     254.012004288183,
-     145014.5475135138
-    ],
-    [
-     1791158400000,
-     254.012004288183,
-     254.837447574922,
-     249.884787854492,
-     252.636886577996,
-     408794.9921823765
-    ],
-    [
-     1791244800000,
-     252.636886577996,
-     256.979867326729,
-     250.197634916282,
-     256.76088284230195,
-     315753.0064639294
-    ],
-    [
-     1791331200000,
-     256.76088284230195,
-     260.360049769733,
-     242.386270215386,
-     260.101573066007,
-     439048.7649193286
-    ],
-    [
-     1791417600000,
-     260.101573066007,
-     260.80188084565697,
-     243.31094396849497,
-     251.60664572738497,
-     428910.7838703788
-    ],
-    [
-     1791504000000,
-     251.60664572738497,
-     262.83457929847594,
-     251.02418535341198,
-     252.271299986885,
-     365495.79219130694
-    ],
-    [
-     1791590400000,
-     252.271299986885,
-     262.72813737321394,
-     252.054145770804,
-     254.217184022492,
-     131745.39624282139
-    ],
-    [
-     1791676800000,
-     254.217184022492,
-     263.689841688539,
-     253.471223712942,
-     257.225383148348,
-     81030.44366556866
-    ],
-    [
-     1791763200000,
-     257.225383148348,
-     264.637272648264,
-     248.600661093177,
-     259.987402390691,
-     289478.2086427127
-    ],
-    [
-     1791849600000,
-     259.987402390691,
-     262.947509599112,
-     245.88570180411097,
-     258.44711728917997,
-     336943.63402523973
-    ],
-    [
-     1791936000000,
-     258.44711728917997,
-     262.406233937369,
-     250.54933928434298,
-     250.54933928434298,
-     332428.6413029084
-    ],
-    [
-     1792022400000,
-     250.54933928434298,
-     255.92311731908498,
-     246.62245181903197,
-     253.36854470904697,
-     631592.4606219992
-    ],
-    [
-     1792108800000,
-     253.36854470904697,
-     257.749853091005,
-     246.990719441832,
-     248.84373837153998,
-     705967.1974348275
-    ],
-    [
-     1792195200000,
-     248.84373837153998,
-     250.12979709800598,
-     246.19154182777797,
-     248.500826995259,
-     156741.8509705351
-    ],
-    [
-     1792281600000,
-     248.500826995259,
-     252.36744584177998,
-     246.99624837914,
-     251.27411856003002,
-     134505.8017943506
-    ],
-    [
-     1792368000000,
-     251.27411856003002,
-     263.69213964603097,
-     250.316972338044,
-     262.01138937674597,
-     627909.0946904141
-    ],
-    [
-     1792454400000,
-     262.01138937674597,
-     266.243814638011,
-     260.22461526579195,
-     264.37950830135196,
-     752093.4070601927
-    ],
-    [
-     1792540800000,
-     264.37950830135196,
-     264.88745265754994,
-     258.819732729848,
-     261.496894005548,
-     756853.0911999439
-    ],
-    [
-     1792627200000,
-     261.496894005548,
-     262.49476113702394,
-     247.928637063775,
-     251.29516984517699,
-     653419.5652705831
-    ],
-    [
-     1792713600000,
-     251.29516984517699,
-     251.63192713232198,
-     246.91707134982397,
-     248.857418938018,
-     458006.1026311231
-    ],
-    [
-     1792800000000,
-     248.857418938018,
-     249.88073558097497,
-     246.582296107228,
-     247.935380655697,
-     117489.05694600454
-    ],
-    [
-     1792886400000,
-     247.935380655697,
-     250.50583679746495,
-     246.28183543947097,
-     248.551349347477,
-     179680.81076160088
-    ],
-    [
-     1792972800000,
-     248.551349347477,
-     251.782104805658,
-     247.15686945522498,
-     249.064974265326,
-     831010.164257155
-    ],
-    [
-     1793059200000,
-     249.064974265326,
-     255.55271270690798,
-     247.474979613847,
-     253.53345396096196,
-     404590.14617074776
-    ],
-    [
-     1793145600000,
-     253.53345396096196,
-     257.735287929971,
-     251.20321240400497,
-     253.28349200619297,
-     1071021.656163725
-    ],
-    [
-     1793232000000,
-     253.28349200619297,
-     291.552151711758,
-     225.12588004960696,
-     227.77705465813196,
-     1459153.8092788032
-    ],
-    [
-     1793318400000,
-     227.77705465813196,
-     242.58165691635995,
-     223.41848877290397,
-     239.761959352064,
-     703029.0509041307
-    ],
-    [
-     1793404800000,
-     239.761959352064,
-     241.75647145965095,
-     238.965317118382,
-     240.59684464410597,
-     43344.282962818295
-    ],
-    [
-     1793491200000,
-     240.59684464410597,
-     242.13170947623402,
-     239.492447526575,
-     241.17355084646,
-     86829.14903985035
-    ],
-    [
-     1793577600000,
-     241.17355084646,
-     254.021294629003,
-     239.540922097583,
-     246.731255018767,
-     548868.1954448645
-    ],
-    [
-     1793664000000,
-     246.731255018767,
-     252.32678377623498,
-     243.80753415474797,
-     250.17357162355097,
-     582003.7927569259
-    ],
-    [
-     1793750400000,
-     250.17357162355097,
-     273.77375113841197,
-     242.78983046923895,
-     265.848378076658,
-     1309975.2948135766
-    ],
-    [
-     1793836800000,
-     265.848378076658,
-     272.962953763186,
-     252.33268719781498,
-     254.45888983735995,
-     1215097.9341748103
-    ],
-    [
-     1793923200000,
-     254.45888983735995,
-     264.94230222291,
-     254.45888983735995,
-     260.46238580428997,
-     843960.0477886657
-    ],
-    [
-     1794009600000,
-     260.46238580428997,
-     261.22796168601695,
-     258.091666077909,
-     259.52798265616497,
-     91530.5667593353
-    ],
-    [
-     1794096000000,
-     259.52798265616497,
-     262.166492112375,
-     256.819212790336,
-     259.037186128586,
-     271764.4471200849
-    ],
-    [
-     1794182400000,
-     259.037186128586,
-     262.01172210858596,
-     257.37781020940895,
-     260.751422506341,
-     82521.33916286928
-    ]
-   ]
-  },
-  "0x5e4ae95442e07e3c996890515d32c50cb5c975cc001df477ec53da5d3fd28e48": {
-   "at": 1794190570781,
-   "c": [
-    [
-     1791849600000,
-     0.000050992652410429895,
-     0.0006810102761566339,
-     0.0000343240284041039,
-     0.00040106276017090397,
-     936480.0689915098
-    ],
-    [
-     1791936000000,
-     0.00040106276017090397,
-     0.0018121557171595299,
-     0.000253748905692661,
-     0.00115745555369175,
-     1704889.5815401839
-    ],
-    [
-     1792022400000,
-     0.00115745555369175,
-     0.00135853738800906,
-     0.000454731521249854,
-     0.00048333276537174,
-     493358.4987161954
-    ],
-    [
-     1792108800000,
-     0.00048333276537174,
-     0.0010532599842945898,
-     0.000247069884348423,
-     0.0006774599781232159,
-     537741.7828151473
-    ],
-    [
-     1792195200000,
-     0.0006774599781232159,
-     0.0009613794632350428,
-     0.0006128561774684449,
-     0.0007328737755280839,
-     173333.6255918214
-    ],
-    [
-     1792281600000,
-     0.0007328737755280839,
-     0.0007534929289500229,
-     0.00036612713985814,
-     0.000554846361197501,
-     124533.75526141771
-    ],
-    [
-     1792368000000,
-     0.000554846361197501,
-     0.000736898297411783,
-     0.000350965897319457,
-     0.00047962599666373897,
-     127406.00688237898
-    ],
-    [
-     1792454400000,
-     0.00047962599666373897,
-     0.0012273368516907098,
-     0.00044378287977626593,
-     0.000878221854598973,
-     280628.39776065585
-    ],
-    [
-     1792540800000,
-     0.000878221854598973,
-     0.0015813111709874698,
-     0.0007747532387393259,
-     0.00098906940529212,
-     182044.6722110072
-    ],
-    [
-     1792627200000,
-     0.00098906940529212,
-     0.0011284754216868598,
-     0.00041306281172335694,
-     0.0004931116124886499,
-     119771.80858782199
-    ],
-    [
-     1792713600000,
-     0.0004931116124886499,
-     0.000570132780330474,
-     0.00031466333760525,
-     0.00034677181272778894,
-     68102.43124308465
-    ],
-    [
-     1792800000000,
-     0.00034677181272778894,
-     0.000405622583023536,
-     0.000047820881740877394,
-     0.0000624570926583462,
-     105962.03115013136
-    ],
-    [
-     1792886400000,
-     0.0000624570926583462,
-     0.0000749939234610804,
-     0.000014640669739798197,
-     0.000017413239635099698,
-     30495.779378088115
-    ],
-    [
-     1792972800000,
-     0.000017413239635099698,
-     0.0000205301250451091,
-     0.0000120163951282827,
-     0.000013483786233315997,
-     7252.196048298027
-    ],
-    [
-     1793059200000,
-     0.000013483786233315997,
-     0.000044896531880689596,
-     0.000012792051201530998,
-     0.000026396361912748498,
-     20593.266497665263
-    ],
-    [
-     1793145600000,
-     0.000026396361912748498,
-     0.0000465377686584132,
-     0.0000165787029616469,
-     0.0000165787029616469,
-     31706.90350234193
-    ],
-    [
-     1793232000000,
-     0.0000165787029616469,
-     0.0000191298670640759,
-     0.0000122917490375314,
-     0.0000124915591781126,
-     3558.5174082588082
-    ],
-    [
-     1793318400000,
-     0.0000124915591781126,
-     0.0000186257089851471,
-     0.0000121176752526881,
-     0.000013752574783287799,
-     7616.7720093070275
-    ],
-    [
-     1793404800000,
-     0.000013752574783287799,
-     0.0000161925704639598,
-     0.000012016311315884599,
-     0.0000159981844039059,
-     3115.786935601248
-    ],
-    [
-     1793491200000,
-     0.0000159981844039059,
-     0.0000160120034904256,
-     0.000013434199971123098,
-     0.000013934708896389798,
-     662.8971869778171
-    ],
-    [
-     1793577600000,
-     0.000013934708896389798,
-     0.00011039700590095699,
-     0.0000112602825937761,
-     0.000066255943875259,
-     36106.56613334929
-    ],
-    [
-     1793664000000,
-     0.000066255943875259,
-     0.000112945324937678,
-     0.0000349417052316834,
-     0.000040659101523406196,
-     94529.57246635472
-    ],
-    [
-     1793750400000,
-     0.000040659101523406196,
-     0.000170682420230183,
-     0.000037448856690291,
-     0.00012430110949741399,
-     56244.17080804082
-    ],
-    [
-     1793836800000,
-     0.00012430110949741399,
-     0.00012447674628876098,
-     0.000049894993966534195,
-     0.000052038683729934295,
-     24255.879538824316
-    ],
-    [
-     1793923200000,
-     0.000052038683729934295,
-     0.0000634245366785136,
-     0.000037439326779518,
-     0.000037439326779518,
-     9851.868412869493
-    ],
-    [
-     1794009600000,
-     0.000037439326779518,
-     0.000060445748287118996,
-     0.000036246972326747497,
-     0.0000460780731571735,
-     10101.356410185712
-    ],
-    [
-     1794096000000,
-     0.0000460780731571735,
-     0.0000460780731571735,
-     0.0000210557836260446,
-     0.0000308548072837236,
-     15351.484608939665
-    ],
-    [
-     1794182400000,
-     0.0000308548072837236,
-     0.000032476421452117094,
-     0.0000308548072837236,
-     0.000032476421452117094,
-     189.72402139571957
-    ]
-   ]
-  },
-  "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c": {
-   "at": 1794190570781,
-   "c": [
-    [
-     1788307200000,
-     0.000052863605991629996,
-     0.0182957343584261,
-     0.000052863605991629996,
-     0.0063932658261712,
-     7954174.783513401
-    ],
-    [
-     1788393600000,
-     0.0063932658261712,
-     0.0314994706483751,
-     0.00471001493997563,
-     0.017342497872401597,
-     3933086.057245113
-    ],
-    [
-     1788480000000,
-     0.017342497872401597,
-     0.0218559840118252,
-     0.009772801348575938,
-     0.0110166615312825,
-     1298051.469486137
-    ],
-    [
-     1788566400000,
-     0.0110166615312825,
-     0.029664018246945,
-     0.00811923170244084,
-     0.021322439602458998,
-     1964502.3686426273
-    ],
-    [
-     1788652800000,
-     0.021322439602458998,
-     0.030208436765709997,
-     0.014062941376233599,
-     0.0222218336490515,
-     1065561.42664389
-    ],
-    [
-     1788739200000,
-     0.0222218336490515,
-     0.027615482484270298,
-     0.015590159111710898,
-     0.0190001622171011,
-     867504.5507524735
-    ],
-    [
-     1788825600000,
-     0.0190001622171011,
-     0.0225759239590934,
-     0.0147293019459308,
-     0.0168196873567837,
-     591967.9300981503
-    ],
-    [
-     1788912000000,
-     0.0168196873567837,
-     0.0371352876740948,
-     0.0161062129911147,
-     0.026408993376912698,
-     1166577.849736227
-    ],
-    [
-     1788998400000,
-     0.026408993376912698,
-     0.052120408202385594,
-     0.024853864565502298,
-     0.0385236982680423,
-     2442801.2143721557
-    ],
-    [
-     1789084800000,
-     0.0385236982680423,
-     0.043222449745956196,
-     0.0285150171212574,
-     0.0338443205851664,
-     1005285.1910947077
-    ],
-    [
-     1789171200000,
-     0.0338443205851664,
-     0.045544048689649196,
-     0.026409036825701598,
-     0.032098605367177596,
-     629523.845730758
-    ],
-    [
-     1789257600000,
-     0.032098605367177596,
-     0.03621137811164139,
-     0.019368998173286897,
-     0.0221184929408494,
-     614146.091409361
-    ],
-    [
-     1789344000000,
-     0.0221184929408494,
-     0.030424856391654594,
-     0.020858740446134696,
-     0.026604865646887497,
-     584629.9307633702
-    ],
-    [
-     1789430400000,
-     0.026604865646887497,
-     0.027549402410637597,
-     0.018031370897196097,
-     0.022145508625677397,
-     500040.75093228224
-    ],
-    [
-     1789516800000,
-     0.022145508625677397,
-     0.0335889937381552,
-     0.021940792113490697,
-     0.0281411243578433,
-     344320.4079298704
-    ],
-    [
-     1789603200000,
-     0.0281411243578433,
-     0.033297024508160494,
-     0.0253218714808183,
-     0.025587278702285696,
-     410781.10942339123
-    ],
-    [
-     1789689600000,
-     0.025587278702285696,
-     0.0322278343468066,
-     0.023608123254298497,
-     0.0290462773037754,
-     202743.0833605496
-    ],
-    [
-     1789776000000,
-     0.0290462773037754,
-     0.0335242594546172,
-     0.026474403165453398,
-     0.030669287486016196,
-     154726.9583397137
-    ],
-    [
-     1789862400000,
-     0.030669287486016196,
-     0.0320212248195119,
-     0.025363234733247798,
-     0.030618060610178598,
-     149368.34763539478
-    ],
-    [
-     1789948800000,
-     0.030618060610178598,
-     0.03813902382906759,
-     0.029920104932706398,
-     0.0365790189123882,
-     226495.11958322924
-    ],
-    [
-     1790035200000,
-     0.0365790189123882,
-     0.0386524865977794,
-     0.0327336818967394,
-     0.0338321608824328,
-     184667.68061720167
-    ],
-    [
-     1790121600000,
-     0.0338321608824328,
-     0.0340007019021329,
-     0.025279968775493,
-     0.029379308300114596,
-     405056.7205819728
-    ],
-    [
-     1790208000000,
-     0.029379308300114596,
-     0.031886798465907897,
-     0.0223366245499595,
-     0.027619879560376797,
-     226764.38870133559
-    ],
-    [
-     1790294400000,
-     0.027619879560376797,
-     0.068130022886058,
-     0.0269499237626131,
-     0.0620325865021463,
-     1418020.1587556843
-    ],
-    [
-     1790380800000,
-     0.0620325865021463,
-     0.09556738645630529,
-     0.0502555059580423,
-     0.0767347910001673,
-     2193242.805006231
-    ],
-    [
-     1790467200000,
-     0.0767347910001673,
-     0.07901900627961139,
-     0.052934142302387896,
-     0.06958009147181848,
-     734931.251115934
-    ],
-    [
-     1790553600000,
-     0.06958009147181848,
-     0.11923563737879798,
-     0.0561858222963728,
-     0.10943738247115,
-     1762727.4160207144
-    ],
-    [
-     1790640000000,
-     0.10943738247115,
-     0.111874431082195,
-     0.0839640074319344,
-     0.0847288477980588,
-     772660.3996990095
-    ],
-    [
-     1790726400000,
-     0.0847288477980588,
-     0.10458737289939099,
-     0.07459470920568019,
-     0.08424943259114889,
-     613713.4036568033
-    ],
-    [
-     1790812800000,
-     0.08424943259114889,
-     0.08567949693947799,
-     0.0635562991180003,
-     0.06706971405559979,
-     538384.1417604686
-    ],
-    [
-     1790899200000,
-     0.06706971405559979,
-     0.08450723300479489,
-     0.0634435013493061,
-     0.06998421721427199,
-     402866.58229112567
-    ],
-    [
-     1790985600000,
-     0.06998421721427199,
-     0.0711420936366155,
-     0.053781787998798194,
-     0.0601858386469881,
-     458252.5096340515
-    ],
-    [
-     1791072000000,
-     0.0601858386469881,
-     0.06190783349089889,
-     0.0468832141430034,
-     0.05970102127934119,
-     388610.4299586947
-    ],
-    [
-     1791158400000,
-     0.05970102127934119,
-     0.0670525889306238,
-     0.0434243095828158,
-     0.06500723553557429,
-     371639.0307128646
-    ],
-    [
-     1791244800000,
-     0.06500723553557429,
-     0.07787029465446349,
-     0.05581351259292149,
-     0.0600686712161191,
-     616653.834594819
-    ],
-    [
-     1791331200000,
-     0.0600686712161191,
-     0.0686652330292675,
-     0.0531840782817824,
-     0.0621677885061984,
-     623943.614538556
-    ],
-    [
-     1791417600000,
-     0.0621677885061984,
-     0.07813543502487799,
-     0.05218930325960759,
-     0.056800538839911895,
-     374272.0008004015
-    ],
-    [
-     1791504000000,
-     0.056800538839911895,
-     0.06577478893671589,
-     0.053142833097735494,
-     0.06311595039747879,
-     168405.3467895571
-    ],
-    [
-     1791590400000,
-     0.06311595039747879,
-     0.063475071854097,
-     0.0538705712064402,
-     0.0542934499263089,
-     94502.52593930971
-    ],
-    [
-     1791676800000,
-     0.0542934499263089,
-     0.057193093657336,
-     0.04766943565815379,
-     0.048843537815687996,
-     140447.2066280747
-    ],
-    [
-     1791763200000,
-     0.048843537815687996,
-     0.048846212599920696,
-     0.04462942448132849,
-     0.0453433872601033,
-     101179.56767677474
-    ],
-    [
-     1791849600000,
-     0.0453433872601033,
-     0.05566728925874909,
-     0.044342526230213196,
-     0.055604104735841896,
-     142609.63879961922
-    ],
-    [
-     1791936000000,
-     0.055604104735841896,
-     0.05843499856621549,
-     0.04804413077009179,
-     0.048118846274881895,
-     132788.74893012323
-    ],
-    [
-     1792022400000,
-     0.048118846274881895,
-     0.0607690579286899,
-     0.03986096499867169,
-     0.0604021964762191,
-     263048.06102108076
-    ],
-    [
-     1792108800000,
-     0.0604021964762191,
-     0.0604021964762191,
-     0.04200491730149909,
-     0.0452257781646509,
-     169455.54507021417
-    ],
-    [
-     1792195200000,
-     0.0452257781646509,
-     0.049827935009016194,
-     0.04280013595723509,
-     0.047932615945024896,
-     136488.83160929606
-    ],
-    [
-     1792281600000,
-     0.047932615945024896,
-     0.0503512667866331,
-     0.041410099075892395,
-     0.0429313330259747,
-     62783.94905001775
-    ],
-    [
-     1792368000000,
-     0.0429313330259747,
-     0.043750114887704195,
-     0.034052322486687,
-     0.04370484868819159,
-     264677.9859024271
-    ],
-    [
-     1792454400000,
-     0.04370484868819159,
-     0.048575399945615994,
-     0.0410128275558699,
-     0.0484040587756671,
-     82561.14841064147
-    ],
-    [
-     1792540800000,
-     0.0484040587756671,
-     0.0569693561639839,
-     0.0484040587756671,
-     0.053151618411954094,
-     145460.33942451823
-    ],
-    [
-     1792627200000,
-     0.053151618411954094,
-     0.053347476270897795,
-     0.0437418974659808,
-     0.0437418974659808,
-     40855.999564781705
-    ],
-    [
-     1792713600000,
-     0.0437418974659808,
-     0.0500462499701451,
-     0.0437418974659808,
-     0.047692533891105796,
-     44640.392499450296
-    ],
-    [
-     1792800000000,
-     0.047692533891105796,
-     0.047692533891105796,
-     0.03676681895945019,
-     0.039714567770824494,
-     122593.0214882059
-    ],
-    [
-     1792886400000,
-     0.039714567770824494,
-     0.0414506718378777,
-     0.0345977681126467,
-     0.03662890229942949,
-     76606.97681323299
-    ],
-    [
-     1792972800000,
-     0.03662890229942949,
-     0.040814068433378196,
-     0.030630819110370796,
-     0.038736469619947,
-     175435.6977988274
-    ],
-    [
-     1793059200000,
-     0.038736469619947,
-     0.041233496517781396,
-     0.038736469619947,
-     0.041227882316617594,
-     33871.85576687545
-    ],
-    [
-     1793145600000,
-     0.041227882316617594,
-     0.05195512460383509,
-     0.0412217477433054,
-     0.049246687632478095,
-     135529.0696263428
-    ],
-    [
-     1793232000000,
-     0.049246687632478095,
-     0.0494432499250166,
-     0.035726613912024995,
-     0.035726613912024995,
-     99193.11383980376
-    ],
-    [
-     1793318400000,
-     0.035726613912024995,
-     0.038921131577450196,
-     0.0318989806667654,
-     0.0334959352862705,
-     118648.34545591881
-    ],
-    [
-     1793404800000,
-     0.0334959352862705,
-     0.0362137769879234,
-     0.0334959352862705,
-     0.035349173515692896,
-     33905.95735677262
-    ],
-    [
-     1793491200000,
-     0.035349173515692896,
-     0.037648331168523196,
-     0.03457789781273989,
-     0.0357462592726939,
-     83284.53302219533
-    ],
-    [
-     1793577600000,
-     0.0357462592726939,
-     0.03803268838576789,
-     0.031591370105253,
-     0.0320683338570078,
-     42456.99366580619
-    ],
-    [
-     1793664000000,
-     0.0320683338570078,
-     0.035521780311505595,
-     0.0250964939610125,
-     0.0329826964997568,
-     210194.97032004382
-    ],
-    [
-     1793750400000,
-     0.0329826964997568,
-     0.0408007677721714,
-     0.028529338311349198,
-     0.037484233920304,
-     124052.52691552557
-    ],
-    [
-     1793836800000,
-     0.037484233920304,
-     0.038187959171183096,
-     0.028704260854184097,
-     0.030057709073890895,
-     89539.08220503283
-    ],
-    [
-     1793923200000,
-     0.030057709073890895,
-     0.0311922943668325,
-     0.024192300947452,
-     0.0285890016264166,
-     144150.87069759218
-    ],
-    [
-     1794009600000,
-     0.0285890016264166,
-     0.0325019584933247,
-     0.0285890016264166,
-     0.030495481042220694,
-     61907.94722465798
-    ],
-    [
-     1794096000000,
-     0.030495481042220694,
-     0.0305317885407084,
-     0.025966991989912896,
-     0.026251471874812998,
-     63879.78772001031
-    ],
-    [
-     1794182400000,
-     0.026251471874812998,
-     0.0273157913067864,
-     0.026251471874812998,
-     0.0273157913067864,
-     8314.372843645282
+     132.312583591055,
+     58608.601591688166
     ]
    ]
   },
@@ -30700,8 +27941,8 @@
    "at": 1792281143398,
    "price": 0.234901915006728,
    "peakX": 1.0513511024191118,
-   "lowX": 0.8013877525600047,
-   "lastX": 0.8439317051880485,
+   "lowX": 0.7752808239772755,
+   "lastX": 0.7752808239772755,
    "outcome": null
   },
   {
@@ -30714,7 +27955,7 @@
    "price": 0.00558346837127279,
    "peakX": 1.468382862707197,
    "lowX": 0.8975746730210359,
-   "lastX": 0.9629199233855112,
+   "lastX": 0.9599617865062214,
    "outcome": null
   },
   {
@@ -30754,7 +27995,7 @@
    "price": 0.00820427054112547,
    "peakX": 1.4842025125349503,
    "lowX": 0.589047739370198,
-   "lastX": 0.6841725097593118,
+   "lastX": 0.6864373085211919,
    "outcome": null
   },
   {
@@ -30767,7 +28008,7 @@
    "price": 0.0000103100401094231,
    "peakX": 1.0670608466306624,
    "lowX": 0.7919605208489002,
-   "lastX": 0.8197273370949466,
+   "lastX": 0.8030425957396663,
    "outcome": null
   },
   {
@@ -30780,7 +28021,7 @@
    "price": 0.00573549892206577,
    "peakX": 1.4294605198690706,
    "lowX": 0.8737827111060523,
-   "lastX": 0.9373958585550523,
+   "lastX": 0.9345161328454253,
    "outcome": null
   },
   {
@@ -30795,7 +28036,7 @@
    "price": 0.0084097427460974,
    "peakX": 1.4479395289832888,
    "lowX": 0.5746557488544012,
-   "lastX": 0.6674563701096582,
+   "lastX": 0.6696658338619582,
    "outcome": null
   },
   {
@@ -30810,7 +28051,7 @@
    "price": 0.0000347135300064612,
    "peakX": 1.0265711805356619,
    "lowX": 0.6999777248287138,
-   "lastX": 0.7371770651843633,
+   "lastX": 0.7505173817755801,
    "outcome": null
   },
   {
@@ -30912,7 +28153,7 @@
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "peakX": 1.4888729981438071,
    "lowX": 0.5801400671027587,
-   "lastX": 0.8100931806653667,
+   "lastX": 0.8146066162088197,
    "outcome": null
   },
   {
@@ -30965,7 +28206,7 @@
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "peakX": 1.447749095427678,
    "lowX": 0.564116118981592,
-   "lastX": 0.787717737498478,
+   "lastX": 0.7921065082220061,
    "outcome": null
   },
   {
@@ -31000,7 +28241,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 2.4731357149711677,
    "lowX": 0.9606837501270689,
-   "lastX": 1.2845328669597906,
+   "lastX": 1.2695661013160484,
    "outcome": null
   },
   {
@@ -31071,7 +28312,7 @@
    "pool": "0xba2f1ed4ceb2169d538d1e614d847e83c5a55913",
    "peakX": 1.1059620894577842,
    "lowX": 0.9268211876974135,
-   "lastX": 0.9854670447588911,
+   "lastX": 0.9869156957522482,
    "outcome": null
   },
   {
@@ -31088,7 +28329,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 2.197510123953737,
    "lowX": 0.857147472841281,
-   "lastX": 1.1413744755727515,
+   "lastX": 1.128075723374937,
    "outcome": null
   },
   {
@@ -31104,8 +28345,8 @@
    "mcap": 20232589,
    "pool": "0xc73f3cd3fb68288e63f008e08ef69caa0437224e420963c6aeb4526178e87ad9",
    "peakX": 1.0186561083796897,
-   "lowX": 0.7764661371900992,
-   "lastX": 0.8176870548449673,
+   "lowX": 0.7511710837958164,
+   "lastX": 0.7511710837958164,
    "outcome": null
   },
   {
@@ -31140,7 +28381,7 @@
    "pool": "0x5f5ec0e1016bae2f04c122bbcd2c141a4177cc681d7c2e4463a1d172ed8430b3",
    "peakX": 2.105010363408036,
    "lowX": 0.8075306969216052,
-   "lastX": 0.836057647002744,
+   "lastX": 0.8348680518505054,
    "outcome": null
   },
   {
@@ -31157,7 +28398,7 @@
    "pool": "0x02904260fb5698e0f3b16ffc127bd1a089df44de",
    "peakX": 1.0210437864627173,
    "lowX": 0.7037007705397471,
-   "lastX": 0.7410979669694571,
+   "lastX": 0.7545092381163792,
    "outcome": null
   },
   {
@@ -31174,7 +28415,7 @@
    "pool": "0xfbd1b5e73760b59b65c63cf8214bfd96eb4f4870",
    "peakX": 1.0835548659180392,
    "lowX": 0.6186430030894545,
-   "lastX": 0.6391036570527874,
+   "lastX": 0.6394169294124665,
    "outcome": null
   },
   {
@@ -31191,7 +28432,7 @@
    "pool": "0xfbd1b5e73760b59b65c63cf8214bfd96eb4f4870",
    "peakX": 1.0986492504536884,
    "lowX": 0.627260965753495,
-   "lastX": 0.6480066454118688,
+   "lastX": 0.6483242817900302,
    "outcome": null
   },
   {
@@ -31244,7 +28485,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 1.4463838490478376,
    "lowX": 0.5641677130202377,
-   "lastX": 0.7512436867474602,
+   "lastX": 0.7424905528338831,
    "outcome": null
   },
   {
@@ -31261,7 +28502,7 @@
    "pool": "0xea9f200e13055b82f175f44f592c4c13dd8c9d9320a66487d3c5cd90d68550ef",
    "peakX": 1.6197470817061295,
    "lowX": 0.6317887242442016,
-   "lastX": 0.8412875807901165,
+   "lastX": 0.8314852982759465,
    "outcome": null
   },
   {
@@ -31278,7 +28519,7 @@
    "pool": "0x237609918f330add285b8bc5f8f2922283d1c4c5",
    "peakX": 1.218519988075751,
    "lowX": 0.5892652435955611,
-   "lastX": 0.8022973299344456,
+   "lastX": 0.8170577369522127,
    "outcome": null
   },
   {
@@ -31295,7 +28536,7 @@
    "pool": "0x237609918f330add285b8bc5f8f2922283d1c4c5",
    "peakX": 1.218519988075751,
    "lowX": 0.5892652435955611,
-   "lastX": 0.8022973299344456,
+   "lastX": 0.8170577369522127,
    "outcome": null
   },
   {
@@ -31312,7 +28553,7 @@
    "pool": "0xab982bc0454dd85bb2f2b8c8c008eb98203de4fa45546651e8db4b8a2e5247c1",
    "peakX": 1.1492236097383388,
    "lowX": 0.728547601570548,
-   "lastX": 0.7332010172792677,
+   "lastX": 0.7290755835964599,
    "outcome": null
   },
   {
@@ -31329,7 +28570,7 @@
    "pool": "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c",
    "peakX": 1.1327812408114344,
    "lowX": 0.5207861366742329,
-   "lastX": 0.5471196584288616,
+   "lastX": 0.544249625397528,
    "outcome": null
   },
   {
@@ -31364,7 +28605,7 @@
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "peakX": 1.150180776186757,
    "lowX": 0.7250076031237932,
-   "lastX": 0.7666367541960462,
+   "lastX": 0.7660888208342833,
    "outcome": null
   },
   {
@@ -31381,7 +28622,7 @@
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "peakX": 1.1458061232567787,
    "lowX": 0.7222500743066473,
-   "lastX": 0.7637208910618248,
+   "lastX": 0.7631750417361858,
    "outcome": null
   },
   {
@@ -31470,7 +28711,7 @@
    "pool": "0xab982bc0454dd85bb2f2b8c8c008eb98203de4fa45546651e8db4b8a2e5247c1",
    "peakX": 1.0500945092083367,
    "lowX": 0.736627128648002,
-   "lastX": 0.7413321503164971,
+   "lastX": 0.7371609659468782,
    "outcome": null
   },
   {
@@ -31487,7 +28728,7 @@
    "pool": "0xd33c8fd38b06e989cdbd4dffdefab71c4bdd415b24964c8d69e38ff35b068f92",
    "peakX": 1.5292624631747276,
    "lowX": 0.9643736690723569,
-   "lastX": 1.0028428765244874,
+   "lastX": 0.9997620943897174,
    "outcome": null
   },
   {
@@ -31504,7 +28745,7 @@
    "pool": "0x2b0d0183d017c58b924401ca8ac362f6e01f0e9e",
    "peakX": 1.9308747287193733,
    "lowX": 0.766322239959426,
-   "lastX": 0.8900749042140269,
+   "lastX": 0.8930212964064779,
    "outcome": null
   },
   {
@@ -31555,7 +28796,7 @@
    "pool": "0x06e308b77bdafd691d179645296ce8c40e33c6af4a879a913efc7eedc402581c",
    "peakX": 1.1932050553046587,
    "lowX": 0.6011249917089463,
-   "lastX": 0.6315208431567364,
+   "lastX": 0.6282080656830841,
    "outcome": null
   },
   {
@@ -31572,7 +28813,7 @@
    "pool": "0xc8c90d3a1c1a24967e773ac2ad0d456ba3e31f64",
    "peakX": 1.000021096583788,
    "lowX": 0.8514085682756514,
-   "lastX": 0.8917526911877415,
+   "lastX": 0.8950956340899507,
    "outcome": null
   },
   {
@@ -31589,7 +28830,7 @@
    "pool": "0xd29893ffac8b29ec4db2cfe0cdb3fe1377c028ff",
    "peakX": 1,
    "lowX": 0.5343592191028577,
-   "lastX": 0.5717932653301481,
+   "lastX": 0.5749790124871954,
    "outcome": null
   },
   {
@@ -31606,7 +28847,7 @@
    "pool": "0xd057b1bc54917855bbee58ead58647f47cab35e5",
    "peakX": 1,
    "lowX": 0.6303423063002683,
-   "lastX": 0.6665358785926759,
+   "lastX": 0.6660594896865951,
    "outcome": null
   },
   {
@@ -31623,7 +28864,7 @@
    "pool": "0x7fb585f108d921de3b197cf7e26b5aebc96b035fec13f972b868e008ea062394",
    "peakX": 1.032779462294802,
    "lowX": 0.7915836787217075,
-   "lastX": 0.8755688050639453,
+   "lastX": 0.8762557389250564,
    "outcome": null
   },
   {
@@ -31640,7 +28881,7 @@
    "pool": "0xc39187cec78a076c41a4085598b4cc05be2ed9b04a3443167471fa0fc4984188",
    "peakX": 1,
    "lowX": 0.537773144109831,
-   "lastX": 0.6234225685180363,
+   "lastX": 0.6137282997316041,
    "outcome": null
   },
   {
@@ -31657,7 +28898,7 @@
    "pool": "0x5394735ca0f081b9e17cdaf0b4c492daed942a3494f5cad2c5379fe341b81109",
    "peakX": 2.46545925717994,
    "lowX": 0.6908034643803364,
-   "lastX": 1.0419410657168817,
+   "lastX": 1.0779437202458182,
    "outcome": null
   },
   {
@@ -31692,7 +28933,7 @@
    "pool": "0x7fb585f108d921de3b197cf7e26b5aebc96b035fec13f972b868e008ea062394",
    "peakX": 1.0139002242964883,
    "lowX": 0.8539195018878188,
-   "lastX": 0.9445183092911764,
+   "lastX": 0.9452593379862818,
    "outcome": null
   },
   {
@@ -31727,7 +28968,7 @@
    "pool": "0xc8c90d3a1c1a24967e773ac2ad0d456ba3e31f64",
    "peakX": 1.0020399521232584,
    "lowX": 0.9042094587574725,
-   "lastX": 0.9284533032326722,
+   "lastX": 0.931933826936997,
    "outcome": null
   },
   {
@@ -31780,7 +29021,7 @@
    "pool": "0xb09fa4f04032b9d9e690ac4a1d29523b5f9a72dc",
    "peakX": 1.0458351792700926,
    "lowX": 0.7262144541272443,
-   "lastX": 0.7474141935806035,
+   "lastX": 0.7646622990151928,
    "outcome": null
   },
   {
@@ -31797,7 +29038,7 @@
    "pool": "0xb09fa4f04032b9d9e690ac4a1d29523b5f9a72dc",
    "peakX": 1.0150626739420199,
    "lowX": 0.7048464234834954,
-   "lastX": 0.7254223848232348,
+   "lastX": 0.7421629844606339,
    "outcome": null
   }
  ],
@@ -31914,7 +29155,6 @@
   "0xc6aca22a4fc9bd5a1cb1a35715f6fdd0fc4c3d2d": 1794163566557,
   "0x38cab840cf2b268e6f297ebe27db1d22b918e829": 1794171667320,
   "0xf46e20ecf1c8c00dfcfcac9a4f53643a2dbacc34": 1794179999956,
-  "0x2e911d81874c52a4e2fbcff38661cfe0185457be": 1794109565251,
   "0x16121de8b5b81edbec05d1fbb6a86954497110d2": 1794116772772,
   "0x2e8dc4162bc7ffe0394087949615deb138bdcd04": 1794148265491,
   "0x8c46cc9001971cb58bee11f7ca5554bf41ce8398": 1794155466062,
@@ -31923,8 +29163,8 @@
   "0x35a5b6ff2d8c4c8259cc07c0f7019c55d1fb7618": 1794163566557,
   "0xc8f8b3300c828cf170f88a4491d84e34d86c72f0": 1794171667320,
   "0x67b0aae999c084117cc37aa6c29747692417d019": 1794171667320,
-  "0x2cddbb06ebca5760517604b7e9a81ce8daa286f9": 1794094265992,
-  "0x66ab90f322e00c434028f4a8544ccd77dc638d37": 1794101466979,
+  "0x2cddbb06ebca5760517604b7e9a81ce8daa286f9": 1794195965695,
+  "0x66ab90f322e00c434028f4a8544ccd77dc638d37": 1794195965695,
   "0x7b444c1a6f72947949a4a020065a3e77da2fa55a": 1794140166837,
   "0xb50f0383167aaa54ed92fc203c900436ce68d321": 1794140166837,
   "0x710377c3e075a715f18808cb2be9dc23e30297d0": 1794140166837,
@@ -31937,20 +29177,17 @@
   "0xea21a51a12d7a9eac7575ecbe542146615200502": 1794171667320,
   "0x5cfa12640318ee013b500de0364716f3afc3ab23": 1794171667320,
   "0x8936e55c7896719e89b966e492f0df080bfd74a1": 1794171667320,
-  "0x10a6144f905c2754d615913dd1f5c105b8e0c946": 1794171667320
+  "0x10a6144f905c2754d615913dd1f5c105b8e0c946": 1794171667320,
+  "0xd2f7d3fd5188ec32f6f9f10f173fcebdb00ee9f3": 1794195965695
  },
  "eth": {
-  "price": 2228.53,
-  "h6": -0.2426195751919047,
-  "h24": -0.34031858470398024,
-  "d7": -2.1810887447217375,
+  "price": 2231.28,
+  "h6": -0.09805370119140289,
+  "h24": -0.18386053440337946,
+  "d7": -2.5603626343393304,
   "trend": "flat"
  },
  "ethHistory": [
-  [
-   1793331963400,
-   2317.78
-  ],
   [
    1793333764656,
    2316.8
@@ -33430,6 +30667,10 @@
   [
    1794194165108,
    2228.53
+  ],
+  [
+   1794195965695,
+   2231.28
   ]
  ],
  "called": {
@@ -33765,7 +31006,7 @@
    "firstPrice": 29.2781897586159,
    "milestones": {},
    "lastSentAt": 1793229365182,
-   "lastSeenAt": 1794194165108,
+   "lastSeenAt": 1794195965695,
    "lastScore": 82,
    "lastTier": "buy",
    "lastPrice": 29.2781897586159,
@@ -33779,7 +31020,7 @@
    "firstPrice": 64.7441426073613,
    "milestones": {},
    "lastSentAt": 1793772066483,
-   "lastSeenAt": 1794194165108,
+   "lastSeenAt": 1794195965695,
    "lastScore": 62,
    "lastTier": "buy",
    "lastPrice": 60.0178429787762,
