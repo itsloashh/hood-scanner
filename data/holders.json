@@ -1,21 +1,17 @@
 {
  "coins": {
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
-   "at": 1794170774914,
+   "at": 1794193660975,
    "symbol": "GENESIS",
-   "holdersCount": 35883,
+   "holdersCount": 35890,
    "conc": {
     "top1Pct": 3.8976,
-    "top10Pct": 13.7428,
+    "top10Pct": 13.9007,
     "largestContractPct": 0.6647,
     "burnedPct": 52.2417,
     "devPctOnchain": null
    },
-   "recentBurns": {
-    "count": 4,
-    "units": 243886.2097,
-    "lastTs": 1794053101000
-   }
+   "recentBurns": null
   },
   "0x1139d423c1706bdead91f03507f521635591ed92": {
    "at": 1794184558625,
@@ -35,12 +31,12 @@
    }
   },
   "0x7fe995a80075df3dc8ae11a9b82c7fe4202cd87f": {
-   "at": 1794170322474,
+   "at": 1794193401246,
    "symbol": "HMM",
-   "holdersCount": 94863,
+   "holdersCount": 94859,
    "conc": {
     "top1Pct": 3.1091,
-    "top10Pct": 14.9034,
+    "top10Pct": 14.9382,
     "largestContractPct": 3.7284,
     "burnedPct": 1.2293,
     "devPctOnchain": null
@@ -151,20 +147,20 @@
    "recentBurns": null
   },
   "0xe934e36a439c94017b64a3fece66af12099abf50": {
-   "at": 1794169940957,
+   "at": 1794193300585,
    "symbol": "STONKBROKER",
    "holdersCount": 44361,
    "conc": {
-    "top1Pct": 1.6443,
-    "top10Pct": 7.7597,
-    "largestContractPct": 46.869,
+    "top1Pct": 1.6506,
+    "top10Pct": 7.7917,
+    "largestContractPct": 46.8692,
     "burnedPct": 0,
     "devPctOnchain": null
    },
    "recentBurns": {
     "count": 85,
-    "units": 337211.8331,
-    "lastTs": 1794169397000
+    "units": 337219.84489999997,
+    "lastTs": 1794171945000
    }
   },
   "0x32ac8c1d7672667d5ebdea22935f7b06fc8d496f": {
@@ -280,9 +276,9 @@
    "recentBurns": null
   },
   "0x96765066f6a040a21eb027167d2315b707c82633": {
-   "at": 1794170015628,
+   "at": 1794193390382,
    "symbol": "RVH",
-   "holdersCount": 23284,
+   "holdersCount": 23304,
    "conc": {
     "top1Pct": 4.9634,
     "top10Pct": 15.2904,
@@ -290,11 +286,7 @@
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "recentBurns": {
-    "count": 50,
-    "units": 351007.3781,
-    "lastTs": 1794157433000
-   }
+   "recentBurns": null
   },
   "0x07ebb29a38fbcb41563817e5e19f2cec619c90d2": {
    "at": 1794184326894,
@@ -447,13 +439,13 @@
    "recentBurns": null
   },
   "0xe93237c50d904957cf27e7b1133b510c669c2e74": {
-   "at": 1794170584023,
+   "at": 1794193575907,
    "symbol": "MSFT",
-   "holdersCount": 67112,
+   "holdersCount": 67100,
    "conc": {
     "top1Pct": 3.999,
-    "top10Pct": 6.1063,
-    "largestContractPct": 23.1615,
+    "top10Pct": 6.0894,
+    "largestContractPct": 23.0879,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -837,17 +829,21 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-09T02:31:07.768Z",
-  "targets": 2,
-  "ok": 1,
-  "failed": 1,
+  "at": "2026-11-09T03:01:05.143Z",
+  "targets": 14,
+  "ok": 5,
+  "failed": 9,
   "errors": [
-   "HOOD: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0x32ac8c1d7672667d5ebdea22935f7b06fc8d496"
+   "CUCK: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0x7648f37c2314466726a28f7a5edbdb8dc7b3e23",
+   "COIN: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0x6330d8c3178a418788df01a47479c0ce7ccf450",
+   "DARK: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "CRCL: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "Index: api.blockscout.com skipped for the rest of this run (kept failing)"
   ],
   "http": {
    "api.blockscout.com": {
-    "calls": 8,
-    "sec": 40
+    "calls": 27,
+    "sec": 369
    }
   }
  }
