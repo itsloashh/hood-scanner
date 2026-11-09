@@ -185,13 +185,13 @@
    }
   },
   "0x2e0847e8910a9732eb3fb1bb4b70a580adad4fe3": {
-   "at": 1794162833856,
+   "at": 1794185519407,
    "symbol": "GOOGL",
-   "holdersCount": 74647,
+   "holdersCount": 74644,
    "conc": {
     "top1Pct": 7.7137,
-    "top10Pct": 25.2521,
-    "largestContractPct": 16.452,
+    "top10Pct": 25.0238,
+    "largestContractPct": 16.5284,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -533,13 +533,13 @@
    "recentBurns": null
   },
   "0x894e1ec2d74ffe5aef8dc8a9e84686accb964f2a": {
-   "at": 1794162988346,
+   "at": 1794185602285,
    "symbol": "PLTR",
-   "holdersCount": 41952,
+   "holdersCount": 41973,
    "conc": {
-    "top1Pct": 3.5608,
-    "top10Pct": 8.2289,
-    "largestContractPct": 43.1545,
+    "top1Pct": 3.0094,
+    "top10Pct": 7.7696,
+    "largestContractPct": 43.8649,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -580,13 +580,13 @@
    }
   },
   "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691": {
-   "at": 1794162680533,
+   "at": 1794185429959,
    "symbol": "FLOCK",
-   "holdersCount": 3857,
+   "holdersCount": 3858,
    "conc": {
-    "top1Pct": 17.6929,
-    "top10Pct": 29.2117,
-    "largestContractPct": 54.1271,
+    "top1Pct": 17.4415,
+    "top10Pct": 28.8901,
+    "largestContractPct": 54.5197,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -849,15 +849,19 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-09T00:31:09.763Z",
+  "at": "2026-11-09T00:49:55.648Z",
   "targets": 6,
-  "ok": 6,
-  "failed": 0,
-  "errors": [],
+  "ok": 3,
+  "failed": 3,
+  "errors": [
+   "BE: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0x822cc93ffd030293e9842c30bbd678f53070186",
+   "mrna: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "SHIT: api.blockscout.com skipped for the rest of this run (kept failing)"
+  ],
   "http": {
    "api.blockscout.com": {
-    "calls": 24,
-    "sec": 658
+    "calls": 13,
+    "sec": 200
    }
   }
  }
