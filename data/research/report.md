@@ -1,12 +1,12 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-10 20:54 UTC from 220 coins._
+_Generated 2026-11-11 14:23 UTC from 220 coins._
 
 ## The base rate
-63 times a coin matched our rules — every setup found since research began, 2 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 119 of 220 coins.
-- **3 went 3–10x** within 30 days (our target)
+63 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 112 of 220 coins.
+- **1 went 3–10x** within 30 days (our target)
 - 2 went past 10x (outliers — listed, not used to learn)
-- 15 never reached 3x
-- Community check skipped (no wallet data this run).
+- 8 never reached 3x
+- Community check: 19 of 25 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
 
 **Hit rate on real setups: 17%** (7 wins / 42). Any parameter is only worth adding if coins with it beat this.
 
@@ -68,23 +68,22 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $JUGGERNAUT — 10× from $1375k (2026-07-31)
 - $PONS — 32× from $15690k (2026-08-04)
 
+## Thrown out by the community check
+- $PEPONS (DUD) — only 8 real buyers
+- $HUMANITY (DUD) — only 9 real buyers
+
 ## After a pump: pullback odds (from 163 past pumps)
 - **+50–100% day** (50 examples): 80% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 64–102%) · low came after ~5 day(s) · 32% made a new high within 2 weeks · 30% gave back the whole move
 - **+100–200% day** (22 examples): 86% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 76–110%) · low came after ~6 day(s) · 32% made a new high within 2 weeks · 50% gave back the whole move
 - **+200+% day** (91 examples): 91% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 87–100%) · low came after ~4 day(s) · 12% made a new high within 2 weeks · 22% gave back the whole move
 
 ## Smart wallets
-Wallet history wasn’t available this run.
+No wallet showed up early in multiple real winners yet — the sample grows every day.
 
 ## Notes
-- $HOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $DIH: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $🪶: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $HUMANITY: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $SCALE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $mShare: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $WOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $RWM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $TENOV: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $GENESIS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $STAG: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $AMC: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
 
-_Wallet history: 0 setup(s) checked · history jump worked 0× / failed 0×._
+_Wallet history: 2 setup(s) checked · history jump worked 9× / failed 0×._
