@@ -1,31 +1,31 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-11 14:23 UTC from 220 coins._
+_Generated 2026-11-11 21:27 UTC from 220 coins._
 
 ## The base rate
-63 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 112 of 220 coins.
-- **1 went 3–10x** within 30 days (our target)
+66 times a coin matched our rules — every setup found since research began, 3 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 116 of 220 coins.
+- **3 went 3–10x** within 30 days (our target)
 - 2 went past 10x (outliers — listed, not used to learn)
-- 8 never reached 3x
-- Community check: 19 of 25 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
+- 12 never reached 3x
+- Community check skipped (no wallet data this run).
 
-**Hit rate on real setups: 17%** (7 wins / 42). Any parameter is only worth adding if coins with it beat this.
+**Hit rate on real setups: 16%** (7 wins / 45). Any parameter is only worth adding if coins with it beat this.
 
 ## Which signals showed up before winners
 Ranked by how much more often they appear in 3–10x winners than in duds:
-- **Volume already rising on the setup day**: 3/7 winners vs 2/35 duds — 7.5× more common in winners
-- **Volume explosion (3×+) during the run** _(happens during the run — explains, can’t predict)_: 7/7 winners vs 10/35 duds — 3.5× more common in winners
-- **cat theme**: 1/7 winners vs 2/35 duds — 2.5× more common in winners
-- **hood theme**: 2/7 winners vs 9/35 duds — 1.1× more common in winners
-- **Token burns in the 2 weeks before**: 0/7 winners vs 5/35 duds — more common in duds
-- **frog theme**: 0/7 winners vs 2/35 duds — more common in duds
-- **Token burns during the run** _(happens during the run — explains, can’t predict)_: 0/7 winners vs 5/35 duds — more common in duds
-- **Buyers up 50%+ week-over-week**: 0/7 winners vs 3/35 duds — more common in duds
-- **Paired with a stock token**: 0/7 winners vs 3/35 duds — more common in duds
+- **Volume already rising on the setup day**: 3/7 winners vs 2/38 duds — 8.1× more common in winners
+- **Volume explosion (3×+) during the run** _(happens during the run — explains, can’t predict)_: 7/7 winners vs 11/38 duds — 3.5× more common in winners
+- **cat theme**: 1/7 winners vs 2/38 duds — 2.7× more common in winners
+- **hood theme**: 2/7 winners vs 11/38 duds — more common in duds
+- **Token burns in the 2 weeks before**: 0/7 winners vs 5/38 duds — more common in duds
+- **frog theme**: 0/7 winners vs 2/38 duds — more common in duds
+- **Token burns during the run** _(happens during the run — explains, can’t predict)_: 0/7 winners vs 5/38 duds — more common in duds
+- **Buyers up 50%+ week-over-week**: 0/7 winners vs 3/38 duds — more common in duds
+- **Paired with a stock token**: 0/7 winners vs 3/38 duds — more common in duds
 
 ## Winners vs duds (middle value of each group)
-- **Volume on the setup day vs its 7-day average:** winners 0.9× vs duds 0.4×
+- **Volume on the setup day vs its 7-day average:** winners 0.9× vs duds 0.5×
 - **7-day price range (lower = tighter base):** winners 1.31× vs duds 1.33×
-- **Drop from all-time high:** winners 93% vs duds 91%
+- **Drop from all-time high:** winners 93% vs duds 90%
 - **Age:** winners 22 days vs duds 52 days
 - **Market cap:** winners $20k vs duds $45k
 
@@ -68,22 +68,23 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $JUGGERNAUT — 10× from $1375k (2026-07-31)
 - $PONS — 32× from $15690k (2026-08-04)
 
-## Thrown out by the community check
-- $PEPONS (DUD) — only 8 real buyers
-- $HUMANITY (DUD) — only 9 real buyers
-
 ## After a pump: pullback odds (from 163 past pumps)
 - **+50–100% day** (50 examples): 80% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 64–102%) · low came after ~5 day(s) · 32% made a new high within 2 weeks · 30% gave back the whole move
 - **+100–200% day** (22 examples): 86% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 76–110%) · low came after ~6 day(s) · 32% made a new high within 2 weeks · 50% gave back the whole move
-- **+200+% day** (91 examples): 91% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 87–100%) · low came after ~4 day(s) · 12% made a new high within 2 weeks · 22% gave back the whole move
+- **+200+% day** (91 examples): 91% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 88–100%) · low came after ~4 day(s) · 13% made a new high within 2 weeks · 22% gave back the whole move
 
 ## Smart wallets
-No wallet showed up early in multiple real winners yet — the sample grows every day.
+Wallet history wasn’t available this run.
 
 ## Notes
-- $GENESIS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $STAG: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $AMC: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $INDEX: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $POO: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $MORT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $UBTC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HOODIE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $RETAIL: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $STONKBROKER: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $MEMEOW: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
 
-_Wallet history: 2 setup(s) checked · history jump worked 9× / failed 0×._
+_Wallet history: 0 setup(s) checked · history jump worked 0× / failed 0×._
