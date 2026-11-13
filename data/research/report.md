@@ -1,11 +1,11 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-12 21:29 UTC from 220 coins._
+_Generated 2026-11-13 14:23 UTC from 220 coins._
 
 ## The base rate
-68 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 112 of 220 coins.
+68 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 111 of 220 coins.
 - **2 went 3–10x** within 30 days (our target)
 - 3 went past 10x (outliers — listed, not used to learn)
-- 10 never reached 3x
+- 14 never reached 3x
 - Community check skipped (no wallet data this run).
 
 **Hit rate on real setups: 16%** (7 wins / 45). Any parameter is only worth adding if coins with it beat this.
@@ -52,7 +52,7 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - During: volume exploded to 191× normal on day 3
 - Check X (verified accounts): https://x.com/search?q=%24POO%20filter%3Ablue_verified&f=live
 
-### $HMM — 3.2× from $5869k (2026-10-30, 3x in 7 days)
+### $HMM — 3.2× from $6049k (2026-10-30, 3x in 7 days)
 - Before: volume already 1.8× normal on the setup day
 - Before: cat theme
 - During: volume exploded to 16× normal on day 7
@@ -70,21 +70,21 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $COLLECT — 27× from $5k (2026-11-04)
 
 ## After a pump: pullback odds (from 164 past pumps)
-- **+50–100% day** (50 examples): 82% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 70–105%) · low came after ~5 day(s) · 32% made a new high within 2 weeks · 32% gave back the whole move
-- **+100–200% day** (22 examples): 86% pulled back 30%+ within a week · typically gave back 101% of the move (middle half: 76–110%) · low came after ~6 day(s) · 32% made a new high within 2 weeks · 50% gave back the whole move
-- **+200+% day** (92 examples): 90% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 88–100%) · low came after ~5 day(s) · 14% made a new high within 2 weeks · 22% gave back the whole move
+- **+50–100% day** (50 examples): 80% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 64–105%) · low came after ~5 day(s) · 34% made a new high within 2 weeks · 32% gave back the whole move
+- **+100–200% day** (23 examples): 87% pulled back 30%+ within a week · typically gave back 100% of the move (middle half: 69–110%) · low came after ~6 day(s) · 30% made a new high within 2 weeks · 48% gave back the whole move
+- **+200+% day** (91 examples): 91% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 88–100%) · low came after ~4 day(s) · 14% made a new high within 2 weeks · 22% gave back the whole move
 
 ## Smart wallets
 Wallet history wasn’t available this run.
 
 ## Notes
-- $HMM: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $INDEX: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $WOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $SCALE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
 - $HOODIE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
 - $RETAIL: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $STONKBROKER: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $MORT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $UBTC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $RWM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $AMC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
 
-_Wallet history: 0 setup(s) checked · history jump worked 1× / failed 0×._
+_Wallet history: 0 setup(s) checked · history jump worked 0× / failed 0×._
