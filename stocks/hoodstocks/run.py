@@ -18,8 +18,18 @@ from .providers import registry
 from .providers.telegram import send
 
 
+def _round(x):
+    if isinstance(x, float):
+        return float(f"{x:.6g}") if abs(x) < 1e6 else round(x)
+    if isinstance(x, dict):
+        return {k: _round(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_round(v) for v in x]
+    return x
+
+
 def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
-    rows = res["rows"]
+    rows = _round(res["rows"])
     std = sorted([r for r in rows if not r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
     micro = sorted([r for r in rows if r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
     store.write("universe.json", {"updated": store.now_iso(), "count": len(rows), "rows": rows}, compact=True)
@@ -27,7 +37,7 @@ def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
            "by_profile": {p: [r["id"] for r in std if r["profile"] == p][:50] for p in ("value", "growth", "dividend")},
            "top": [r["id"] for r in std[:100]], "experimental_micro": [r["id"] for r in micro[:40]],
            "quarantined": [r["id"] for r in rows if r["quarantined"]][:200],
-           "etfs": sorted(etfs, key=lambda e: -(e.get("score") or 0)), "rotation": res["rotation"], "sector_medians": res["sector_medians"]}
+           "etfs": _round(sorted(etfs, key=lambda e: -(e.get("score") or 0))), "rotation": res["rotation"], "sector_medians": res["sector_medians"]}
     store.write("opportunities.json", opp, compact=True)
     # per-security detail pages for anything worth opening (top names, insider buys, institutional activity, watchlist)
     watch = {w.get("security_id") or w.get("ticker") for w in (store.read("watchlist.json", []) or [])}
@@ -35,7 +45,7 @@ def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
     want |= {r["id"] for r in std[:400]}
     old = set(p.stem for p in (config.DATA / "sec").glob("*.json")) if (config.DATA / "sec").exists() else set()
     for sid in want:
-        store.write(f"sec/{sid}.json", res["details"][sid], compact=True)
+        store.write(f"sec/{sid}.json", _round(res["details"][sid]), compact=True)
     for stale in old - want:
         (config.DATA / "sec" / f"{stale}.json").unlink(missing_ok=True)
 

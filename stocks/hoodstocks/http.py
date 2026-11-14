@@ -101,7 +101,7 @@ class Http:
                 raise FetchError(url, 404)
             if status == 429:
                 st.r429 += 1
-            err = FetchError(url, status, body[:120].decode("utf-8", "replace"))
+            err = FetchError(url, status, " ".join(body[:300].decode("utf-8", "replace").split())[:120])
             if status in (400, 401, 403) and attempt >= 1:
                 break  # won't fix itself
             st.retries += 1
@@ -124,7 +124,13 @@ class Http:
                     body = gzip.decompress(body)
                 return r.status, body
         except urllib.error.HTTPError as e:
-            return e.code, e.read()[:500]
+            body = e.read()
+            if e.headers.get("Content-Encoding") == "gzip":
+                try:
+                    body = gzip.decompress(body)
+                except OSError:
+                    pass
+            return e.code, body[:500]
 
     def json(self, url: str, **kw):
         return json.loads(self.get(url, **kw))

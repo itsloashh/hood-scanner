@@ -44,7 +44,7 @@ const NAV: Item[] = [
   { href: '/calls', label: 'Calls', icon: icon(I.calls) },
   { href: '/analysis', label: 'Analysis', icon: icon(I.analysis) },
   { href: '/scanner', label: 'Scanner', icon: icon(I.scanner) },
-  { href: '/stocks', label: 'Stocks', icon: icon(I.stocks), soon: true },
+  { href: '/stocks', label: 'Stocks', icon: icon(I.stocks) },
 ];
 
 function active(path: string, href: string) {
