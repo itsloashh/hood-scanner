@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-14T19:52:45Z",
+ "updated": "2026-11-14T19:55:10Z",
  "error": "universe failed \u2014 nothing scored this run",
  "stages": {
   "macro": {
@@ -8,7 +8,7 @@
   },
   "universe": {
    "ok": false,
-   "sec": 1,
+   "sec": 2,
    "error": "FetchError: 403 https://www.sec.gov/files/company_tickers_exchange.json <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\""
   }
  },
@@ -27,7 +27,7 @@
    "calls": 2,
    "errors": 1,
    "last_error": "403 https://www.sec.gov/files/company_tickers_exchange.json <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"",
-   "checked": "2026-11-14T19:52:45Z"
+   "checked": "2026-11-14T19:55:10Z"
   },
   "yahoo": {
    "name": "Yahoo Finance chart API",
@@ -42,7 +42,7 @@
    "calls": 0,
    "errors": 0,
    "last_error": null,
-   "checked": "2026-11-14T19:52:45Z"
+   "checked": "2026-11-14T19:55:10Z"
   },
   "fred": {
    "name": "FRED (St. Louis Fed)",
@@ -57,7 +57,7 @@
    "calls": 0,
    "errors": 0,
    "last_error": null,
-   "checked": "2026-11-14T19:52:45Z"
+   "checked": "2026-11-14T19:55:10Z"
   },
   "bank_of_canada": {
    "name": "Bank of Canada Valet API",
@@ -72,7 +72,7 @@
    "calls": 0,
    "errors": 0,
    "last_error": null,
-   "checked": "2026-11-14T19:52:45Z"
+   "checked": "2026-11-14T19:55:10Z"
   },
   "openfigi": {
    "name": "OpenFIGI mapping",
@@ -84,7 +84,7 @@
    "limits": "25 requests/min keyless",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-14T19:52:45Z"
+   "checked": "2026-11-14T19:55:10Z"
   },
   "google_news": {
    "name": "Google News RSS (discovery only)",
@@ -96,7 +96,7 @@
    "limits": "throttled",
    "licensing": "headlines and links only; articles are not copied",
    "status": "not used this run",
-   "checked": "2026-11-14T19:52:45Z"
+   "checked": "2026-11-14T19:55:10Z"
   },
   "sedar_plus": {
    "name": "SEDAR+ (Canadian filings)",
@@ -187,7 +187,7 @@
    "errors": 1,
    "retries": 1,
    "r429": 0,
-   "seconds": 0.1,
+   "seconds": 0.5,
    "cache_hits": 0,
    "last_error": "403 https://www.sec.gov/files/company_tickers_exchange.json <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"",
    "consecutive_fail": 1
