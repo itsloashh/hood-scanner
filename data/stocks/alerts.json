@@ -10609,7 +10609,15 @@
   "risk:SEC104169:2.02:2026-08-20": "2026-11-14T22:19:49Z",
   "ins:SEC31462:2026-11-12": "2026-11-14T22:19:49Z",
   "catalyst:SEC31462:2.02:2026-10-27": "2026-11-14T22:19:49Z",
-  "risk:SEC31462:2.02:2026-10-27": "2026-11-14T22:19:49Z"
+  "risk:SEC31462:2.02:2026-10-27": "2026-11-14T22:19:49Z",
+  "opp:SEC1376139:Developing opportunity": "2026-11-14T22:32:01Z",
+  "opp:SEC723125:Developing opportunity": "2026-11-14T22:32:02Z",
+  "opp:SEC1116942:Developing opportunity": "2026-11-14T22:32:03Z",
+  "opp:SEC64803:Developing opportunity": "2026-11-14T22:32:04Z",
+  "inst:SEC1652044-GOOG:2026-09-30": "2026-11-14T22:32:05Z",
+  "inst:SEC1326801:2026-09-30": "2026-11-14T22:32:06Z",
+  "inst:SEC2488:2026-06-30": "2026-11-14T22:32:07Z",
+  "inst:SEC354950:2026-06-30": "2026-11-14T22:32:08Z"
  },
  "log": [
   {
@@ -10690,6 +10698,86 @@
    "score": 71.8,
    "deduplication_key": "opp:SEC1489393:Developing opportunity",
    "created_at": "2026-11-14T22:18:36Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "opportunity:opp:SEC1376139:Developing opportunity",
+   "security_id": "SEC1376139",
+   "alert_type": "opportunity",
+   "trigger_event": "score 70.8 (Developing opportunity)",
+   "score": 70.8,
+   "deduplication_key": "opp:SEC1376139:Developing opportunity",
+   "created_at": "2026-11-14T22:32:01Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "opportunity:opp:SEC723125:Developing opportunity",
+   "security_id": "SEC723125",
+   "alert_type": "opportunity",
+   "trigger_event": "score 70.3 (Developing opportunity)",
+   "score": 70.3,
+   "deduplication_key": "opp:SEC723125:Developing opportunity",
+   "created_at": "2026-11-14T22:32:02Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "opportunity:opp:SEC1116942:Developing opportunity",
+   "security_id": "SEC1116942",
+   "alert_type": "opportunity",
+   "trigger_event": "score 70.1 (Developing opportunity)",
+   "score": 70.1,
+   "deduplication_key": "opp:SEC1116942:Developing opportunity",
+   "created_at": "2026-11-14T22:32:03Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "opportunity:opp:SEC64803:Developing opportunity",
+   "security_id": "SEC64803",
+   "alert_type": "opportunity",
+   "trigger_event": "score 70.0 (Developing opportunity)",
+   "score": 70.0,
+   "deduplication_key": "opp:SEC64803:Developing opportunity",
+   "created_at": "2026-11-14T22:32:04Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "institutional:inst:SEC1652044-GOOG:2026-09-30",
+   "security_id": "SEC1652044-GOOG",
+   "alert_type": "institutional",
+   "trigger_event": "13F period 2026-09-30",
+   "score": 63.7,
+   "deduplication_key": "inst:SEC1652044-GOOG:2026-09-30",
+   "created_at": "2026-11-14T22:32:05Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "institutional:inst:SEC1326801:2026-09-30",
+   "security_id": "SEC1326801",
+   "alert_type": "institutional",
+   "trigger_event": "13F period 2026-09-30",
+   "score": 49.8,
+   "deduplication_key": "inst:SEC1326801:2026-09-30",
+   "created_at": "2026-11-14T22:32:06Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "institutional:inst:SEC2488:2026-06-30",
+   "security_id": "SEC2488",
+   "alert_type": "institutional",
+   "trigger_event": "13F period 2026-06-30",
+   "score": 63.5,
+   "deduplication_key": "inst:SEC2488:2026-06-30",
+   "created_at": "2026-11-14T22:32:07Z",
+   "delivery_status": "sent"
+  },
+  {
+   "alert_id": "institutional:inst:SEC354950:2026-06-30",
+   "security_id": "SEC354950",
+   "alert_type": "institutional",
+   "trigger_event": "13F period 2026-06-30",
+   "score": 62.0,
+   "deduplication_key": "inst:SEC354950:2026-06-30",
+   "created_at": "2026-11-14T22:32:08Z",
    "delivery_status": "sent"
   }
  ]
