@@ -61,7 +61,7 @@ export function Shell({ children, updated }: { children: React.ReactNode; update
           <img src="/icon.svg" alt="" className="h-9 w-9" />
           <div>
             <div className="display text-lg leading-tight">Hood Desk</div>
-            <div className="text-xs text-faint">Robinhood Chain</div>
+            <div className="text-xs text-faint">Research desk</div>
           </div>
         </Link>
         <div className="eyebrow mb-2 px-3">Markets</div>
