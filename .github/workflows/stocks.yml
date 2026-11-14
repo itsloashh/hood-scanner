@@ -1,0 +1,43 @@
+name: stocks
+
+# Stock research engine (US + Canada). Python, free official sources.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'probe | daily | insiders | institutions | macro | track'
+        required: false
+        default: 'daily'
+  push:
+    branches: [main]
+    paths: ['triggers/stocks.txt'] # editing this file runs the mode written in it (lets Claude test remotely)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stocks
+  cancel-in-progress: false
+
+jobs:
+  stocks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run
+        run: |
+          MODE="${{ inputs.mode }}"
+          if [ -z "$MODE" ]; then MODE=$(grep -oE '^[a-z]+' triggers/stocks.txt || echo probe); fi
+          echo "mode: $MODE"
+          if [ "$MODE" = "probe" ]; then python stocks/scripts/probe.py; else cd stocks && pip install -q -e . && python -m hoodstocks.run "$MODE"; fi
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+      - name: Save
+        if: always()
+        run: scripts/save-data.sh "stocks $(date -u +%Y-%m-%dT%H:%MZ)" data/stocks
