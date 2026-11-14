@@ -1,11 +1,14 @@
 name: stocks
 
-# Stock research engine (US + Canada). Python, free official sources.
+# Stock research engine (US + Canada). Python, free official sources. See stocks/README.md.
 on:
+  schedule:
+    - cron: '35 22 * * 1-5'        # daily research after the US close (≈5:35 PM Toronto)
+    - cron: '7 13-23/2 * * 1-5'    # insider (Form 4) sweep every 2 hours on weekdays
   workflow_dispatch:
     inputs:
       mode:
-        description: 'probe | daily | insiders | institutions | macro | track'
+        description: 'daily | insiders | institutions | macro | backtest | probe'
         required: false
         default: 'daily'
   push:
@@ -22,22 +25,40 @@ concurrency:
 jobs:
   stocks:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Restore research cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/stocks
+          key: stocks-${{ github.run_id }}
+          restore-keys: stocks-
       - name: Run
         run: |
           MODE="${{ inputs.mode }}"
+          if [ -z "$MODE" ] && [ "${{ github.event_name }}" = "schedule" ]; then
+            if [ "${{ github.event.schedule }}" = "35 22 * * 1-5" ]; then MODE=daily; else MODE=insiders; fi
+          fi
           if [ -z "$MODE" ]; then MODE=$(grep -oE '^[a-z]+' triggers/stocks.txt || echo probe); fi
           echo "mode: $MODE"
-          if [ "$MODE" = "probe" ]; then python stocks/scripts/probe.py; else cd stocks && pip install -q -e . && python -m hoodstocks.run "$MODE"; fi
+          echo "MODE=$MODE" >> "$GITHUB_ENV"
+          if [ "$MODE" = "probe" ]; then python stocks/scripts/probe.py; exit 0; fi
+          cd stocks && python -m pip install -q -e . && python -m hoodstocks.run "$MODE"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
+          OPENFIGI_API_KEY: ${{ secrets.OPENFIGI_API_KEY }}
+      - name: Save research cache
+        if: always() && (env.MODE == 'daily' || env.MODE == 'institutions')
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/stocks
+          key: stocks-${{ github.run_id }}
       - name: Save
         if: always()
         run: scripts/save-data.sh "stocks $(date -u +%Y-%m-%dT%H:%MZ)" data/stocks
