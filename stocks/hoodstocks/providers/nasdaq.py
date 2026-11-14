@@ -21,7 +21,7 @@ def screener(http: Http) -> list[dict]:
     out = []
     for r in j["data"]["rows"]:
         out.append({
-            "ticker": (r.get("symbol") or "").strip().upper(),
+            "ticker": (r.get("symbol") or "").strip().upper().replace("/", "-"),  # BRK/B → BRK-B (SEC style)
             "name": r.get("name"),
             "price": _money(r.get("lastsale")),
             "mcap": _money(r.get("marketCap")),

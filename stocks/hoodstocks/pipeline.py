@@ -263,7 +263,7 @@ def run_fundamentals(ctx: Ctx, master: dict, subs: dict) -> dict:
         sub = subs.get(cik) or {}
         last_fin = max((f["filed"] for f in sub.get("filings", []) if f["form"] in ("10-K", "10-Q", "20-F", "40-F", "10-K/A", "10-Q/A", "20-F/A", "40-F/A")), default="")
         c = cache_get("facts", cik)
-        if c and c.get("_last_fin", "") >= last_fin and c.get("_fetched", 0) > time.time() - 30 * 86400:
+        if c and c.get("_v") == F.FACTS_VERSION and c.get("_last_fin", "") >= last_fin and c.get("_fetched", 0) > time.time() - 30 * 86400:
             out[cik] = c
             continue
         if ctx.left() < 25 * 60:

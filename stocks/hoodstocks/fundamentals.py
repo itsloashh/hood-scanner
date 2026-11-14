@@ -69,20 +69,43 @@ def _units(facts: dict, tax: str, concept: str) -> list[dict] | None:
     return next(iter(units.values()), None)
 
 
+FACTS_VERSION = 2
+
+
 def compact_facts(facts: dict, max_years: int = 7) -> dict:
-    """Shrink companyfacts (MBs) to the series we use: {metric: {concept, unit, rows:[[start,end,val,filed,form,accn]]}}."""
+    """Shrink companyfacts (MBs) to the series we use: {metric: {concept, unit, rows:[[start,end,val,filed,form,accn,fp]]}}.
+    Companies switch tags over time (e.g. Revenues → RevenueFromContractWithCustomer...), so every listed concept is merged:
+    for each period the most-preferred concept that reports it wins."""
     cutoff = (date.today() - timedelta(days=366 * max_years)).isoformat()
-    out = {"entity": facts.get("entityName"), "cik": facts.get("cik")}
+    out = {"entity": facts.get("entityName"), "cik": facts.get("cik"), "_v": FACTS_VERSION}
     for group in (FLOW, INSTANT, FLAGS):
         for metric, prefs in group.items():
-            for tax, concept in prefs:
+            merged: dict[tuple, list] = {}
+            used, unit = [], None
+            for rank, (tax, concept) in enumerate(prefs):
                 rows = _units(facts, tax, concept)
                 if not rows:
                     continue
-                keep = [[r.get("start"), r["end"], r["val"], r.get("filed"), r.get("form"), r.get("accn"), r.get("fp")] for r in rows if r.get("end", "") >= cutoff]
-                if keep:
-                    out[metric] = {"concept": f"{tax}:{concept}", "unit": rows[0].get("unit"), "rows": keep}
-                    break
+                u = rows[0].get("unit")
+                if unit and u and u.split("/")[0] != unit.split("/")[0]:
+                    continue  # never mix currencies
+                took = False
+                for r in rows:
+                    if r.get("end", "") < cutoff:
+                        continue
+                    k = (r.get("start"), r["end"])
+                    if k in merged and merged[k][0] < rank:
+                        continue
+                    merged.setdefault(k, [rank, []])
+                    if merged[k][0] > rank:
+                        merged[k] = [rank, []]
+                    merged[k][1].append([r.get("start"), r["end"], r["val"], r.get("filed"), r.get("form"), r.get("accn"), r.get("fp")])
+                    took = True
+                if took:
+                    used.append(f"{tax}:{concept}")
+                    unit = unit or u
+            if merged:
+                out[metric] = {"concept": " + ".join(used), "unit": unit, "rows": [row for _, rows_ in merged.values() for row in rows_]}
     return out
 
 
@@ -125,6 +148,18 @@ def ttm(series: dict | None, as_of: str | None = None) -> dict | None:
                 q4 = yr[2] - sum(v[2] for _, v in inside)
                 quarters[(last_q_end, ye)] = [last_q_end, ye, q4, yr[3], yr[4], yr[5], "Q4*"]
     latest_year = max(years.items(), key=lambda kv: kv[0][1]) if years else None
+    # 10-Q cash flow statements are year-to-date: TTM = last fiscal year + YTD now − same YTD a year earlier
+    if latest_year:
+        (fys, fye), fy = latest_year
+        ytd = [(k, v) for k, v in best.items() if k[0] and k[0] > fye and 150 <= _days(*k) <= 290]
+        if ytd and not (len(quarters) >= 4 and max(quarters)[1] >= max(k[1] for k, _ in ytd)):
+            (cs, ce), cur = max(ytd, key=lambda kv: kv[0][1])
+            dur = _days(cs, ce)
+            prior = [(k, v) for k, v in best.items() if k[0] and fys <= k[0] <= fye and abs(_days(*k) - dur) <= 10 and 340 <= _days(k[1], ce) <= 390]
+            if prior:
+                (ps, pe_), pv = prior[0]
+                return {"value": fy[2] + cur[2] - pv[2], "start": pe_, "end": ce, "filed": cur[3], "accn": cur[5], "form": cur[4],
+                        "basis": "TTM (fiscal year + YTD)", "restated": any(k in restated for k in ((fys, fye), (cs, ce), (ps, pe_))), "concept": series["concept"]}
     if len(quarters) >= 4:
         qs = sorted(quarters.items(), key=lambda kv: kv[0][1])[-4:]
         contiguous = all(abs(_days(qs[i][0][1], qs[i + 1][0][0])) <= 5 for i in range(3)) and _days(qs[0][0][0], qs[-1][0][1]) <= 380
@@ -209,6 +244,14 @@ def snapshot(cf: dict, as_of: str | None = None) -> dict:
     s["shares_rows"] = sorted(([r[1], r[2], r[3]] for r in (g("shares_outstanding") or {}).get("rows", []) if not as_of or (r[3] or "") <= as_of), key=lambda r: r[0])
     gc = g("going_concern")
     s["going_concern"] = bool(gc and any(r[2] in (True, 1, "true") for r in gc["rows"] if not as_of or (r[3] or "") <= as_of))
+    # a metric whose latest period is far older than the company's latest reported period is stale (tag dropped) → not used
+    latest_end = max((v["end"] for k, v in s.items() if isinstance(v, dict) and v.get("end") and k in ("assets", "net_income", "equity")), default=None)
+    if latest_end:
+        lim = (_d(latest_end) - timedelta(days=400)).isoformat()
+        for k, v in list(s.items()):
+            if isinstance(v, dict) and v.get("end") and v["end"] < lim and not k.endswith("_prev"):
+                s[k] = None
+                s.setdefault("stale_metrics", []).append(k)
     filed = [v["filed"] for k, v in s.items() if isinstance(v, dict) and v.get("filed")]
     s["latest_filed"] = max(filed) if filed else None
     s["latest_period"] = max((v["end"] for k, v in s.items() if isinstance(v, dict) and v.get("end") and k in ("revenue", "net_income", "assets")), default=None)

@@ -18,13 +18,13 @@ from .providers import registry
 from .providers.telegram import send
 
 
-def _round(x):
+def _round(x, sig=6):
     if isinstance(x, float):
-        return float(f"{x:.6g}") if abs(x) < 1e6 else round(x)
+        return float(f"{x:.{sig}g}") if abs(x) < 1e6 else round(x)
     if isinstance(x, dict):
-        return {k: _round(v) for k, v in x.items()}
+        return {k: _round(v, sig) for k, v in x.items()}
     if isinstance(x, list):
-        return [_round(v) for v in x]
+        return [_round(v, sig) for v in x]
     return x
 
 
@@ -32,7 +32,10 @@ def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
     rows = _round(res["rows"])
     std = sorted([r for r in rows if not r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
     micro = sorted([r for r in rows if r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
-    store.write("universe.json", {"updated": store.now_iso(), "count": len(rows), "rows": rows}, compact=True)
+    slim = [{k: v for k, v in _round(r, 4).items() if k not in ("model", "dual_listed")} for r in rows]  # dashboard list (keeps it under 2 MB)
+    for r, full in zip(slim, rows):
+        r["price"] = full["price"]
+    store.write("universe.json", {"updated": store.now_iso(), "count": len(rows), "rows": slim}, compact=True)
     opp = {"updated": store.now_iso(), "score_version": config.SCORE_VERSION,
            "by_profile": {p: [r["id"] for r in std if r["profile"] == p][:50] for p in ("value", "growth", "dividend")},
            "top": [r["id"] for r in std[:100]], "experimental_micro": [r["id"] for r in micro[:40]],

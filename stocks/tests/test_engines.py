@@ -403,3 +403,30 @@ def test_yahoo_chart_parse():
                                "events": {"dividends": {"1700000000": {"amount": 0.1}}, "splits": {"1700086400": {"numerator": 2, "denominator": 1}}}}]}}
     c = Y.parse_chart(j)
     assert c["bars"][0]["adj"] == 0.9 and c["dividends"][0]["amount"] == 0.1 and c["splits"][0]["ratio"] == 2
+
+
+def test_concept_switch_is_merged_not_stale(facts):
+    """SYNTHETIC: company stops tagging 'Revenues' in 2023 and switches to the ASC 606 tag."""
+    g = facts["facts"]["us-gaap"]
+    old = [r for r in g["Revenues"]["units"]["USD"] if r["end"] < "2024-01-01"]
+    new = [r for r in g["Revenues"]["units"]["USD"] if r["end"] >= "2024-01-01"]
+    g["Revenues"]["units"]["USD"] = old
+    g["RevenueFromContractWithCustomerExcludingAssessedTax"] = {"units": {"USD": new}}
+    t = F.ttm(F.compact_facts(facts)["revenue"])
+    assert t["end"] == "2024-12-31" and t["value"] == pytest.approx(560)
+
+
+def test_ytd_cash_flow_ttm(facts):
+    """SYNTHETIC: 10-Q cash flows are year-to-date, not quarterly."""
+    q = lambda s, e, v, f: {"start": s, "end": e, "val": v, "filed": f, "form": "10-Q", "accn": "x"}  # noqa: E731
+    facts["facts"]["us-gaap"]["NetCashProvidedByUsedInOperatingActivities"] = {"units": {"USD": [
+        {"start": "2023-01-01", "end": "2023-12-31", "val": 100, "filed": "2024-02-15", "form": "10-K", "accn": "a"},
+        q("2023-01-01", "2023-06-30", 40, "2023-08-01"), q("2024-01-01", "2024-06-30", 70, "2024-08-01")]}}
+    t = F.ttm(F.compact_facts(facts)["ocf"])
+    assert t["value"] == pytest.approx(100 + 70 - 40) and t["end"] == "2024-06-30" and "YTD" in t["basis"]
+
+
+def test_bank_has_no_fcf(facts):
+    snap = F.snapshot(F.compact_facts(facts))
+    m = MET.compute(snap, price=30, splits=[], bars=bars_linear(n=300, p0=30), model="bank")
+    assert m["fcf_yield"] is None and m["pe"] is not None

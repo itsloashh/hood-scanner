@@ -81,6 +81,10 @@ def compute(snap: dict, *, price: float | None, splits: list[dict], bars: list[d
         "cash_runway_months": (cash / (-fcf) * 12) if fcf is not None and fcf < 0 and cash is not None else None,
         "sbc_to_rev": div(v(snap.get("sbc")), rev),
     }
+    if model in ("bank", "insurance", "financial"):
+        # operating cash flow of lenders/insurers swings with loans and deposits; FCF isn't meaningful
+        for key in ("fcf", "fcf_yield", "fcf_growth", "fcf_payout", "ev", "ev_ebitda", "net_debt_ebitda", "cash_runway_months", "current_ratio"):
+            m[key] = None
     if model == "reit" and ni is not None and dna is not None:
         ffo = ni + dna  # approximation: real FFO also removes property-sale gains (not tagged consistently)
         m["ffo_approx"] = ffo
