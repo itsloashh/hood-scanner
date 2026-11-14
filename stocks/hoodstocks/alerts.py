@@ -91,7 +91,8 @@ class Alerts:
         return self.deliver(f"ins:{sid}:{filing_key}", "insider", sid, "\n".join(lines), score=row.get("score"), trigger="Form 4 open-market purchase")
 
     def institutional(self, sid: str, row: dict, changes: list[dict]) -> bool:
-        adds = [c for c in changes if c["change"] in ("new", "increase")]
+        fresh = (date.today() - timedelta(days=14)).isoformat()
+        adds = [c for c in changes if c["change"] in ("new", "increase") and c.get("filed", "") >= fresh]  # only newly filed 13Fs
         managers = {c["manager"] for c in adds}
         if len(managers) < 2:
             return False
