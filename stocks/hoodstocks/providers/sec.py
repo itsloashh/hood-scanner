@@ -171,7 +171,8 @@ def parse_form4(xml_text: str) -> dict | None:
 # ── 13F ──────────────────────────────────────────────────
 def parse_13f_table(xml_text: str) -> list[dict]:
     """13F information table → [{cusip, issuer, class, value_usd, shares, put_call}]. Namespaces vary; strip them."""
-    xml_text = re.sub(r'\sxmlns(:\w+)?="[^"]+"', "", xml_text)
+    xml_text = re.sub(r'\sxmlns(:\w+)?="[^"]*"', "", xml_text)
+    xml_text = re.sub(r'\s\w+:\w+="[^"]*"', "", xml_text)  # prefixed attributes such as xsi:schemaLocation
     xml_text = re.sub(r"<(/?)\w+:", r"<\1", xml_text)
     try:
         root = ET.fromstring(xml_text)

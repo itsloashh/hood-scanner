@@ -355,7 +355,7 @@ def latest_13f(ctx: Ctx, mcik: str) -> list[dict]:
 
 def holdings(ctx: Ctx, mcik: str, f: dict) -> list[dict]:
     c = cache_get("13f", f["acc"])
-    if c is not None:
+    if c:  # an empty result is never trusted from cache
         return c
     idx = ctx.sec.filing_index(mcik, f["acc"])
     items = idx.get("directory", {}).get("item", [])
@@ -368,7 +368,8 @@ def holdings(ctx: Ctx, mcik: str, f: dict) -> list[dict]:
     for r in rows:
         r["value_usd"] = thirteenf_value_usd(r.get("value_raw"), f["filed"])
     agg = INST.aggregate(rows)
-    cache_put("13f", f["acc"], agg)
+    if agg:
+        cache_put("13f", f["acc"], agg)
     return agg
 
 
@@ -394,6 +395,13 @@ def run_institutions(ctx: Ctx, master: dict | None = None) -> dict:
             db["managers"][mcik] = {"name": label, "error": "fewer than two 13F-HR filings"}
             continue
         cur_f, prev_f = fs[0], fs[1]
+        first_word = label.split()[0].lower().strip(".")
+        if first_word not in (cur_f["name"] or "").lower():
+            db["managers"][mcik] = {"name": label, "edgar_name": cur_f["name"], "error": "CIK belongs to a different filer — skipped"}
+            continue
+        if cur_f["period"] < (date.today() - timedelta(days=200)).isoformat():
+            db["managers"][mcik] = {"name": label, "edgar_name": cur_f["name"], "period": cur_f["period"], "error": "no 13F in the last 200 days — skipped"}
+            continue
         try:
             cur, prev = holdings(ctx, mcik, cur_f), holdings(ctx, mcik, prev_f)
         except Exception as e:

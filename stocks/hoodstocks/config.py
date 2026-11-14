@@ -88,23 +88,21 @@ ALERT = {
     "max_alerts_per_run": 8,
 }
 
-# Curated managers whose 13F filings we compare quarter to quarter (CIKs from EDGAR)
+# Curated fundamental managers whose 13F filings we compare quarter to quarter (CIKs from EDGAR).
+# Quant/multi-strategy funds (thousands of positions, high turnover) are left out on purpose: their changes are noise.
+# A CIK whose EDGAR name doesn't match the label, or with no 13F in 200 days, is skipped and reported.
 MANAGERS = {
     "1067983": "Berkshire Hathaway",
     "1336528": "Pershing Square",
     "1061768": "Baupost Group",
     "1649339": "Scion Asset Management",
     "1029160": "Soros Fund Management",
-    "1350694": "Bridgewater Associates",
     "1167483": "Tiger Global",
     "1103804": "Viking Global",
     "1135730": "Coatue Management",
     "1656456": "Appaloosa",
     "1040273": "Third Point",
     "1079114": "Greenlight Capital",
-    "1009207": "D. E. Shaw",
-    "1037389": "Renaissance Technologies",
-    "1423053": "Citadel Advisors",
     "1418814": "ValueAct",
     "1345471": "Trian Fund Management",
     "1510387": "Starboard Value",

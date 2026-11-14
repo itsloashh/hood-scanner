@@ -122,7 +122,9 @@ export default async function StockPage({ params }: { params: Promise<{ id: stri
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-dim">
-                  Reward/risk {d.scenarios.reward_risk != null ? `${d.scenarios.reward_risk.toFixed(1)} : 1` : '—'} {d.scenarios.reward_risk != null && d.scenarios.reward_risk < 2 && '(below the 2:1 target)'}
+                  {(d.scenarios.downside_bear ?? 0) <= 0
+                    ? 'Even the bear case is above today’s value (no modeled downside).'
+                    : <>Reward/risk {d.scenarios.reward_risk != null ? `${d.scenarios.reward_risk.toFixed(1)} : 1` : '—'} {d.scenarios.reward_risk != null && d.scenarios.reward_risk < 2 && '(below the 2:1 target)'}</>}
                 </p>
                 <ul className="mt-2 space-y-0.5 text-xs text-faint">
                   {d.scenarios.assumptions?.map((a) => <li key={a}>• {a}</li>)}

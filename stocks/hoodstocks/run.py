@@ -32,7 +32,7 @@ def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
     rows = _round(res["rows"])
     std = sorted([r for r in rows if not r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
     micro = sorted([r for r in rows if r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
-    slim = [{k: v for k, v in _round(r, 4).items() if k not in ("model", "dual_listed")} for r in rows]  # dashboard list (keeps it under 2 MB)
+    slim = [{k: v for k, v in _round(r, 4).items() if k not in ("model", "dual_listed", "industry", "price_date", "exchange")} for r in rows]  # dashboard list (keeps it under 2 MB)
     for r, full in zip(slim, rows):
         r["price"] = full["price"]
     store.write("universe.json", {"updated": store.now_iso(), "count": len(rows), "rows": slim}, compact=True)
@@ -111,10 +111,19 @@ def send_alerts(ctx: Ctx, res: dict, insiders: dict, inst: dict, prev_rows: dict
         if d["institutional"] and not first_run:
             al.institutional(sid, r, d["institutional"])
     if first_run:  # remember what exists so the next run only alerts on what's new
+        now = store.now_iso()
         for d in by_score:
-            r = d["row"]
+            r, sid = d["row"], d["row"]["id"]
             if r["score"] >= config.ALERT["opportunity_min_score"]:
-                al.db["sent"][f"opp:{r['id']}:{r['class']}"] = store.now_iso()
+                al.db["sent"][f"opp:{sid}:{r['class']}"] = now
+            if d["insider"].get("buys"):
+                al.db["sent"][f"ins:{sid}:{max(b['filed'] or '' for b in d['insider']['buys'])}"] = now
+            adds = [c for c in d["institutional"] if c["change"] in ("new", "increase")]
+            if adds:
+                al.db["sent"][f"inst:{sid}:{max(c['period'] for c in adds)}"] = now
+            for ev in d["events"]:
+                al.db["sent"][f"catalyst:{sid}:{ev['item']}:{ev['filed']}"] = now
+                al.db["sent"][f"risk:{sid}:{ev['item']}:{ev['filed']}"] = now
     al.save()
     digest(ctx, al, res, prev_rows, new, cat, risks, insiders, inst, macro)
 

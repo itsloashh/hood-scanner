@@ -430,3 +430,10 @@ def test_bank_has_no_fcf(facts):
     snap = F.snapshot(F.compact_facts(facts))
     m = MET.compute(snap, price=30, splits=[], bars=bars_linear(n=300, p0=30), model="bank")
     assert m["fcf_yield"] is None and m["pe"] is not None
+
+
+def test_13f_with_schema_location_parses():
+    xml = fx("13f.xml").replace('<informationTable xmlns="http://www.sec.gov/edgar/document/thirteenf/informationtable">',
+                                '<ns1:informationTable xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns1="http://www.sec.gov/x" xsi:schemaLocation="http://www.sec.gov/x x.xsd">').replace("</informationTable>", "</ns1:informationTable>")
+    xml = xml.replace("<infoTable>", "<ns1:infoTable>").replace("</infoTable>", "</ns1:infoTable>")
+    assert len(SEC.parse_13f_table(xml)) == 3
