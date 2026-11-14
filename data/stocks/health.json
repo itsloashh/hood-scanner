@@ -1,18 +1,57 @@
 {
- "updated": "2026-11-14T19:55:10Z",
- "error": "universe failed \u2014 nothing scored this run",
+ "updated": "2026-11-14T21:47:39Z",
+ "error": null,
  "stages": {
   "macro": {
    "ok": true,
    "sec": 0
   },
   "universe": {
-   "ok": false,
-   "sec": 2,
-   "error": "FetchError: 403 https://www.sec.gov/files/company_tickers_exchange.json <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\""
+   "ok": true,
+   "sec": 788
+  },
+  "prices": {
+   "ok": true,
+   "sec": 1467
+  },
+  "fundamentals": {
+   "ok": true,
+   "sec": 1094
+  },
+  "insiders": {
+   "ok": true,
+   "sec": 1716
+  },
+  "institutions": {
+   "ok": true,
+   "sec": 197
+  },
+  "scores": {
+   "ok": true,
+   "sec": 112
+  },
+  "etfs": {
+   "ok": true,
+   "sec": 0
+  },
+  "outputs": {
+   "ok": true,
+   "sec": 3
+  },
+  "history": {
+   "ok": true,
+   "sec": 0
+  },
+  "tracking": {
+   "ok": true,
+   "sec": 0
+  },
+  "alerts": {
+   "ok": true,
+   "sec": 0
   }
  },
- "minutes": 0.0,
+ "minutes": 89.6,
  "providers": {
   "sec_edgar": {
    "name": "SEC EDGAR (submissions, XBRL company facts, Form 4, 13F, 8-K)",
@@ -23,11 +62,11 @@
    "freshness": "filings appear minutes after acceptance; 13F is quarterly and up to 45 days after quarter end",
    "limits": "10 requests/second, must send an identifying User-Agent",
    "licensing": "public domain US government data",
-   "status": "down",
-   "calls": 2,
-   "errors": 1,
-   "last_error": "403 https://www.sec.gov/files/company_tickers_exchange.json <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"",
-   "checked": "2026-11-14T19:55:10Z"
+   "status": "degraded",
+   "calls": 10001,
+   "errors": 65,
+   "last_error": "503 https://www.sec.gov/Archives/edgar/data/1086222/0001699796-26-000018.txt <!DOCTYPE html> <html lang=\"en\"> <head> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" /> <meta http-equiv=\"conten",
+   "checked": "2026-11-14T21:47:39Z"
   },
   "yahoo": {
    "name": "Yahoo Finance chart API",
@@ -38,11 +77,11 @@
    "freshness": "delayed; daily bars used",
    "limits": "unpublished; throttled to ~3/s",
    "licensing": "personal research use only; not licensed real-time data; may change without notice",
-   "status": "ok",
-   "calls": 0,
-   "errors": 0,
+   "status": "degraded",
+   "calls": 4397,
+   "errors": 120,
    "last_error": null,
-   "checked": "2026-11-14T19:55:10Z"
+   "checked": "2026-11-14T21:47:39Z"
   },
   "fred": {
    "name": "FRED (St. Louis Fed)",
@@ -57,7 +96,7 @@
    "calls": 0,
    "errors": 0,
    "last_error": null,
-   "checked": "2026-11-14T19:55:10Z"
+   "checked": "2026-11-14T21:47:39Z"
   },
   "bank_of_canada": {
    "name": "Bank of Canada Valet API",
@@ -72,7 +111,7 @@
    "calls": 0,
    "errors": 0,
    "last_error": null,
-   "checked": "2026-11-14T19:55:10Z"
+   "checked": "2026-11-14T21:47:39Z"
   },
   "openfigi": {
    "name": "OpenFIGI mapping",
@@ -83,8 +122,11 @@
    "freshness": "static",
    "limits": "25 requests/min keyless",
    "licensing": "open",
-   "status": "not used this run",
-   "checked": "2026-11-14T19:55:10Z"
+   "status": "ok",
+   "calls": 77,
+   "errors": 0,
+   "last_error": null,
+   "checked": "2026-11-14T21:47:39Z"
   },
   "google_news": {
    "name": "Google News RSS (discovery only)",
@@ -96,7 +138,7 @@
    "limits": "throttled",
    "licensing": "headlines and links only; articles are not copied",
    "status": "not used this run",
-   "checked": "2026-11-14T19:55:10Z"
+   "checked": "2026-11-14T21:47:39Z"
   },
   "sedar_plus": {
    "name": "SEDAR+ (Canadian filings)",
@@ -160,12 +202,12 @@
    "consecutive_fail": 0
   },
   "query1.finance.yahoo.com": {
-   "calls": 0,
-   "ok": 0,
-   "errors": 0,
+   "calls": 4397,
+   "ok": 4277,
+   "errors": 120,
    "retries": 0,
    "r429": 0,
-   "seconds": 0.0,
+   "seconds": 788.7,
    "cache_hits": 2,
    "last_error": null,
    "consecutive_fail": 0
@@ -182,15 +224,38 @@
    "consecutive_fail": 0
   },
   "www.sec.gov": {
-   "calls": 2,
-   "ok": 0,
-   "errors": 1,
-   "retries": 1,
+   "calls": 2249,
+   "ok": 2184,
+   "errors": 3,
+   "retries": 63,
    "r429": 0,
-   "seconds": 0.5,
+   "seconds": 1588.4,
+   "cache_hits": 2,
+   "last_error": "503 https://www.sec.gov/Archives/edgar/data/1086222/0001699796-26-000018.txt <!DOCTYPE html> <html lang=\"en\"> <head> <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\" /> <meta http-equiv=\"conten",
+   "consecutive_fail": 0
+  },
+  "data.sec.gov": {
+   "calls": 7752,
+   "ok": 7690,
+   "errors": 62,
+   "retries": 0,
+   "r429": 0,
+   "seconds": 1589.7,
    "cache_hits": 0,
-   "last_error": "403 https://www.sec.gov/files/company_tickers_exchange.json <!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\"",
-   "consecutive_fail": 1
+   "last_error": null,
+   "consecutive_fail": 0
+  },
+  "api.openfigi.com": {
+   "calls": 77,
+   "ok": 77,
+   "errors": 0,
+   "retries": 0,
+   "r429": 0,
+   "seconds": 20.1,
+   "cache_hits": 0,
+   "last_error": null,
+   "consecutive_fail": 0
   }
- }
+ },
+ "scored": 3169
 }
