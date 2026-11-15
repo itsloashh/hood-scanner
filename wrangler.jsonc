@@ -18,5 +18,11 @@
   // Paper wallet storage (KV namespace "hood-paper")
   "kv_namespaces": [
     { "binding": "PAPER", "id": "f4937e2185f040a8b276010c178b5491" }
-  ]
+  ],
+  // Hood Desk hub: the app inbox + push notification devices (worker/hub.js).
+  // SQLite-backed Durable Object — included in the Workers free plan, created on deploy.
+  "durable_objects": {
+    "bindings": [{ "name": "HUB", "class_name": "Hub" }]
+  },
+  "migrations": [{ "tag": "hub-v1", "new_sqlite_classes": ["Hub"] }]
 }

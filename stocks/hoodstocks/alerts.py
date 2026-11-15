@@ -48,7 +48,8 @@ class Alerts:
     def deliver(self, key: str, kind: str, sid: str | None, text: str, score=None, trigger=None) -> bool:
         if self.seen(key) or self.count >= config.ALERT["max_alerts_per_run"]:
             return False
-        ok = True if self.dry else send(self.http, text)
+        url = "/options" if kind == "option" else f"/stocks/{sid}" if sid else "/stocks"
+        ok = True if self.dry else send(self.http, text, kind=f"stock-{kind}", url=url)
         rec = {"alert_id": f"{kind}:{key}", "security_id": sid, "alert_type": kind, "trigger_event": trigger, "score": score,
                "deduplication_key": key, "created_at": store.now_iso(), "delivery_status": "sent" if ok else "failed"}
         if ok:

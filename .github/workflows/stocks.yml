@@ -55,6 +55,7 @@ jobs:
           cd stocks && python -m pip install -q -e . && python -m hoodstocks.run "$MODE"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          HUB_URL: ${{ secrets.HUB_URL }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           SEC_USER_AGENT: ${{ secrets.SEC_USER_AGENT }}
           OPENFIGI_API_KEY: ${{ secrets.OPENFIGI_API_KEY }}

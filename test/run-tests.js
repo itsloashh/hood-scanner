@@ -571,6 +571,140 @@ await test('/check: full report for any coin, listing which rules it fails', asy
   assert.equal(fs.readFileSync(path.join(process.env.DATA_DIR, 'state.json'), 'utf8'), stateBefore, 'check mode must not change state');
 });
 
+await test('Hood Desk hub: inbox, Web Push (encrypted + VAPID), signed events from GitHub, Telegram on/off', async () => {
+  const worker = (await import('../worker/worker.js')).default;
+  const { Hub, encryptPayload, unb64u, b64u, hmacHex, splitText } = await import('../worker/hub.js');
+  const { budgetTick, outbound } = await import('../worker/worker.js');
+  const subtle = crypto.subtle;
+  class Store {
+    m = new Map();
+    async get(k) { return structuredClone(this.m.get(k)); }
+    async put(k, v) { if (typeof k === 'object') for (const [a, b] of Object.entries(k)) this.m.set(a, structuredClone(b)); else this.m.set(k, structuredClone(v)); }
+    async delete(k) { this.m.delete(k); }
+    async list({ prefix = '', reverse = false, limit, end } = {}) {
+      let ks = [...this.m.keys()].filter((k) => k.startsWith(prefix)).sort();
+      if (end) ks = ks.filter((k) => k < end);
+      if (reverse) ks.reverse();
+      if (limit) ks = ks.slice(0, limit);
+      return new Map(ks.map((k) => [k, structuredClone(this.m.get(k))]));
+    }
+  }
+  const hub = new Hub({ storage: new Store() }, {});
+  const KEY = 'k'.repeat(32);
+  const env = { TELEGRAM_BOT_TOKEN: 'T0K', ALLOWED_CHAT_ID: '111', DASH_KEY: KEY, HUB: { idFromName: () => 'main', get: () => ({ fetch: (u, init) => hub.fetch(new Request(u, init)) }) } };
+
+  // a phone's push subscription (P-256 keys + auth secret), as the browser would create it
+  const ua = await subtle.generateKey({ name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']);
+  const uaPub = new Uint8Array(await subtle.exportKey('raw', ua.publicKey));
+  const auth = crypto.getRandomValues(new Uint8Array(16));
+  const sub = { endpoint: 'https://web.push.apple.com/QmFrZQ', keys: { p256dh: b64u(uaPub), auth: b64u(auth) } };
+
+  const pushes = [];
+  const sent = [];
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init = {}) => {
+    url = String(url);
+    if (url.includes('api.telegram.org')) { sent.push(JSON.parse(init.body)); return new Response('{"ok":true}'); }
+    if (url.startsWith('https://web.push.apple.com')) { pushes.push({ url, init }); return new Response(null, { status: 201 }); }
+    return new Response('nope', { status: 404 });
+  };
+  const api = (path, body, headers = { authorization: `Bearer ${KEY}` }) => worker.fetch(new Request(`https://bot.example.workers.dev/api/${path}`, { method: 'POST', headers, body: typeof body === 'string' ? body : JSON.stringify(body) }), env);
+
+  // dashboard endpoints need the key
+  assert.equal((await api('inbox', {}, {})).status, 403);
+  const key = await (await api('push', { op: 'key' })).json();
+  assert.equal(unb64u(key.publicKey).length, 65); // VAPID key made on first use
+  assert.equal((await (await api('push', { op: 'sub', subscription: sub, device: 'iPhone' })).json()).devices, 1);
+
+  // a signed event from GitHub Actions (HMAC with the bot token) → stored + pushed + Telegram still on
+  const raw = JSON.stringify({ ts: Date.now(), event: { kind: 'coin-buy', source: 'scan', title: '🟢 BUY ZONE · $GOODCAT — 80/100', body: 'Passed every check', url: '/coins/0xabc' } });
+  assert.equal((await api('event', raw, { 'x-hub-signature': 'sha256=bad' })).status, 403);
+  const r1 = await (await api('event', raw, { 'x-hub-signature': `sha256=${await hmacHex('T0K', raw)}` })).json();
+  assert.equal(r1.telegram, true);
+  assert.equal(r1.pushed, 1);
+
+  // the push is VAPID-signed and decrypts on the phone to the event (RFC 8291)
+  const p = pushes[0];
+  assert.equal(p.init.headers['content-encoding'], 'aes128gcm');
+  const [, jwt, k] = p.init.headers.authorization.match(/^vapid t=([^,]+), k=(.+)$/);
+  const [h, c, sig] = jwt.split('.');
+  assert.equal(JSON.parse(new TextDecoder().decode(unb64u(c))).aud, 'https://web.push.apple.com');
+  const vk = await subtle.importKey('raw', unb64u(k), { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+  assert.ok(await subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, vk, unb64u(sig), new TextEncoder().encode(`${h}.${c}`)));
+  const body = new Uint8Array(p.init.body);
+  const salt = body.slice(0, 16);
+  const asPub = body.slice(21, 21 + body[20]);
+  const hk = async (s, ikm, info, bits) => new Uint8Array(await subtle.deriveBits({ name: 'HKDF', hash: 'SHA-256', salt: s, info: new Uint8Array(info) }, await subtle.importKey('raw', ikm, 'HKDF', false, ['deriveBits']), bits));
+  const te = (x) => [...new TextEncoder().encode(x)];
+  const shared = new Uint8Array(await subtle.deriveBits({ name: 'ECDH', public: await subtle.importKey('raw', asPub, { name: 'ECDH', namedCurve: 'P-256' }, false, []) }, ua.privateKey, 256));
+  const ikm = await hk(auth, shared, [...te('WebPush: info\0'), ...uaPub, ...asPub], 256);
+  const cek = await subtle.importKey('raw', await hk(salt, ikm, te('Content-Encoding: aes128gcm\0'), 128), 'AES-GCM', false, ['decrypt']);
+  const plain = new Uint8Array(await subtle.decrypt({ name: 'AES-GCM', iv: await hk(salt, ikm, te('Content-Encoding: nonce\0'), 96) }, cek, body.slice(21 + body[20])));
+  assert.equal(plain.at(-1), 2); // last-record delimiter
+  const msg = JSON.parse(new TextDecoder().decode(plain.slice(0, -1)));
+  assert.equal(msg.title, '🟢 BUY ZONE · $GOODCAT — 80/100');
+  assert.equal(msg.url, '/coins/0xabc');
+
+  // inbox lists newest first; bad URLs are dropped
+  await api('event', { event: { title: 'second', url: 'https://evil.example' } });
+  const inbox = await (await api('inbox', { limit: 10 })).json();
+  assert.deepEqual(inbox.events.map((e) => e.title), ['second', '🟢 BUY ZONE · $GOODCAT — 80/100']);
+  assert.equal(inbox.events[0].url, null);
+  assert.equal((await (await api('inbox', { since: inbox.events[0].id })).json()).events.length, 0);
+
+  // bot-started messages (bills, paper) go to the inbox AND Telegram — until Telegram is switched off
+  await outbound(env, '💰 BILLS\n\nRent due tomorrow', { kind: 'budget', url: '/budget' });
+  assert.equal(sent.length, 1);
+  await api('prefs', { set: { telegram: false } });
+  await outbound(env, '📋 PAPER\n\nTP1 hit', { kind: 'paper', url: '/paper' });
+  assert.equal(sent.length, 1); // web only now
+  const titles = (await (await api('inbox', {})).json()).events.map((e) => e.title);
+  assert.deepEqual(titles.slice(0, 2), ['📋 PAPER', '💰 BILLS']);
+  assert.equal((await (await api('event', { event: { title: 'x' } })).json()).telegram, false); // GitHub senders learn it too
+
+  // a phone that's gone (410) is forgotten
+  globalThis.fetch = async (url) => (String(url).startsWith('https://web.push.apple.com') ? new Response(null, { status: 410 }) : new Response('{}'));
+  await api('push', { op: 'test' });
+  assert.equal((await (await api('push', { op: 'key' })).json()).devices, 0);
+  assert.deepEqual(splitText('\n<b>POTENTIAL</b> OPPORTUNITY\nline2', true), { title: 'POTENTIAL OPPORTUNITY', body: 'line2' });
+  globalThis.fetch = prevFetch;
+});
+
+await test('notify: GitHub jobs post to the Hood Desk hub (signed) and skip Telegram when it is switched off', async () => {
+  const { notify, eventFor } = await import('../src/notify.js');
+  const nodeCrypto = await import('node:crypto');
+  const ev = eventFor('\n🟢 BUY ZONE · $GOODCAT — 80/100\nPassed', [[{ text: 'x', data: 'pc:0xABCDEF0123456789abcdef0123456789ABCDEF01' }]]);
+  assert.equal(ev.kind, 'coin-buy');
+  assert.equal(ev.url, '/coins/0xabcdef0123456789abcdef0123456789abcdef01');
+  assert.equal(ev.title, '🟢 BUY ZONE · $GOODCAT — 80/100');
+  const saved = { ...process.env };
+  Object.assign(process.env, { DRY_RUN: '0', HUB_URL: 'https://hub.example.workers.dev/', TELEGRAM_BOT_TOKEN: 'TOK', TELEGRAM_CHAT_ID: '1' });
+  const calls = [];
+  let telegramOn = false;
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url: String(url), init });
+    if (String(url).includes('/api/event')) return new Response(JSON.stringify({ telegram: telegramOn, stored: true }));
+    return new Response('{"ok":true}');
+  };
+  await notify('📋 HOOD SCANNER — summary (every 4h)\nall quiet');
+  assert.equal(calls.length, 1); // hub only — Telegram is off
+  assert.equal(calls[0].url, 'https://hub.example.workers.dev/api/event');
+  const want = nodeCrypto.createHmac('sha256', 'TOK').update(calls[0].init.body).digest('hex');
+  assert.equal(calls[0].init.headers['x-hub-signature'], `sha256=${want}`);
+  assert.equal(JSON.parse(calls[0].init.body).event.kind, 'digest');
+  telegramOn = true;
+  await notify('hi');
+  assert.ok(calls.at(-1).url.includes('api.telegram.org'));
+  globalThis.fetch = async () => { throw new Error('down'); }; // hub down → Telegram still goes out
+  let tgSent = 0;
+  globalThis.fetch = async (url) => { if (String(url).includes('/api/event')) throw new Error('down'); tgSent += 1; return new Response('{"ok":true}'); };
+  await notify('hub down');
+  assert.equal(tgSent, 1);
+  globalThis.fetch = prevFetch;
+  for (const k of ['DRY_RUN', 'HUB_URL', 'TELEGRAM_BOT_TOKEN', 'TELEGRAM_CHAT_ID']) { if (k in saved) process.env[k] = saved[k]; else delete process.env[k]; }
+});
+
 await test('telegram relay: commands trigger GitHub, strangers and forged requests are ignored', async () => {
   const worker = (await import('../worker/worker.js')).default;
   const env = { TELEGRAM_BOT_TOKEN: 'T', ALLOWED_CHAT_ID: '111', GITHUB_TOKEN: 'G', WEBHOOK_SECRET: 'sec_123', GITHUB_REPO: 'itsloashh/hood-scanner' };

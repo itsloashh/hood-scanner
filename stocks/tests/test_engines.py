@@ -480,3 +480,41 @@ def test_zones_match_rules():
     assert s["tps"][-1]["price"] == 130 and s["tps"][-1]["label"] == "Runner"
     assert z["scalp"] and all(t["label"] != "Runner" for t in z["scalp"]["tps"])
     assert ZN.zones(100.0, [], None) is None
+
+
+def test_stock_alerts_go_to_the_hood_desk_hub_first(monkeypatch):
+    """Alerts post to the Hood Desk hub (signed with the bot token); Telegram is skipped when switched off there."""
+    import hashlib, hmac, json as J, urllib.request
+    from hoodstocks.providers import telegram
+    posted, tg = [], []
+
+    class Resp:
+        def __init__(self, b): self.b = b
+        def read(self): return self.b
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+
+    state = {"telegram": True}
+
+    def fake_urlopen(req, timeout=0):
+        raw = req.data
+        sig = req.headers.get("X-hub-signature")
+        assert sig == "sha256=" + hmac.new(b"TOK", raw, hashlib.sha256).hexdigest()
+        posted.append(J.loads(raw))
+        return Resp(J.dumps({"telegram": state["telegram"], "stored": True}).encode())
+
+    class FakeHttp:
+        def get(self, url, data=None, **k):
+            tg.append(J.loads(data))
+            return b"{}"
+
+    monkeypatch.setattr(urllib.request, "urlopen", fake_urlopen)
+    monkeypatch.setenv("HUB_URL", "https://hub.example.workers.dev/")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "TOK")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "111")
+    assert telegram.send(FakeHttp(), "<b>POTENTIAL INVESTMENT OPPORTUNITY</b>\n\nSYN", kind="stock-opportunity", url="/stocks/SEC1")
+    ev = posted[0]["event"]
+    assert ev["title"] == "POTENTIAL INVESTMENT OPPORTUNITY" and ev["url"] == "/stocks/SEC1" and ev["html"] and len(tg) == 1
+    state["telegram"] = False
+    assert telegram.send(FakeHttp(), "x", kind="stock-digest")
+    assert len(posted) == 2 and len(tg) == 1  # web only

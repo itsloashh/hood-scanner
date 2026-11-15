@@ -38,6 +38,7 @@ jobs:
           FX_MODE="$MODE" node fx/run.js
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          HUB_URL: ${{ secrets.HUB_URL }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       - name: Save
         if: always()

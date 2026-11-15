@@ -1,4 +1,7 @@
 import * as BG from './budget.js';
+import { Hub, publish, hubCall, hmacHex, splitText } from './hub.js';
+
+export { Hub }; // Durable Object: the Hood Desk inbox + push subscriptions (worker/hub.js)
 // HOOD SCANNER — Telegram command relay (Cloudflare Worker, free plan)
 //
 // Telegram → this Worker → GitHub Actions. Commands:
@@ -163,7 +166,7 @@ export async function budgetTick(env) {
   if (!b || (!b.bills.length && !b.history.length)) return [];
   const msgs = BG.dailyReminders(b);
   await BG.saveBudget(env, b);
-  if (msgs.length) await tg(env, 'sendMessage', { chat_id: env.ALLOWED_CHAT_ID, text: `💰 BILLS\n\n${msgs.join('\n\n')}`, reply_markup: { inline_keyboard: [[{ text: '💰 Budget home', callback_data: 'bg' }]] } });
+  if (msgs.length) await outbound(env, `💰 BILLS\n\n${msgs.join('\n\n')}`, { kb: [[{ text: '💰 Budget home', callback_data: 'bg' }]], kind: 'budget', url: '/budget' });
   return msgs;
 }
 
@@ -748,10 +751,8 @@ export async function paperTick(env, now = Date.now()) {
   for (const pos of [...p.positions]) evs.push(...tickPosition(p, pos, prices[pos.pool], now));
   const moves = positionMoves(p, prices, now);
   await savePaper(env, p);
-  for (const e of evs) await reply(env, env.ALLOWED_CHAT_ID, eventText(e));
-  for (const m of moves) {
-    await tg(env, 'sendMessage', { chat_id: env.ALLOWED_CHAT_ID, text: moveText(m), reply_markup: { inline_keyboard: moveButtons(m.pos.id) }, disable_web_page_preview: true });
-  }
+  for (const e of evs) await outbound(env, eventText(e), { kind: 'paper', url: '/paper' });
+  for (const m of moves) await outbound(env, moveText(m), { kb: moveButtons(m.pos.id), kind: 'paper-move', url: '/paper' });
   return [...evs, ...moves];
 }
 
@@ -1150,6 +1151,57 @@ async function sendScreen(env, chatId, scr) {
   return tg(env, 'sendMessage', { chat_id: chatId, text: scr.text, reply_markup: { inline_keyboard: scr.kb }, disable_web_page_preview: true });
 }
 
+// ── messages the bot starts itself (not replies): Hood Desk inbox + push, and Telegram unless switched off ──
+export async function outbound(env, text, { kb = null, kind = 'update', url = null, source = 'bot' } = {}) {
+  let telegram = true;
+  try {
+    telegram = (await publish(env, { kind, source, url, ...splitText(text) })).telegram;
+  } catch {
+    // hub unavailable → Telegram still gets it
+  }
+  if (telegram && env.ALLOWED_CHAT_ID) await tg(env, 'sendMessage', { chat_id: env.ALLOWED_CHAT_ID, text, disable_web_page_preview: true, ...(kb ? { reply_markup: { inline_keyboard: kb } } : {}) });
+}
+
+const dashOk = (request, env) => {
+  const want = String(env.DASH_KEY || '').trim();
+  const got = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+  return want.length >= 20 && got === want;
+};
+
+// Hood Desk hub API: events in (dashboard key, or GitHub Actions signed with the bot token), inbox/push/prefs out
+async function hubApi(request, env, path) {
+  if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+  const raw = await request.text();
+  let body = {};
+  try {
+    body = JSON.parse(raw || '{}');
+  } catch {
+    return new Response('Bad JSON', { status: 400 });
+  }
+  const json = (x) => Response.json(x, { headers: { 'cache-control': 'no-store' } });
+  if (path === 'event') {
+    let ok = dashOk(request, env);
+    if (!ok && env.TELEGRAM_BOT_TOKEN) {
+      const sig = request.headers.get('x-hub-signature') || '';
+      ok = sig === `sha256=${await hmacHex(env.TELEGRAM_BOT_TOKEN, raw)}` && Math.abs(Date.now() - Number(body.ts || 0)) < 10 * 60_000;
+    }
+    if (!ok) return new Response('Forbidden', { status: 403 });
+    if (!env.HUB) return json({ telegram: true, stored: false });
+    return json(await publish(env, body.event || {}));
+  }
+  if (!dashOk(request, env)) return new Response('Forbidden', { status: 403 });
+  if (!env.HUB) return json({ error: 'hub not deployed yet' });
+  if (path === 'inbox') return json(await hubCall(env, 'list', { since: body.since, before: body.before, limit: body.limit }));
+  if (path === 'prefs') return json(await hubCall(env, 'prefs', { set: body.set }));
+  if (path === 'push') {
+    if (body.op === 'key') return json(await hubCall(env, 'key'));
+    if (body.op === 'sub') return json(await hubCall(env, 'sub', { subscription: body.subscription, device: body.device }));
+    if (body.op === 'unsub') return json(await hubCall(env, 'unsub', { endpoint: body.endpoint }));
+    if (body.op === 'test') return json(await publish(env, { kind: 'test', source: 'hood-desk', title: '🔔 Hood Desk notifications are on', body: 'Alerts, digests and paper-trade updates will arrive here.', url: '/inbox' }));
+  }
+  return new Response('Not found', { status: 404 });
+}
+
 // ── dashboard bridge: same handlers as Telegram, output captured ──
 export async function dashboardBot(env, body = {}) {
   const cap = [];
@@ -1330,7 +1382,7 @@ export default {
     ctx.waitUntil(
       dispatch(env, job).then(async (r) => {
         // only speak up if the clock breaks, so a bad token doesn't fail silently
-        if (!r.ok && env.ALLOWED_CHAT_ID) await reply(env, env.ALLOWED_CHAT_ID, `⏰ Scheduled ${job.replace('.yml', '')} couldn't start. ${dispatchError(r)}`);
+        if (!r.ok && env.ALLOWED_CHAT_ID) await outbound(env, `⏰ Scheduled ${job.replace('.yml', '')} couldn't start. ${dispatchError(r)}`, { kind: 'system' });
       })
     );
   },
@@ -1378,6 +1430,9 @@ export default {
 
     // Hood Desk dashboard: runs any bot command or button tap and returns the screen instead of
     // posting it to Telegram. Server-to-server only, guarded by the DASH_KEY secret.
+    const hubPath = url.pathname.match(/^\/api\/(event|inbox|prefs|push)$/)?.[1];
+    if (hubPath) return hubApi(request, env, hubPath);
+
     if (url.pathname === '/api/bot') {
       if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
       // trimmed both sides: keys pasted on a phone often pick up a space or line break

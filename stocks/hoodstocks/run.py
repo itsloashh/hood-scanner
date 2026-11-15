@@ -154,7 +154,7 @@ def digest(ctx, al, res, prev_rows, new, cat, risks, insiders, inst, macro):
             dg["watchlist"].append(f"${r['ticker']} score {p['score']} → {r['score']}")
     store.write(f"digests/{dg['date']}.json", {k: v for k, v in dg.items()})
     if prev_rows:  # the very first run seeds data quietly
-        send(ctx.http, AL.digest_text(dg))
+        send(ctx.http, AL.digest_text(dg), kind="stock-digest", url="/stocks")
 
 
 def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: bool = True) -> dict:
