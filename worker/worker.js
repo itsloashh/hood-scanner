@@ -1376,7 +1376,10 @@ export default {
     // posting it to Telegram. Server-to-server only, guarded by the DASH_KEY secret.
     if (url.pathname === '/api/bot') {
       if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
-      if (!env.DASH_KEY || env.DASH_KEY.length < 20 || request.headers.get('authorization') !== `Bearer ${env.DASH_KEY}`) return new Response('Forbidden', { status: 403 });
+      // trimmed both sides: keys pasted on a phone often pick up a space or line break
+      const want = String(env.DASH_KEY || '').trim();
+      const got = String(request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '').trim();
+      if (want.length < 20 || got !== want) return new Response(want ? 'Forbidden: key mismatch' : 'Forbidden: DASH_KEY not set on the Worker', { status: 403 });
       const body = await request.json().catch(() => ({}));
       return Response.json(await dashboardBot(env, body), { headers: { 'cache-control': 'no-store' } });
     }
