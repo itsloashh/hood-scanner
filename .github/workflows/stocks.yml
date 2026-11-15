@@ -5,10 +5,11 @@ on:
   schedule:
     - cron: '35 22 * * 1-5'        # daily research after the US close (≈5:35 PM Toronto)
     - cron: '7 13-23/2 * * 1-5'    # insider (Form 4) sweep every 2 hours on weekdays
+    - cron: '45 15,18 * * 1-5'     # option setups re-priced + paper marks (10:45 AM and 1:45 PM Toronto)
   workflow_dispatch:
     inputs:
       mode:
-        description: 'daily | insiders | institutions | macro | backtest | probe'
+        description: 'daily | options | insiders | institutions | macro | backtest | probe'
         required: false
         default: 'daily'
   push:
@@ -41,7 +42,11 @@ jobs:
         run: |
           MODE="${{ inputs.mode }}"
           if [ -z "$MODE" ] && [ "${{ github.event_name }}" = "schedule" ]; then
-            if [ "${{ github.event.schedule }}" = "35 22 * * 1-5" ]; then MODE=daily; else MODE=insiders; fi
+            case "${{ github.event.schedule }}" in
+              "35 22 * * 1-5") MODE=daily ;;
+              "45 15,18 * * 1-5") MODE=options ;;
+              *) MODE=insiders ;;
+            esac
           fi
           if [ -z "$MODE" ]; then MODE=$(grep -oE '^[a-z]+' triggers/stocks.txt || echo probe); fi
           echo "mode: $MODE"

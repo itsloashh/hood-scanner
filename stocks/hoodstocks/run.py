@@ -79,6 +79,7 @@ def daily():
     history.snapshot_scores(res["rows"])
     ctx.stage("tracking", history.track, bars, master)
     ctx.stage("alerts", send_alerts, ctx, res, insiders, inst, prev_rows, new, macro)
+    ctx.stage("options", run_options, ctx, res["details"], bars, macro, bool(prev_rows))
     finish(ctx, None, extra={"scored": len(res["rows"])})
 
 
@@ -156,6 +157,100 @@ def digest(ctx, al, res, prev_rows, new, cat, risks, insiders, inst, macro):
         send(ctx.http, AL.digest_text(dg))
 
 
+def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: bool = True) -> dict:
+    """Option setups for the best bullish stock candidates + paper tracking. See options.py."""
+    from . import options as OP
+    from .pipeline import cache_get
+    rate = ((macro.get("readings") or {}).get("DFF") or {}).get("last")
+    rate = rate / 100 if rate else 0.04
+    earnings = OP.earnings_calendar(ctx.http)
+    rows = {sid: d["row"] for sid, d in details.items()}
+
+    def bars_of(d):
+        sym = d.get("yahoo") or d["security"]["listings"][0]["ticker"]
+        b = bars.get(sym) or cache_get("bars", sym) or {}
+        return b.get("bars") or []
+
+    cands = [(sid, d) for sid, d in details.items() if OP.gate(d["row"], d)]
+    cands.sort(key=lambda x: -OP.prelim(x[1]["row"], x[1], bars_of(x[1])))
+    cands = cands[: OP.CFG["max_chains"]]
+    paper = store.read("options/paper.json", {"positions": []}) or {"positions": []}
+    open_tickers = {p["ticker"] for p in paper["positions"] if p["status"] == "open"}
+    chains: dict[str, dict] = {}
+    for t in [d["row"]["ticker"] for _, d in cands] + sorted(open_tickers):
+        if t in chains or ctx.left() < 4 * 60:
+            continue
+        ch = OP.fetch_chain(ctx.http, t)
+        if ch:
+            chains[t] = ch
+    # IV history (builds IV rank over time)
+    hist = store.read("options/iv_history.json", {}) or {}
+    today = date.today().isoformat()
+    for t, ch in chains.items():
+        if ch.get("iv30"):
+            h = [x for x in hist.get(t, []) if x[0] != today] + [[today, ch["iv30"]]]
+            hist[t] = h[-300:]
+    store.write("options/iv_history.json", hist, compact=True)
+    setups, skipped = [], []
+    for sid, d in cands:
+        t = d["row"]["ticker"]
+        st = OP.build_setup(d["row"], d, chains.get(t), bars_of(d), earnings.get(t), rate)
+        if not st:
+            skipped.append({"ticker": t, "why": "no chain / no 30–60 day expiry"})
+            continue
+        if st.get("skip"):
+            skipped.append({"ticker": t, "why": st["skip"]})
+            continue
+        h = [x[1] for x in hist.get(t, [])]
+        if len(h) >= 60 and max(h) > min(h):
+            st["iv_rank"] = (h[-1] - min(h)) / (max(h) - min(h))
+        if st["tier"]:
+            setups.append(st)
+        else:
+            skipped.append({"ticker": t, "why": f"{st['points']} points (below tier C)", "against": st["against"][:3]})
+    setups.sort(key=lambda s: ("ABC".index(s["tier"]), -s["points"]))
+    # paper: mark open positions, open new ones for alert-grade setups
+    for p in paper["positions"]:
+        if p["status"] == "open":
+            OP.mark(p, chains)
+    al = AL.Alerts(ctx.http) if alerts_on else None
+    for st in [s for s in setups if s["tier"] in ("A", "B")]:
+        if st["ticker"] in open_tickers:
+            continue
+        sent = al.option(st) if al and al.count < OP.CFG["max_alerts_per_run"] else False
+        if sent:
+            paper["positions"].append(OP.open_paper(st))
+            open_tickers.add(st["ticker"])
+    if al:
+        al.save()
+    paper["summary"] = OP.summary(paper["positions"])
+    paper["updated"] = store.now_iso()
+    store.write("options/paper.json", paper)
+    out = {"updated": store.now_iso(), "rate": rate, "config": OP.CFG, "setups": setups, "skipped": skipped[:80], "checked": len(cands),
+           "chains": len(chains), "notes": ["Bullish call setups only (V1).", "Cboe delayed quotes; Nasdaq earnings calendar.",
+                                              "Tier A/B are alerted (max 3 per run, one per stock per 2 weeks) and paper-tracked."]}
+    store.write("options/setups.json", out)
+    log(f"options: {len(cands)} candidates, {len(chains)} chains, {len(setups)} setups ({sum(s['tier'] == 'A' for s in setups)} A, {sum(s['tier'] == 'B' for s in setups)} B)")
+    return out
+
+
+def options_only(alerts_on: bool = True):
+    """Midday refresh: re-price setups from the latest scored candidates and mark the paper positions."""
+    import glob
+    import json as _json
+    ctx = Ctx(budget_min=30)
+    details = {}
+    for f in glob.glob(str(config.DATA / "sec" / "*.json")):
+        try:
+            d = _json.loads(open(f).read())
+            details[d["row"]["id"]] = d
+        except Exception:
+            continue
+    macro = store.read("macro.json", {}) or {}
+    ctx.stage("options", run_options, ctx, details, {}, macro, alerts_on)
+    finish(ctx, None, name="health-options.json")
+
+
 def insiders_only():
     ctx = Ctx(budget_min=25)
     master = store.read("master.json", {}) or {}
@@ -187,6 +282,10 @@ def main(argv=None):
         daily()
     elif mode == "insiders":
         insiders_only()
+    elif mode == "options":
+        options_only()
+    elif mode == "optionsdry":  # same, without Telegram alerts or new paper positions (for checking)
+        options_only(alerts_on=False)
     elif mode == "institutions":
         ctx = Ctx(budget_min=40)
         ctx.stage("institutions", run_institutions, ctx)

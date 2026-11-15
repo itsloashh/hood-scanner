@@ -40,6 +40,22 @@ Tests: `cd stocks && pip install pytest && python -m pytest` (43 tests, syntheti
 | `backtest.py` | quarterly point-in-time replay of the score |
 | `pipeline.py`, `run.py` | orchestration; every stage fails soft and is reported in `health.json` |
 
+## Options setups (calls only, V1)
+
+`hoodstocks/options.py`, run after the daily scoring and re-priced at 10:45 AM and 1:45 PM Toronto on weekdays.
+
+- **Gate:** US stock, score 55+, evidence 70+, market cap $1B+, swing zones with TP1 reward/risk ≥ 1.2.
+- **Chains:** Cboe delayed quotes (~15 min) for the best ~60 by score + timing; Nasdaq earnings calendar.
+- **Expiry:** 30–60 days, closest to 45; exit by 21 days left.
+- **Structure:** ~0.60-delta call when options are cheap (IV ≤ 1.15× realised volatility) and no earnings in the window; otherwise a
+  call debit spread (sell the strike nearest TP2).
+- **Liquidity:** open interest 300+, a bid, bid/ask spread ≤ 12% of mid.
+- **Payoff:** Black-Scholes value if price hits TP1 / TP2 / the stop halfway to expiry, entry at the ask.
+- **Tier:** points for score, evidence, uptrend, in-zone, RSI, option reward/risk, TP1 inside the implied move, cheap IV,
+  liquidity, insider/fund activity; minus for stretched price, overbought, expensive IV, earnings in the window.
+  A ≥ 9, B ≥ 7, C ≥ 5. A/B are alerted (max 3 per run, once per stock per 2 weeks) and paper-tracked at Cboe bid/ask.
+- Files: `data/stocks/options/setups.json`, `paper.json`, `iv_history.json` (builds IV rank), `earnings.json`.
+
 ## Scoring (method v1.0.0)
 
 Components (base weights): financial health 20 · undervaluation 20 · institutional 15 · growth & catalysts 15 ·

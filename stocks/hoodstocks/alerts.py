@@ -103,6 +103,13 @@ class Alerts:
                   f"Score {row.get('score')} · confidence {row.get('confidence')}", "", "<i>Research signal — not a buy instruction.</i>"]
         return self.deliver(f"inst:{sid}:{period}", "institutional", sid, "\n".join(lines), score=row.get("score"), trigger=f"13F period {period}")
 
+    def option(self, st: dict) -> bool:
+        key = f"optn:{st['ticker']}:{st['expiry']}"
+        recent = [k for k, v in self.db["sent"].items() if k.startswith(f"optn:{st['ticker']}:") and v >= (date.today() - timedelta(days=14)).isoformat()]
+        if recent:
+            return False
+        return self.deliver(key, "option", st["id"], option_text(st), score=st["points"], trigger=f"Tier {st['tier']} {st['recommended']} exp {st['expiry']}")
+
     def catalyst(self, sid: str, row: dict, ev: dict, risk: bool = False) -> bool:
         kind = "risk" if risk else "catalyst"
         title = "RISK ALERT" if risk else "CATALYST"
@@ -164,6 +171,28 @@ def zone_lines(z: dict | None, cur: str = "USD") -> list[str]:
     if c:
         L.append(f"Scalp (1h): entry {m(c['entry'][0])}–{m(c['entry'][1])} · stop {m(c['stop'])} · " + " · ".join(tp(t) for t in c["tps"]))
     return L
+
+
+def option_text(st: dict) -> str:
+    s = st["structures"][st["recommended"]]
+    u = st["underlying"]
+    legs = " / ".join(f"{'Buy' if l['side'] == 'buy' else 'Sell'} {l['strike']:g}C" for l in s["legs"])
+    name = "CALL" if s["kind"] == "call" else "CALL DEBIT SPREAD"
+    L = [f"<b>OPTION SETUP · Tier {st['tier']}</b> · ${_e(st['ticker'])} — {_e(st['name'])}", "",
+         f"<b>{name}</b> {legs} · exp {st['expiry']} ({st['dte']} days)",
+         f"Cost ≈ ${s['debit']:.2f} (${s['cost']:,.0f}/contract, max loss) · mid ${s['debit_mid']:.2f}",
+         f"Breakeven at expiry ${s['breakeven']:.2f}" + (f" · max gain ${s['max_gain']:,.0f}" if s.get("max_gain") else ""),
+         "", "<b>Plan (underlying)</b>",
+         f"Now ${st['spot']:.2f} · entry {u['entry'][0]:.2f}–{u['entry'][1]:.2f} · stop {u['stop']:.2f}",
+         f"TP1 {u['tp1']:.2f} → ≈ {'+' if s['profit_tp1'] >= 0 else ''}${s['profit_tp1']:,.0f} · TP2 {u['tp2']:.2f} → ≈ +${s['profit_tp2']:,.0f} · stop → ≈ ${s['loss_at_stop']:,.0f}",
+         f"Exit by {st['exit_by']} (21 days left) if neither level hits",
+         "", "<b>Why</b>"] + [f"• {_e(x)}" for x in st["why"][:5]]
+    if st["against"]:
+        L += ["<b>Watch out</b>"] + [f"• {_e(x)}" for x in st["against"][:3]]
+    iv = f"IV {st['atm_iv'] * 100:.0f}%" + (f" vs realised {max(x for x in (st['hv20'], st['hv60']) if x) * 100:.0f}%" if (st.get("hv20") or st.get("hv60")) else "")
+    L += ["", f"{iv} · expected move ±{st['expected_move'] / st['spot'] * 100:.1f}% by expiry" if st.get("expected_move") else iv,
+          f"Delayed Cboe quotes · {DASH.replace('/stocks', '/options')}", "<i>Research setup — not a trade instruction. Size so the max loss is affordable.</i>"]
+    return "\n".join(L)
 
 
 def fmt(x):

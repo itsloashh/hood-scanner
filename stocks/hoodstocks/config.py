@@ -25,6 +25,8 @@ RATE = {
     "api.openfigi.com": 0.4,  # keyless: 25 requests / minute
     "news.google.com": 1.0,
     "api.telegram.org": 1.0,
+    "cdn.cboe.com": 2.0,
+    "api.nasdaq.com": 2.0,
 }
 
 # ── Market cap classes (USD) ─────────────────────────────
