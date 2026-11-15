@@ -1,0 +1,287 @@
+{
+ "updated": "2026-11-15T19:23:57Z",
+ "rate": 0.0388,
+ "config": {
+  "min_score": 55,
+  "min_confidence": 70,
+  "min_mcap": 1000000000.0,
+  "min_tp1_rr": 1.2,
+  "dte": [
+   30,
+   60
+  ],
+  "dte_target": 45,
+  "exit_dte": 21,
+  "long_delta": 0.6,
+  "long_delta_band": [
+   0.45,
+   0.75
+  ],
+  "min_oi": 300,
+  "max_spread_pct": 0.12,
+  "cheap_iv_ratio": 1.15,
+  "expensive_iv_ratio": 1.4,
+  "tiers": {
+   "A": 9.0,
+   "B": 7.0,
+   "C": 5.0
+  },
+  "max_chains": 60,
+  "alert_cooldown_days": 14,
+  "max_alerts_per_run": 3,
+  "take_profit_pct": {
+   "call": 1.0,
+   "spread": 0.8
+  }
+ },
+ "setups": [],
+ "skipped": [
+  {
+   "ticker": "WTM",
+   "why": "no chain / no 30\u201360 day expiry"
+  },
+  {
+   "ticker": "GAP",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "LNTH",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "M",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "CTSH",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "GNK",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "LCII",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "TGT",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "THC",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "PYPL",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "AEO",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "BBY",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "LRN",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "PCRX",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "PAYC",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "CHRD",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "CON",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "MAT",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "SBH",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "MHK",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "INSW",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "GME",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "DAL",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "TDC",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "LYB",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "SEZL",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "AMPH",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "TTMI",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "BAH",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "DAR",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "KALU",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "JLL",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "KSS",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "CVS",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "GDDY",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "WRB",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "AR",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "KFY",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "REYN",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "HZO",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "BR",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "BTSG",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "OPCH",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "WST",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "MLKN",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "ESTC",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "SWK",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "OLLI",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "DINO",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "ADSK",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "AIN",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "KMB",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "VSXY",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "ADUS",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "XYL",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "ADI",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "GEN",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "PAYX",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "NBIX",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  },
+  {
+   "ticker": "AN",
+   "why": "no liquid ~0.60-delta call in the 30\u201360 day window"
+  }
+ ],
+ "checked": 60,
+ "chains": 59,
+ "notes": [
+  "Bullish call setups only (V1).",
+  "Cboe delayed quotes; Nasdaq earnings calendar.",
+  "Tier A/B are alerted (max 3 per run, one per stock per 2 weeks) and paper-tracked."
+ ]
+}
