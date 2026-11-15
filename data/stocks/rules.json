@@ -1,0 +1,91 @@
+{
+ "updated": "2026-11-15T17:21:49Z",
+ "alert": {
+  "opportunity_min_score": 70,
+  "opportunity_min_confidence": 50,
+  "rescore_jump": 10,
+  "insider_min_value_usd": 100000,
+  "insider_cluster_min_people": 2,
+  "max_alerts_per_run": 8
+ },
+ "eligibility": {
+  "min_mcap_usd": 300000000.0,
+  "min_price_usd": 5.0,
+  "min_adv_usd": 2000000.0,
+  "min_history_days": 90
+ },
+ "micro": {
+  "min_mcap_usd": 50000000.0,
+  "min_price_usd": 1.0,
+  "min_adv_usd": 250000.0,
+  "min_history_days": 90
+ },
+ "caps": {
+  "no_verified_financials": 69,
+  "institutional_only": 79
+ },
+ "classes": [
+  [
+   90,
+   "Exceptional research candidate"
+  ],
+  [
+   80,
+   "Strong research candidate"
+  ],
+  [
+   70,
+   "Developing opportunity"
+  ],
+  [
+   60,
+   "Early watchlist"
+  ],
+  [
+   0,
+   "No priority alert"
+  ]
+ ],
+ "profiles": {
+  "value": {
+   "financial_health": 22,
+   "valuation": 28,
+   "institutional": 15,
+   "growth_catalysts": 8,
+   "market_sector": 7,
+   "insider_strategic": 10,
+   "data_quality": 10
+  },
+  "growth": {
+   "financial_health": 20,
+   "valuation": 12,
+   "institutional": 13,
+   "growth_catalysts": 28,
+   "market_sector": 9,
+   "insider_strategic": 8,
+   "data_quality": 10
+  },
+  "dividend": {
+   "financial_health": 25.0,
+   "valuation": 18.0,
+   "institutional": 10.0,
+   "growth_catalysts": 7.0,
+   "market_sector": 5.0,
+   "insider_strategic": 5.0,
+   "data_quality": 10.0,
+   "income_quality": 20.0
+  }
+ },
+ "score_version": "1.0.0",
+ "dividend": {
+  "yield_min": 0.025,
+  "yield_max": 0.08,
+  "investigate_above": 0.1,
+  "min_years": 5,
+  "max_payout": 0.75
+ },
+ "value": {
+  "min_drawdown_52w": 0.15
+ },
+ "managers": 21
+}
