@@ -1,13 +1,15 @@
-"""Probe the free data sources from GitHub Actions and save short samples (no secrets)."""
+"""Probe options + earnings sources from GitHub Actions (no secrets). Writes data/stocks/probe/probe.json."""
 import json, os, time, urllib.request, urllib.error
+from datetime import date, timedelta
 
 OUT = "data/stocks/probe"
 os.makedirs(OUT, exist_ok=True)
 BOT = "Mozilla/5.0 (compatible; hood-desk-stocks/1.0; +github.com/itsloashh/hood-scanner)"
+BROWSER = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
 
 
 def get(url, ua, timeout=60):
-    req = urllib.request.Request(url, headers={"User-Agent": ua, "Accept": "*/*"})
+    req = urllib.request.Request(url, headers={"User-Agent": ua, "Accept": "application/json, text/plain, */*"})
     t = time.time()
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
@@ -19,36 +21,35 @@ def get(url, ua, timeout=60):
 
 
 res = {}
-sec_uas = {
-    "secret": os.environ.get("SEC_USER_AGENT") or "",
-    "bot": BOT,
-    "plain": "HoodDesk Research hood-desk-stocks",
-    "python": "Python-urllib/3.12",
-}
-for name, ua in sec_uas.items():
-    if not ua:
-        continue
-    s, b, dt = get("https://data.sec.gov/submissions/CIK0000320193.json", ua)
-    res[f"sec_ua_{name}"] = {"status": s, "bytes": len(b), "sec": dt}
-    s, b, dt = get("https://www.sec.gov/files/company_tickers_exchange.json", ua)
-    res[f"sec_www_ua_{name}"] = {"status": s, "bytes": len(b), "sec": dt}
-    time.sleep(1)
-for k, u in {
-    "yahoo_chart": "https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=5y&interval=1d&events=div%2Csplits",
-    "yahoo_chart_tsx": "https://query1.finance.yahoo.com/v8/finance/chart/RY.TO?range=1y&interval=1d&events=div",
-    "yahoo_spark": "https://query1.finance.yahoo.com/v7/finance/spark?symbols=AAPL,MSFT,RY.TO,SHOP.TO&range=5d&interval=1d",
-    "fred_csv": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=BAMLH0A0HYM2",
-}.items():
-    s, b, dt = get(u, BOT)
-    res[k] = {"status": s, "bytes": len(b), "sec": dt, "sample": b[:300].decode("utf-8", "replace")}
+for k, u, ua in [
+    ("cboe_aapl", "https://cdn.cboe.com/api/global/delayed_quotes/options/AAPL.json", BOT),
+    ("cboe_aapl_browser", "https://cdn.cboe.com/api/global/delayed_quotes/options/AAPL.json", BROWSER),
+    ("cboe_quote", "https://cdn.cboe.com/api/global/delayed_quotes/quotes/AAPL.json", BOT),
+    ("nasdaq_earn", f"https://api.nasdaq.com/api/calendar/earnings?date={(date.today() + timedelta(days=1)).isoformat()}", BROWSER),
+    ("nasdaq_opt", "https://api.nasdaq.com/api/quote/AAPL/option-chain?assetclass=stocks&limit=5", BROWSER),
+    ("yahoo_opt", "https://query1.finance.yahoo.com/v7/finance/options/AAPL", BOT),
+]:
+    s, b, dt = get(u, ua)
+    r = {"status": s, "bytes": len(b), "sec": dt}
+    try:
+        j = json.loads(b)
+        if k.startswith("cboe") and s == 200:
+            d = j.get("data", {})
+            r["keys"] = list(d.keys())
+            r["scalar"] = {kk: vv for kk, vv in d.items() if not isinstance(vv, (list, dict))}
+            opts = d.get("options") or []
+            r["n_options"] = len(opts)
+            r["sample"] = opts[:3]
+            r["timestamp"] = j.get("timestamp")
+        elif k == "nasdaq_earn" and s == 200:
+            rows = ((j.get("data") or {}).get("rows") or [])
+            r["n"] = len(rows)
+            r["sample"] = rows[:2]
+        else:
+            r["sample"] = str(j)[:600]
+    except Exception:
+        r["sample"] = b[:300].decode("utf-8", "replace")
+    res[k] = r
+    print(k, s, len(b), dt)
     time.sleep(0.5)
-s, b, dt = get("https://api.nasdaq.com/api/screener/stocks?tableonly=true&limit=25&download=true", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36")
-if s == 200:
-    j = json.loads(b)
-    rows = j["data"]["rows"]
-    res["nasdaq_screener"] = {"status": s, "n": len(rows), "keys": list(rows[0].keys()), "sample": rows[:2]}
-s, b, dt = get("https://www.tsx.com/json/company-directory/search/tsx/A", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36")
-res["tmx"] = {"status": s, "sample": b[:600].decode("utf-8", "replace")}
-json.dump(res, open(f"{OUT}/probe.json", "w"), indent=1)
-for k, v in res.items():
-    print(k, v.get("status"), v.get("bytes"), v.get("sec"))
+json.dump(res, open(f"{OUT}/probe.json", "w"), indent=1, default=str)
