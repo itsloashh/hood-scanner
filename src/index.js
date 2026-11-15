@@ -758,6 +758,7 @@ export async function main() {
     for (const [t, v] of Object.entries(state.pumpAlerts)) if (now - v.at > 3 * DAY) delete state.pumpAlerts[t];
     delete state.holdersFile; // read-only copy of data/holders.json, never saved into state
     saveState(state);
+    writeRules();
   }
   return runStats;
 }
@@ -766,6 +767,22 @@ const fmtPx = (v) => (v == null ? '—' : v >= 1 ? `$${v.toFixed(4)}` : `$${v.to
 const paperButtons = (token) => [[{ text: '📝 Paper buy', data: `pc:${token}` }, { text: '📋 Paper menu', data: 'm' }]];
 // on every alert/update for a coin: trade it, see the full report, or choose how much to hear about it
 const coinButtons = (token) => [[{ text: '📝 Paper buy', data: `pc:${token}` }, { text: '🔍 Full report', data: `ck:${token}` }], [{ text: '🔕 Mute coin', data: `cm:${token}` }, { text: '⭐ Follow closely', data: `cf:${token}` }]];
+
+// The live alert rules, written next to the data so the dashboard always shows what the bot actually uses
+function writeRules() {
+  const C = CONFIG;
+  const rules = {
+    updated: new Date().toISOString(),
+    lanes: C.lanes,
+    buyScore: C.alertScore, watchScore: C.watchScore, regimeAdjust: C.regimeAdjust,
+    profile: C.profile, tracking: C.tracking, scorecard: C.scorecard,
+    pump: { minChangePct: C.pump.minChangePct, cooldownHours: C.pump.cooldownHours },
+    ignition: { minVolMultiple: C.ignition.minVolMultiple, hours: C.ignition.hours, maxPriceAboveBasePct: C.ignition.maxPriceAboveBasePct, cooldownHours: C.ignition.cooldownHours, minVolume24hUsd: C.ignition.minVolume24hUsd },
+    digestEveryHours: C.digestEveryHours, target: [C.targetMinX, C.targetMaxX],
+    zones: 'ATR(14) + swing highs/lows: swing from daily candles, scalp from hourly',
+  };
+  try { fs.writeFileSync(path.join(DATA_DIR, 'rules.json'), JSON.stringify(rules, null, 1)); } catch {}
+}
 
 function candidateRow(r, tier, now) {
   const p = r.pool;

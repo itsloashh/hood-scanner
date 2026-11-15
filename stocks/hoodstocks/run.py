@@ -42,6 +42,9 @@ def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
            "quarantined": [r["id"] for r in rows if r["quarantined"]][:200],
            "etfs": _round(sorted(etfs, key=lambda e: -(e.get("score") or 0))), "rotation": res["rotation"], "sector_medians": res["sector_medians"]}
     store.write("opportunities.json", opp, compact=True)
+    store.write("rules.json", {"updated": store.now_iso(), "alert": config.ALERT, "eligibility": config.ELIGIBILITY, "micro": config.MICRO_EXPERIMENTAL,
+                               "caps": config.CAPS, "classes": config.CLASSES, "profiles": config.PROFILES, "score_version": config.SCORE_VERSION,
+                               "dividend": config.DIVIDEND, "value": config.VALUE, "managers": len(config.MANAGERS)})
     # per-security detail pages for anything worth opening (top names, insider buys, institutional activity, watchlist)
     watch = {w.get("security_id") or w.get("ticker") for w in (store.read("watchlist.json", []) or [])}
     want = set(opp["top"]) | set(opp["experimental_micro"]) | {r["id"] for r in rows if r["insider_buyers_90d"] or r["inst_adds"] or r["id"] in watch or r["ticker"] in watch}
