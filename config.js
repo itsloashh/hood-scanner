@@ -71,7 +71,7 @@ export const CONFIG = {
 
   // Quiet base: price going sideways while volume dries up — every second leg in the
   // case study started from this (volume trend 0.37–0.79×, 7-day range 1.2–2×)
-  quietBase: { maxVolTrend: 0.8, maxBaseRange: 2, minDrawdownPct: 50, maxDrawdownPct: 97 },
+  quietBase: { maxVolTrend: 0.7, maxBaseRange: 2, minDrawdownPct: 50, maxDrawdownPct: 97 }, // Nov 15: volume trend ≤0.7× (was 0.8×)
   // Absorption base: the opposite volume picture with the same flat price — volume keeps coming
   // in (≥1.2×) yet price won't drop: weak sellers are being soaked up by steady buyers.
   // FLORK's 19× second leg came from this (volume 1.81×, 7-day range 1.38×, 89% off its high).
@@ -97,6 +97,8 @@ export const CONFIG = {
     identityBonus: 2, // coin is part of the chain's identity (launchpad token, Robinhood-themed)
     identityPattern: /robin|hood|tenev|vlad|launchpad|\bpons\b/i,
     max: 8,
+    // Nov 15: a catalyst only counts when buyers or volume are actually showing up
+    evidence: { minBuySell: 1.1, minVolRatio: 1.5 },
   },
 
   // Copycats: a different contract using the ticker of an established coin (ticker search kept finding fake PONS/FRONG)
@@ -145,10 +147,21 @@ export const CONFIG = {
   // Winner profile (src/profile.js) — micro-lane calls must look like our past 2× winners.
   // Oct 17–27: coins we called by score alone doubled 5% of the time; coins matching this did 27–75%.
   // Quality lane not gated yet: no snapshot data for $1M+ coins until now.
-  profile: { enabled: true, lanes: ['micro'], minBuyers24h: 60, minBuySell: 1.0, minVolRatio: 2, change24h: [0, 60] },
+  // Nov 15 tightening: buyers 60→80, buyers/sellers 1.0→1.2, volume 2×→2.5×.
+  profile: { enabled: true, lanes: ['micro'], minBuyers24h: 80, minBuySell: 1.2, minVolRatio: 2.5, change24h: [0, 60] },
 
-  alertScore: 65, // 🟢 BUY ZONE — opens a paper position
-  watchScore: 50, // 👀 WATCH — heads-up only, no paper position
+  // Extra conditions for BUY ZONE only (a coin that misses them can still be a WATCH)
+  buyGates: {
+    microMinSmartWallets: 2, // micro: 2+ proven wallets bought in the last 24h
+    noNewLowDays: 6, // no new low in the last 6 days (all lanes)
+    quality: { minBuyers24h: 40, minVolRatio: 1.5 }, // quality lane: real buyers and volume picking up
+  },
+  // Narrative + burn bonuses can't lift a coin over an alert bar on their own:
+  // the score without them must already be within this many points of the bar.
+  secondaryBridgeMax: 3,
+
+  alertScore: 68, // 🟢 BUY ZONE (Nov 15: was 65)
+  watchScore: 55, // 👀 WATCH — heads-up only (Nov 15: was 50)
   regimeAdjust: { riskOn: -5, riskOff: +10 },
   // Called coins: one full alert, then short updates only when something changes (src/tracking.js)
   tracking: {
@@ -162,6 +175,7 @@ export const CONFIG = {
   watchCooldownHours: 24,
 
   // ── Paper trading: the $30 test ──────────────────────────
+  microMaxPositionPct: 2.5, // suggested max size for a micro-lane coin, % of the wallet (Nov 15: was 5%)
   paper: {
     enabled: true,
     auto: false, // paper trades are placed by you from Telegram (/paper). true = old auto-trading
@@ -200,8 +214,8 @@ export const CONFIG = {
     smartMinHitRate: 0.4, // …and ≥40% of its resolved buys won
     sprayMaxTokensPerDay: 15, // wallets buying more distinct tokens than this per day are treated as bots
     maxWallets: 6000, // cap file size
-    smartBonusPerWallet: 4, // score bonus per smart wallet buying in last 24h…
-    smartBonusMax: 10, // …up to this many points
+    smartBonusPerWallet: 6, // score bonus per smart wallet buying in last 24h (Nov 15: was 4)…
+    smartBonusMax: 12, // …full bonus (12) needs 2+ wallets; one wallet = partial (6)
   },
 
   // Summary message every N hours, around the clock. Alerts themselves go out any time.

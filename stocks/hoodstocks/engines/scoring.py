@@ -8,7 +8,7 @@ from .. import config
 from .base import Component, pct
 
 
-def market_sector(px: dict, sector: str | None, rotation: dict, tilt: dict) -> Component:
+def market_sector(px: dict, sector: str | None, rotation: dict, tilt: dict, sector_px: dict | None = None) -> Component:
     c = Component("market_sector")
     rot = rotation.get(sector or "")
     if not sector:
@@ -27,10 +27,22 @@ def market_sector(px: dict, sector: str | None, rotation: dict, tilt: dict) -> C
             c.add(0.2, f"recent economic data leans positive for {sector}")
         elif t < 0:
             c.no(f"recent economic data leans negative for {sector}")
+    # Momentum (Nov 15: more weight on trend and on beating the sector)
     if px.get("above_ma50"):
-        c.add(0.2, "price back above its 50-day average")
+        c.add(0.25, "price back above its 50-day average")
     if px.get("above_ma200"):
-        c.add(0.15, "above its 200-day average")
+        c.add(0.2, "above its 200-day average")
+    if px.get("above_ma50") and px.get("above_ma200"):
+        c.add(0.1, "above both the 50- and 200-day averages")
+    spx = (sector_px or {}).get(sector or "")
+    if spx and px.get("ret_3m") is not None and spx.get("ret_3m") is not None:
+        rs3 = px["ret_3m"] - spx["ret_3m"]
+        if rs3 >= 0.05:
+            c.add(0.2, f"beating its sector ETF by {rs3 * 100:.0f} pts over 3 months")
+            if px.get("ret_1m") is not None and spx.get("ret_1m") is not None and px["ret_1m"] > spx["ret_1m"]:
+                c.add(0.05, "and still ahead of it this month")
+        elif rs3 <= -0.05:
+            c.no(f"lagging its sector ETF by {-rs3 * 100:.0f} pts over 3 months")
     if (px.get("rel_volume") or 0) > 1.3:
         c.add(0.1, f"trading volume {px['rel_volume']:.1f}× its 90-day average")
     return c.clamp()
@@ -83,7 +95,7 @@ def combine(components: dict[str, Component], profile: str, *, verified_financia
     core = sum(parts[k]["points"] for k in ("financial_health", "valuation", "growth_catalysts", "income_quality") if k in parts)
     if core < 20 and total > config.CAPS["institutional_only"]:
         total = config.CAPS["institutional_only"]
-        caps.append("capped at 79: the case rests mostly on institutional buying")
+        caps.append(f"capped at {config.CAPS['institutional_only']}: the case rests mostly on institutional buying")
     if quarantined:
         caps.append("quarantined: " + "; ".join(quarantined))
         total = min(total, 39)

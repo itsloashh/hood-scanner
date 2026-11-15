@@ -53,16 +53,16 @@ def score(ins: dict) -> Component:
         n30, n90 = ins.get("buyers_30d", 0), ins.get("buyers_90d", 0)
         v = ins["buys_value_90d"]
         if n30 >= 2:
-            c.add(0.45, f"{n30} insiders bought on the open market within 30 days")
+            c.add(0.55, f"{n30} insiders bought on the open market within 30 days")  # Nov 15: was 0.45
         elif n90 >= 2:
             c.add(0.35, f"{n90} insiders bought on the open market within 90 days")
         else:
             c.add(0.2, "an insider bought on the open market")
         if ins.get("senior_buy"):
-            c.add(0.25, "CEO/CFO/President/Chair among the buyers")
+            c.add(0.35, "CEO/CFO/President/Chair among the buyers")  # Nov 15: was 0.25
         if v >= 1e6:
             c.add(0.2, f"${v / 1e6:.1f}M bought in total")
-        elif v >= 1e5:
+        elif v >= 2.5e5:  # Nov 15: was $100k
             c.add(0.1, f"${v / 1e3:.0f}k bought in total")
     for a in ins.get("activist", []):
         c.add(0.3, f"{a['form']} (5%+ owner, active intent) filed {a['filed']}")

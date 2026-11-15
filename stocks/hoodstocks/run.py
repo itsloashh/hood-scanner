@@ -44,7 +44,7 @@ def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
     store.write("opportunities.json", opp, compact=True)
     store.write("rules.json", {"updated": store.now_iso(), "alert": config.ALERT, "eligibility": config.ELIGIBILITY, "micro": config.MICRO_EXPERIMENTAL,
                                "caps": config.CAPS, "classes": config.CLASSES, "profiles": config.PROFILES, "score_version": config.SCORE_VERSION,
-                               "dividend": config.DIVIDEND, "value": config.VALUE, "managers": len(config.MANAGERS)})
+                               "dividend": config.DIVIDEND, "value": config.VALUE, "managers": len(config.MANAGERS), "quality": config.QUALITY})
     # per-security detail pages for anything worth opening (top names, insider buys, institutional activity, watchlist)
     watch = {w.get("security_id") or w.get("ticker") for w in (store.read("watchlist.json", []) or [])}
     want = set(opp["top"]) | set(opp["experimental_micro"]) | {r["id"] for r in rows if r["insider_buyers_90d"] or r["inst_adds"] or r["id"] in watch or r["ticker"] in watch}
@@ -196,7 +196,7 @@ def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: boo
         t = d["row"]["ticker"]
         st = OP.build_setup(d["row"], d, chains.get(t), bars_of(d), earnings.get(t), rate)
         if not st:
-            skipped.append({"ticker": t, "why": "no chain / no 30–60 day expiry"})
+            skipped.append({"ticker": t, "why": "no chain / no 35–55 day expiry"})
             continue
         if st.get("skip"):
             skipped.append({"ticker": t, "why": st["skip"]})
@@ -204,6 +204,7 @@ def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: boo
         h = [x[1] for x in hist.get(t, [])]
         if len(h) >= 60 and max(h) > min(h):
             st["iv_rank"] = (h[-1] - min(h)) / (max(h) - min(h))
+        st["stock_grade"] = OP.stock_grade(d["row"], d)
         if st["tier"]:
             setups.append(st)
         else:
@@ -217,6 +218,9 @@ def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: boo
     for st in [s for s in setups if s["tier"] in ("A", "B")]:
         if st["ticker"] in open_tickers:
             continue
+        if not st.get("stock_grade"):  # Nov 15: A/B alert only when the stock itself is Opportunity-grade or 80+
+            st["not_alerted"] = "the stock isn't Opportunity-grade (72+, confidence 55+, quality overlay) or 80+"
+            continue
         sent = al.option(st) if al and al.count < OP.CFG["max_alerts_per_run"] else False
         if sent:
             paper["positions"].append(OP.open_paper(st))
@@ -228,7 +232,7 @@ def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: boo
     store.write("options/paper.json", paper)
     out = {"updated": store.now_iso(), "rate": rate, "config": OP.CFG, "setups": setups, "skipped": skipped[:80], "checked": len(cands),
            "chains": len(chains), "notes": ["Bullish call setups only (V1).", "Cboe delayed quotes; Nasdaq earnings calendar.",
-                                              "Tier A/B are alerted (max 3 per run, one per stock per 2 weeks) and paper-tracked."]}
+                                              "Tier A/B are alerted (max 3 per run, one per stock per 2 weeks) and paper-tracked when the stock is Opportunity-grade or scores 80+."]}
     store.write("options/setups.json", out)
     log(f"options: {len(cands)} candidates, {len(chains)} chains, {len(setups)} setups ({sum(s['tier'] == 'A' for s in setups)} A, {sum(s['tier'] == 'B' for s in setups)} B)")
     return out

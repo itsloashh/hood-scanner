@@ -478,6 +478,7 @@ async function handleMessage(env, msg) {
 //  PAPER TRADING (Telegram buttons + KV)
 // ════════════════════════════════════════════════════════════
 const GT = 'https://api.geckoterminal.com/api/v2/networks/robinhood';
+const MICRO_MAX_PCT = 2.5; // keep in step with CONFIG.microMaxPositionPct
 const DEFAULTS = { start: 30, moveStep: 10, sizePct: 10, sl: -50, tp1: 3, tp1Sell: 50, tp2: 5, tp2Sell: 25, runner: 10, trail: 40, slip: 3, orderHours: 48 };
 const money = (v) => {
   if (v == null || !Number.isFinite(v)) return '—';
@@ -882,8 +883,11 @@ async function coinScreen(env, token) {
     'How much?',
   ].filter((l) => l !== null);
   const part = (pct) => `${pct}% (${money(sizeFor(p.cash, pct))})`;
+  // micro-lane coins: suggested max 2.5% of the wallet (scanner rule, Nov 15)
+  const micro = c.lane === 'micro';
+  if (micro) lines.splice(lines.length - 1, 0, `🧪 Micro lane — suggested max ${MICRO_MAX_PCT}% (${money(sizeFor(p.cash, MICRO_MAX_PCT))}).`, '');
   const kb = [
-    [btn(part(5), `pb:${token}:p5`), btn(part(10), `pb:${token}:p10`)],
+    micro ? [btn(part(MICRO_MAX_PCT), `pb:${token}:p${MICRO_MAX_PCT}`), btn(part(5), `pb:${token}:p5`), btn(part(10), `pb:${token}:p10`)] : [btn(part(5), `pb:${token}:p5`), btn(part(10), `pb:${token}:p10`)],
     [btn(part(25), `pb:${token}:q`), btn(part(50), `pb:${token}:p50`), btn(`All (${money(p.cash)})`, `pb:${token}:all`)],
   ];
   if (c.entry?.mid) kb.push([btn(`📌 Limit buy ${st.sizePct}% (${money(sizeFor(p.cash, st.sizePct))}) @ ${price(c.entry.mid)}`, `pl:${token}`)]);
@@ -1236,7 +1240,7 @@ export async function handleCallback(env, cq) {
   } else if (op === 'pb') {
     const c = await coinInfo(env, a);
     const q = c ? (await priceMap(env, [{ ...c, token: a }]))[c.pool] : null;
-    const size = b === 'all' ? Math.floor(p.cash * 100) / 100 : b === 'q' ? sizeFor(p.cash, 25) : /^p\d+$/.test(b) ? sizeFor(p.cash, Number(b.slice(1))) : Number(b);
+    const size = b === 'all' ? Math.floor(p.cash * 100) / 100 : b === 'q' ? sizeFor(p.cash, 25) : /^p\d+(\.\d+)?$/.test(b) ? sizeFor(p.cash, Number(b.slice(1))) : Number(b);
     const r = !c ? { error: 'Coin not found.' } : !q?.price ? { error: noPriceMsg() } : openPosition(p, { token: a, symbol: c.symbol, pool: c.pool, px: q.price, size });
     if (r.error) toast = r.error;
     else {

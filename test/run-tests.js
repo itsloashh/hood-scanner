@@ -26,15 +26,16 @@ const addr = (n) => '0x' + n.toString(16).padStart(40, '0');
 // big   : $2M mcap                                                → rejected (mcap)
 // leader: large cat coin up 30% (rotation source for GOODCAT)
 const coins = {
-  good: { sym: 'GOODCAT', token: addr(1), pool: addr(101), mcap: 180_000, liq: 30_000, age: 40, buyers: 70, sellers: 45, ch24: 4, vol: 40_000 },
+  good: { sym: 'GOODCAT', token: addr(1), pool: addr(101), mcap: 180_000, liq: 30_000, age: 40, buyers: 90, sellers: 45, ch24: 4, vol: 40_000 },
   young: { sym: 'NEWDOG', token: addr(2), pool: addr(102), mcap: 150_000, liq: 20_000, age: 10, buyers: 80, sellers: 50, ch24: 10, vol: 30_000 },
   whale: { sym: 'WHALEINU', token: addr(3), pool: addr(103), mcap: 120_000, liq: 15_000, age: 30, buyers: 40, sellers: 20, ch24: 2, vol: 10_000 },
   big: { sym: 'BIGCAT', token: addr(4), pool: addr(104), mcap: 2_000_000, liq: 300_000, age: 90, buyers: 900, sellers: 700, ch24: 30, vol: 900_000 },
 };
 const price = 0.00018;
 const SMART = '0x5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a';
+const SMART2 = '0x6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b6b';
 fs.mkdirSync(path.join(process.env.DATA_DIR, 'research'), { recursive: true });
-fs.writeFileSync(path.join(process.env.DATA_DIR, 'research', 'smart-wallets.json'), JSON.stringify({ wallets: [{ addr: SMART, wins: 3, duds: 0, coins: ['OLDCAT'] }] }));
+fs.writeFileSync(path.join(process.env.DATA_DIR, 'research', 'smart-wallets.json'), JSON.stringify({ wallets: [{ addr: SMART, wins: 3, duds: 0, coins: ['OLDCAT'] }, { addr: SMART2, wins: 4, duds: 1, coins: ['OLDCAT'] }] }));
 
 function poolJson(list) {
   return {
@@ -109,7 +110,10 @@ globalThis.fetch = async (url) => {
         price_to_in_usd: String(price), price_from_in_usd: String(price),
       } });
     }
-    if (c?.sym === 'GOODCAT') data.push({ attributes: { tx_hash: '0xsmart', block_number: 2000, block_timestamp: new Date(now - 3_600_000).toISOString(), tx_from_address: SMART, kind: 'buy', volume_in_usd: '250', price_to_in_usd: String(price) } });
+    if (c?.sym === 'GOODCAT') {
+      data.push({ attributes: { tx_hash: '0xsmart', block_number: 2000, block_timestamp: new Date(now - 3_600_000).toISOString(), tx_from_address: SMART, kind: 'buy', volume_in_usd: '250', price_to_in_usd: String(price) } });
+      data.push({ attributes: { tx_hash: '0xsmart2', block_number: 2005, block_timestamp: new Date(now - 2_400_000).toISOString(), tx_from_address: SMART2, kind: 'buy', volume_in_usd: '180', price_to_in_usd: String(price) } });
+    }
     return ok({ data });
   }
   if (url.includes('api.telegram.org') && url.includes('getChatMemberCount')) return ok({ ok: true, result: 1200 });
@@ -176,8 +180,8 @@ await test('full scan alerts on the good coin only, with paper buttons (no auto 
   assert.match(out, /BUY ZONE · \$GOODCAT/);
   assert.match(out, /Telegram @goodcatportal — 1,200 members/);
   assert.match(out, /WHO'S BUYING/);
-  assert.match(out, /1 proven wallet\(s\) bought/);
-  assert.match(out, /Smart money \+4/);
+  assert.match(out, /2 proven wallet\(s\) bought/);
+  assert.match(out, /Smart money \+12/);
   if (process.env.SHOW_ALERT) origLog(out.slice(out.indexOf('──── ALERT')));
   assert.doesNotMatch(out, /— \$WHALEINU/);
   assert.doesNotMatch(out, /— \$NEWDOG/);
@@ -423,8 +427,38 @@ await test('holders job: slow Blockscout lists saved for the scan; buy zone need
   const est = scoreCoin({ pool, holdersCount: 900, conc: { top10Pct: 20, top1Pct: null, source: 'estimate' }, socials: 2, chart: null, rotation: {}, community: {} });
   assert.equal(est.buyBlocked, true);
   assert.match(est.buyBlockedWhy, /biggest single wallet/);
-  const real = scoreCoin({ pool, holdersCount: 900, conc: { top10Pct: 20, top1Pct: 3 }, socials: 2, chart: null, rotation: {}, community: {} });
+  const real = scoreCoin({ pool, holdersCount: 900, conc: { top10Pct: 20, top1Pct: 3 }, socials: 2, chart: null, rotation: {}, community: {}, flow: { smartBuyers: ['a', 'b'] } });
   assert.equal(real.buyBlocked, false);
+});
+
+await test('buy gates (Nov 15): micro BUY needs 2+ smart wallets, quality BUY needs buyers + volume, no new low in 6 days', async () => {
+  const { scoreCoin, tierFor, chartFeatures } = await import('../src/score.js');
+  const pool = { baseToken: { symbol: 'X' }, marketCap: 100_000, liquidityUsd: 20_000, volume24h: 5000, buyers24h: 90, sellers24h: 40, change: { h24: 2 } };
+  const base = { pool, holdersCount: 900, conc: { top10Pct: 20, top1Pct: 3 }, socials: 2, chart: null, rotation: {}, community: {} };
+  const one = scoreCoin({ ...base, flow: { smartBuyers: ['a'] } });
+  const two = scoreCoin({ ...base, flow: { smartBuyers: ['a', 'b'] } });
+  assert.equal(one.parts.smartMoney, 6); // partial bonus
+  assert.equal(two.parts.smartMoney, 12); // full bonus
+  assert.equal(one.buyBlocked, true);
+  assert.match(one.buyBlockedWhy, /only 1 proven wallet/);
+  assert.equal(two.buyBlocked, false);
+  // blocked coins can still be WATCH, never BUY
+  assert.equal(tierFor({ total: 80, secondary: 0, buyBlocked: true }), 'watch');
+  assert.equal(tierFor({ total: 80, secondary: 0, buyBlocked: false }), 'buy');
+  // quality lane: under 40 buyers or volume under 1.5× its weekly average = no BUY
+  const qpool = { ...pool, marketCap: 2_000_000, liquidityUsd: 200_000, buyers24h: 30, volume24h: 10_000 };
+  const days = Array.from({ length: 20 }, (_, i) => ({ t: i, o: 1, h: 1.05, l: 0.95, c: 1, v: 10_000 }));
+  const q = scoreCoin({ ...base, pool: qpool, lane: 'quality', chart: chartFeatures(days, 1) });
+  assert.match(q.buyBlockedWhy, /quality BUY needs 40\+/);
+  assert.match(q.buyBlockedWhy, /quality BUY needs 1.5×/);
+  // a new low in the last 6 days blocks BUY
+  const dipped = days.map((d, i) => (i === 17 ? { ...d, l: 0.8 } : d));
+  assert.equal(chartFeatures(dipped, 1).lowsHolding, false);
+  assert.match(scoreCoin({ ...base, flow: { smartBuyers: ['a', 'b'] }, chart: chartFeatures(dipped, 1) }).buyBlockedWhy, /new low in the last 6 days/);
+  // narrative + burn can only bridge the last 3 points to a bar
+  assert.equal(tierFor({ total: 69, secondary: 5, buyBlocked: false }), 'watch'); // 64 without them: too far from 68
+  assert.equal(tierFor({ total: 69, secondary: 2, buyBlocked: false }), 'buy'); // 67 without them: close enough
+  assert.equal(tierFor({ total: 56, secondary: 5, buyBlocked: false }), null); // 51: too far from watch 55
 });
 
 await test('scorecard: every alert is followed to 3x, −50% or 30 days', async () => {
@@ -1577,9 +1611,14 @@ await test('absorption base: volume rising while price holds flat scores (FLORK)
 await test('catalysts: manual tag, buybacks and chain identity add up to +8 max', async () => {
   const { catalystScore } = await import('../src/score.js');
   const pool = { baseToken: { symbol: 'HOODCAT', name: 'Hood Cat' } };
-  const c = catalystScore({ manual: { note: 'Robinhood app listing' }, burns: { recent: { count: 5 } }, pool, info: {} });
+  const c = catalystScore({ manual: { note: 'Robinhood app listing' }, burns: { recent: { count: 5 } }, pool: { ...pool, buyers24h: 60, sellers24h: 30 }, info: {} });
   assert.equal(c.pts, 8);
   assert.equal(c.why.length, 3);
+  // Nov 15: no buyer or volume follow-through = catalyst not counted yet
+  const cold = catalystScore({ manual: { note: 'listing' }, burns: null, pool: { ...pool, buyers24h: 20, sellers24h: 30 }, info: {}, volRatio: 0.9 });
+  assert.equal(cold.pts, 0);
+  assert.match(cold.why[0], /no buyer or volume follow-through/);
+  assert.equal(catalystScore({ manual: { note: 'listing' }, burns: null, pool: { ...pool, buyers24h: 20, sellers24h: 30 }, info: {}, volRatio: 2 }).pts, 8);
   assert.equal(catalystScore({ manual: null, burns: { recent: { count: 1 } }, pool: { baseToken: { symbol: 'ZZZ', name: 'zz' } }, info: {} }).pts, 0);
   const { applyCatalyst } = await import('../scripts/catalyst.js');
   const file = path.join(process.env.DATA_DIR, 'catalysts.json');

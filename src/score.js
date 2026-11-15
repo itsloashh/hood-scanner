@@ -27,9 +27,10 @@ export function chartFeatures(candles, priceNow) {
   const closes7 = last7.map((c) => c.c).filter((c) => c > 0);
   const baseRange = closes7.length >= 5 ? Math.max(...closes7) / Math.min(...closes7) : null;
 
-  // Lows holding: the lowest low of the last 5 days is above the lowest low before that.
-  const recent = candles.slice(-5);
-  const prior = candles.slice(0, -5);
+  // Lows holding: no new low in the last N days (6) — their lowest low is above the lowest low before them.
+  const nl = CONFIG.buyGates?.noNewLowDays ?? 6;
+  const recent = candles.slice(-nl);
+  const prior = candles.slice(0, -nl);
   const lowsHolding =
     prior.length >= 5 ? Math.min(...recent.map((c) => c.l)) >= Math.min(...prior.map((c) => c.l)) : null;
 
@@ -77,11 +78,15 @@ export function absorptionScore(chart, flow) {
   return 4 + lerp(chart.volTrend, a.minVolTrend, 2.5, 2) + lerp(chart.baseRange, a.maxBaseRange, 1.2, 2);
 }
 
-// Catalysts (0–8): outside buyers arriving + buyback machines + chain identity
-export function catalystScore({ manual, burns, pool, info }) {
+// Catalysts (0–8): outside buyers arriving + buyback machines + chain identity.
+// Only counts when buyers or volume back it up (more buyers than sellers, or volume picking up).
+export function catalystScore({ manual, burns, pool, info, volRatio = null }) {
   const c = CONFIG.catalyst;
   const why = [];
   let pts = 0;
+  const ev = c.evidence;
+  const bs = pool.sellers24h > 0 ? pool.buyers24h / pool.sellers24h : pool.buyers24h > 0 ? Infinity : 0;
+  const backed = !ev || bs >= ev.minBuySell || (volRatio != null && volRatio >= ev.minVolRatio);
   if (manual) {
     pts += c.manualBonus;
     why.push(`you tagged it: ${manual.note || 'catalyst'}`);
@@ -95,6 +100,7 @@ export function catalystScore({ manual, burns, pool, info }) {
     pts += c.identityBonus;
     why.push('part of the chain\'s identity (Robinhood-themed or a launchpad token)');
   }
+  if (pts > 0 && !backed) return { pts: 0, why: [`catalyst not counted yet — no buyer or volume follow-through (${why.join('; ')})`] };
   return { pts: Math.min(c.max, pts), why };
 }
 
@@ -108,7 +114,7 @@ export function holderTrend(history, holdersNow, now = Date.now()) {
   return ((holdersNow - ref[1]) / ref[1]) * 100;
 }
 
-export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community, flow, burns, lane = 'micro', catalyst = null, info = null, smartBonus = { per: 4, max: 10 } }) {
+export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChangePct, rotation, stockPaired, community, flow, burns, lane = 'micro', catalyst = null, info = null, smartBonus = { per: CONFIG.wallets.smartBonusPerWallet, max: CONFIG.wallets.smartBonusMax } }) {
   const parts = {};
 
   // Community (25): on-chain crowd + off-chain crowd
@@ -139,9 +145,9 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   if (chart) {
     const dd = chart.drawdownPct;
     if (dd != null) {
-      if (dd >= 65 && dd <= 92) structure += 10;
-      else if (dd >= 50 && dd < 65) structure += 6;
-      else if (dd > 92 && dd <= 97) structure += 4;
+      if (dd >= 70 && dd <= 90) structure += 10; // Nov 15: was 65–92
+      else if (dd >= 50 && dd < 70) structure += 6;
+      else if (dd > 90 && dd <= 97) structure += 4;
     }
     structure += lerp(chart.baseRange, 1.8, 1.15, 8);
     if (chart.lowsHolding === true) structure += 7;
@@ -183,10 +189,11 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   // Quiet base + catalysts (outside the 100 base)
   parts.quietBase = quietBaseScore(chart);
   parts.absorption = absorptionScore(chart, flow);
-  const cat = catalystScore({ manual: catalyst, burns, pool, info });
+  const cat = catalystScore({ manual: catalyst, burns, pool, info, volRatio });
   parts.catalyst = cat.pts;
 
-  // Smart money bonus (outside the 100 base): proven wallets buying in the last 24h
+  // Smart money bonus (outside the 100 base): proven wallets buying in the last 24h.
+  // One wallet = partial bonus; the full bonus (and micro BUY ZONE) needs 2+.
   const smartN = flow?.smartBuyers?.length || 0;
   parts.smartMoney = Math.min(smartBonus.max, smartN * smartBonus.per);
   // Bundled buying (several wallets in the same block) is usually bots dressing up demand
@@ -197,7 +204,22 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
   parts.inflatedHoldersPenalty = usdPerHolder != null && usdPerHolder < 10 && holdersCount > 2000 ? -6 : 0;
 
   const total = Math.round(Object.values(parts).reduce((s, v) => s + v, 0));
+
+  // BUY ZONE conditions on top of the score (missing one still allows WATCH)
+  const G = CONFIG.buyGates || {};
+  const blocks = [];
+  if (flow?.washLikely) blocks.push('trading looks bot-driven');
+  if (conc?.top1Pct == null) blocks.push("the biggest single wallet couldn't be checked yet");
+  if (lane === 'micro' && G.microMinSmartWallets && smartN < G.microMinSmartWallets) blocks.push(`only ${smartN} proven wallet${smartN === 1 ? '' : 's'} bought today (BUY needs ${G.microMinSmartWallets}+)`);
+  if (lane === 'quality' && G.quality) {
+    if ((pool.buyers24h ?? 0) < G.quality.minBuyers24h) blocks.push(`only ${pool.buyers24h ?? 0} buyers today (quality BUY needs ${G.quality.minBuyers24h}+)`);
+    if (volRatio == null || volRatio < G.quality.minVolRatio) blocks.push(`volume ${volRatio == null ? 'unknown' : volRatio.toFixed(1) + '×'} its weekly average (quality BUY needs ${G.quality.minVolRatio}×+)`);
+  }
+  if (chart?.lowsHolding === false) blocks.push(`made a new low in the last ${G.noNewLowDays ?? 6} days`);
+
   return {
+    secondary: Math.round(((parts.narrative || 0) + (parts.burn || 0)) * 10) / 10,
+    smartWallets: smartN,
     total: clamp(total, 0, 100),
     parts: Object.fromEntries(Object.entries(parts).map(([k, v]) => [k, Math.round(v * 10) / 10])),
     volRatio,
@@ -206,11 +228,23 @@ export function scoreCoin({ pool, holdersCount, conc, socials, chart, holderChan
     usdPerHolder,
     lane,
     catalystWhy: cat.why,
-    // fake-activity coins can be watched but never reach the buy zone
-    buyBlocked: Boolean(flow?.washLikely) || conc?.top1Pct == null,
+    // coins that miss a BUY condition can be watched but never reach the buy zone
+    buyBlocked: blocks.length > 0,
     // why it can't be a buy even with a high score
-    buyBlockedWhy: flow?.washLikely ? 'trading looks bot-driven' : conc?.top1Pct == null ? "the biggest single wallet couldn't be checked yet" : null,
+    buyBlockedWhy: blocks.length ? blocks.join('; ') : null,
   };
+}
+
+// Alert tier from the score. Narrative + burn points can only bridge the last few points to a bar
+// (CONFIG.secondaryBridgeMax): the score without them must already be close.
+export function tierFor(sc, buyBar = CONFIG.alertScore, watchBar = CONFIG.watchScore) {
+  if (!sc) return null;
+  const core = sc.total - (sc.secondary || 0);
+  const bridge = CONFIG.secondaryBridgeMax ?? Infinity;
+  const reaches = (bar) => sc.total >= bar && core >= bar - bridge;
+  if (reaches(buyBar) && !sc.buyBlocked) return 'buy';
+  if (reaches(watchBar)) return 'watch';
+  return null;
 }
 
 // Market regime from total scanned volume vs. its recent median.

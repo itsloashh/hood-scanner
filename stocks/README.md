@@ -44,16 +44,18 @@ Tests: `cd stocks && pip install pytest && python -m pytest` (43 tests, syntheti
 
 `hoodstocks/options.py`, run after the daily scoring and re-priced at 10:45 AM and 1:45 PM Toronto on weekdays.
 
-- **Gate:** US stock, score 55+, evidence 70+, market cap $1B+, swing zones with TP1 reward/risk ≥ 1.2.
+- **Gate:** US stock, score 60+, evidence 75+, market cap $1B+, swing zones with TP1 reward/risk ≥ 1.2.
 - **Chains:** Cboe delayed quotes (~15 min) for the best ~60 by score + timing; Nasdaq earnings calendar.
-- **Expiry:** 30–60 days, closest to 45; exit by 21 days left.
-- **Structure:** ~0.60-delta call when options are cheap (IV ≤ 1.15× realised volatility) and no earnings in the window; otherwise a
-  call debit spread (sell the strike nearest TP2).
-- **Liquidity:** open interest 300+, a bid, bid/ask spread ≤ 12% of mid.
+- **Expiry:** 35–55 days, closest to 45; exit by 21 days left.
+- **Structure:** call debit spread (buy ~0.60 delta, sell the strike nearest TP2) whenever IV > 1.05× realised volatility or
+  earnings fall before expiry. A plain ~0.60-delta call only when IV ≤ 1.0× realised, no earnings, a very liquid contract
+  (spread ≤ 5%, OI 1,000+) and the setup is Tier A as a call.
+- **Liquidity:** open interest 150+, a bid, bid/ask spread ≤ 10% of mid.
 - **Payoff:** Black-Scholes value if price hits TP1 / TP2 / the stop halfway to expiry, entry at the ask.
 - **Tier:** points for score, evidence, uptrend, in-zone, RSI, option reward/risk, TP1 inside the implied move, cheap IV,
   liquidity, insider/fund activity; minus for stretched price, overbought, expensive IV, earnings in the window.
-  A ≥ 9, B ≥ 7, C ≥ 5. A/B are alerted (max 3 per run, once per stock per 2 weeks) and paper-tracked at Cboe bid/ask.
+  A ≥ 10, B ≥ 8, C ≥ 5. A/B are alerted (max 3 per run, once per stock per 2 weeks) and paper-tracked at Cboe bid/ask — only
+  when the stock itself is Opportunity-grade (score 72+, confidence 55+, quality overlay) or scores 80+.
 - Files: `data/stocks/options/setups.json`, `paper.json`, `iv_history.json` (builds IV rank), `earnings.json`.
 
 ## Scoring (method v1.0.0)
@@ -64,7 +66,7 @@ market & sector 10 · insider & strategic 10 · data quality 10. Profiles re-wei
 judged on dividends and non-payers skip the dividend lens. ETFs have their own profile.
 
 Hard rules: missing or unverified data earns no points · no verified financials → max 69 · a case resting on
-institutional buying → max 79 · going concern, 8-K 1.03/3.01/4.02 or extreme illiquidity → quarantined (max 39) ·
+institutional buying → max 74 · going concern, 8-K 1.03/3.01/4.02 or extreme illiquidity → quarantined (max 39) ·
 a price drop only counts with a valuation signal · yields over 10% earn nothing until investigated ·
 13F data is always labelled with its period and filing date and never called a live trade.
 
@@ -72,6 +74,10 @@ Evidence confidence (0–100) is separate: source reliability, completeness, fre
 (market cap and price vs the Nasdaq list), restatements and reporting delays.
 
 Classes: 90+ exceptional · 80+ strong · 70+ developing · 60+ early watchlist.
+
+Opportunity alerts (Nov 15): score 72+ and confidence 55+. A Value-lens name must also pass the quality overlay
+(`engines/quality.py`): ROIC ≥ 12% with earnings yield ≥ 6% or EBIT/EV ≥ 8%, or an F-Score-style check ≥ 7/9 — unless insiders
+are buying heavily at the same time (2+ insiders in 30 days with $250k+, or a CEO/CFO/President/Chair buying $250k+).
 Model range: bear/base/bull equity values from multiples the company and its peers actually traded at; shown as
 unavailable when the inputs aren't there. Never a price target.
 

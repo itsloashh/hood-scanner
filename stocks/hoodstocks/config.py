@@ -74,18 +74,22 @@ _d = PROFILES["dividend"]
 _s = sum(_d.values())
 PROFILES["dividend"] = {k: round(v * 100 / _s, 2) for k, v in _d.items()}
 
+# Quality/value overlay (Nov 15): a Value-lens name must also pass this to reach an Opportunity alert,
+# unless insiders are buying heavily at the same time (engines/quality.py)
+QUALITY = {"min_roic": 0.12, "min_earnings_yield": 0.06, "min_ebit_ev": 0.08, "min_fscore": 7}
+
 CLASSES = [(90, "Exceptional research candidate"), (80, "Strong research candidate"), (70, "Developing opportunity"), (60, "Early watchlist"), (0, "No priority alert")]
 
 CAPS = {
     "no_verified_financials": 69,
-    "institutional_only": 79,
+    "institutional_only": 74,  # Nov 15: was 79
 }
 
 ALERT = {
-    "opportunity_min_score": 70,
-    "opportunity_min_confidence": 50,
+    "opportunity_min_score": 72,  # Nov 15: was 70
+    "opportunity_min_confidence": 55,  # Nov 15: was 50
     "rescore_jump": 10,  # a new alert for the same name needs +10 points AND a class upgrade
-    "insider_min_value_usd": 100_000,
+    "insider_min_value_usd": 250_000,  # Nov 15: was $100k (alerts, strong-insider override, top insider points tier)
     "insider_cluster_min_people": 2,
     "max_alerts_per_run": 8,
 }

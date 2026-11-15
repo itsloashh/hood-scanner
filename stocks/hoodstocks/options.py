@@ -5,13 +5,13 @@ Nothing here is a recommendation — every setup is a research candidate with it
 
 How a setup is built
   1. Stock gate      quality score, evidence, swing zones with reward/risk, and timing (uptrend, not stretched, RSI healthy)
-  2. Expiry          30–60 days to expiry, closest to 45; earnings inside the window are flagged
+  2. Expiry          35–55 days to expiry, closest to 45; earnings inside the window are flagged
   3. Liquidity       open interest, a bid, and a tight bid/ask spread on every leg
   4. Volatility      at-the-money IV vs the stock's own realised volatility (IV/HV); IV history stored to build IV rank
-  5. Structure       cheap options → buy the ~0.60-delta call; expensive options or earnings in the window → call debit spread
-                     (buy ~0.60 delta, sell the strike nearest TP2)
+  5. Structure       call debit spread by default (buy ~0.60 delta, sell the strike nearest TP2); a plain ~0.60-delta call
+                     only when IV ≤ 1.0× realised, no earnings before expiry, a very liquid contract, and Tier A as a call
   6. Payoff          Black-Scholes value of the position if price reaches TP1 / TP2 or the stop halfway to expiry
-  7. Tier            A / B / C from points (shown with every reason); only A and B are alerted
+  7. Tier            A (10+) / B (8+) / C (5+) from points; A and B are alerted only when the stock is Opportunity-grade or 80+
 """
 from __future__ import annotations
 
@@ -26,12 +26,15 @@ NASDAQ_EARN = "https://api.nasdaq.com/api/calendar/earnings?date={d}"
 BROWSER = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
 
 CFG = {
-    "min_score": 55, "min_confidence": 70, "min_mcap": 1e9, "min_tp1_rr": 1.2,
-    "dte": (30, 60), "dte_target": 45, "exit_dte": 21,
+    # Nov 15 tightening: score 55→60, confidence 70→75, DTE 30–60→35–55, OI 100→150, spread 12%→10%, tiers A 9→10, B 7→8
+    "min_score": 60, "min_confidence": 75, "min_mcap": 1e9, "min_tp1_rr": 1.2,
+    "dte": (35, 55), "dte_target": 45, "exit_dte": 21,
     "long_delta": 0.60, "long_delta_band": (0.45, 0.75),
-    "min_oi": 100, "max_spread_pct": 0.12,
-    "cheap_iv_ratio": 1.15, "expensive_iv_ratio": 1.4,
-    "tiers": {"A": 9.0, "B": 7.0, "C": 5.0},
+    "min_oi": 150, "max_spread_pct": 0.10,
+    # spread when IV > 1.05× realised (or earnings before expiry); a plain call only when IV ≤ 1.0× realised,
+    # no earnings, a very liquid contract, and the setup scores Tier A as a call
+    "cheap_iv_ratio": 1.05, "call_max_iv_ratio": 1.0, "expensive_iv_ratio": 1.4,
+    "tiers": {"A": 10.0, "B": 8.0, "C": 5.0},
     "max_chains": 60, "alert_cooldown_days": 14, "max_alerts_per_run": 3,
     "take_profit_pct": {"call": 1.0, "spread": 0.8},  # long call +100%, spread 80% of max value
 }
@@ -153,7 +156,7 @@ def is_monthly(e: str) -> bool:
 
 
 def pick_expiry(calls: list[dict], today: date) -> tuple[str, int] | None:
-    """Among 30–60 day expiries, prefer ones with a liquid ~0.60-delta call, then monthlies, then closest to 45 days."""
+    """Among 35–55 day expiries, prefer ones with a liquid ~0.60-delta call, then monthlies, then closest to 45 days."""
     lo, hi = CFG["dte"]
     dlo, dhi = CFG["long_delta_band"]
     best = None
@@ -267,12 +270,39 @@ def build_setup(row: dict, detail: dict, chain: dict, bars: list[dict], earnings
 
     call = evaluate("call")
     spread = evaluate("spread")
-    prefer_spread = (iv_ratio is not None and iv_ratio > CFG["cheap_iv_ratio"]) or (earnings and earnings <= expiry)
-    rec = spread if (prefer_spread and spread) else call
-    if not rec:
+    if not call and not spread:
         return None
+    earn_in = bool(earnings and earnings <= expiry)
+    tm = timing(bars, spot, zones)
+    pc = points(call, row, tm, em, tp1, spot, iv_ratio, atm_iv, hv, earnings, earn_in) if call else None
+    very_liquid = bool(call) and all(l["spread_pct"] <= 0.05 and l["oi"] >= 1000 for l in call["legs"])
+    # a plain call only when options are cheap, no earnings, very liquid, and it's a Tier A setup as a call
+    call_ok = bool(call and iv_ratio is not None and iv_ratio <= CFG["call_max_iv_ratio"] and not earn_in and very_liquid and pc[0] >= CFG["tiers"]["A"])
+    if call_ok or not spread:
+        rec, (pts, why, against) = call, pc
+        if not call_ok:
+            against.append("plain call only because no debit spread could be built (call rules not all met)")
+    else:
+        rec = spread
+        pts, why, against = points(spread, row, tm, em, tp1, spot, iv_ratio, atm_iv, hv, earnings, earn_in)
+    tier = next((t for t, th in CFG["tiers"].items() if pts >= th), None)
+    sc, cf = row["score"], row["confidence"]
+    return {
+        "ticker": row["ticker"], "id": row["id"], "name": row["name"], "sector": row.get("sector"), "as_of": chain.get("as_of"),
+        "spot": spot, "score": sc, "confidence": cf, "tier": tier, "points": round(pts, 1), "why": why, "against": against,
+        "expiry": expiry, "dte": dte, "exit_by": (date.fromisoformat(expiry) - timedelta(days=CFG["exit_dte"])).isoformat(),
+        "earnings": earnings, "earnings_in_window": earn_in,
+        "atm_iv": atm_iv, "hv20": hv20, "hv60": hv60, "iv_ratio": iv_ratio, "iv30": chain.get("iv30"), "expected_move": em,
+        "underlying": {"entry": sw["entry"], "stop": stop, "tp1": tp1, "tp2": tp2, "zones_at": zones.get("at")},
+        "timing": tm, "recommended": rec["kind"], "structures": {k: v for k, v in (("call", call), ("spread", spread)) if v},
+        "assumptions": ["prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask − bid)",
+                        "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
+                        f"exit by {CFG['exit_dte']} days to expiry; stop = underlying closes below the swing stop"],
+    }
 
-    # ── tier points (every reason recorded) ──
+
+def points(rec: dict, row: dict, tm: dict, em, tp1, spot, iv_ratio, atm_iv, hv, earnings, earn_in) -> tuple[float, list[str], list[str]]:
+    """Tier points for one structure (every reason recorded)."""
     pts, why, against = 0.0, [], []
 
     def add(p, txt):
@@ -284,7 +314,6 @@ def build_setup(row: dict, detail: dict, chain: dict, bars: list[dict], earnings
     add(3 if sc >= 75 else 2 if sc >= 65 else 1, f"stock score {sc:.0f}")
     if cf >= 85:
         add(1, f"evidence {cf}")
-    tm = timing(bars, spot, zones)
     if tm["uptrend"]:
         add(1, "uptrend (above 50-day, 50-day above 200-day)")
     else:
@@ -318,21 +347,22 @@ def build_setup(row: dict, detail: dict, chain: dict, bars: list[dict], earnings
         add(1, "very liquid contract (tight spread, 1,000+ open interest)")
     if row.get("insider_buyers_90d") or row.get("inst_adds"):
         add(1, "insider buying / fund additions")
-    if earnings and earnings <= expiry:
+    if earn_in:
         add(-2 if rec["kind"] == "call" else -1, f"earnings {earnings} before expiry (IV crush risk)")
-    tier = next((t for t, th in CFG["tiers"].items() if pts >= th), None)
-    return {
-        "ticker": row["ticker"], "id": row["id"], "name": row["name"], "sector": row.get("sector"), "as_of": chain.get("as_of"),
-        "spot": spot, "score": sc, "confidence": cf, "tier": tier, "points": round(pts, 1), "why": why, "against": against,
-        "expiry": expiry, "dte": dte, "exit_by": (date.fromisoformat(expiry) - timedelta(days=CFG["exit_dte"])).isoformat(),
-        "earnings": earnings, "earnings_in_window": bool(earnings and earnings <= expiry),
-        "atm_iv": atm_iv, "hv20": hv20, "hv60": hv60, "iv_ratio": iv_ratio, "iv30": chain.get("iv30"), "expected_move": em,
-        "underlying": {"entry": sw["entry"], "stop": stop, "tp1": tp1, "tp2": tp2, "zones_at": zones.get("at")},
-        "timing": tm, "recommended": rec["kind"], "structures": {k: v for k, v in (("call", call), ("spread", spread)) if v},
-        "assumptions": ["prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask − bid)",
-                        "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-                        f"exit by {CFG['exit_dte']} days to expiry; stop = underlying closes below the swing stop"],
-    }
+    return pts, why, against
+
+
+def stock_grade(row: dict, detail: dict | None = None) -> str | None:
+    """Options alerts need a strong underlying (Nov 15): an Opportunity-grade stock, or a Strong/Exceptional (80+) name."""
+    from .alerts import is_opportunity
+    r = dict(row)
+    if "quality_ok" not in r and detail and detail.get("metrics"):  # rows scored before the overlay existed
+        from .engines import quality as QUAL
+        r["quality_ok"] = QUAL.overlay(detail["metrics"], r.get("model") or detail.get("security", {}).get("model", "general"))["ok"]
+        r["insider_strong"] = QUAL.strong_insiders(detail.get("insider") or {})
+    if r["score"] >= 80:
+        return "high-class"
+    return "opportunity" if is_opportunity(r) else None
 
 
 def gate(row: dict, detail: dict) -> bool:

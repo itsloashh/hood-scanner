@@ -45,8 +45,19 @@ def health(m: dict, model: str) -> Component:
         c.miss("free cash flow")
     elif fcf > 0:
         c.add(0.25, "positive free cash flow")
+        fy = m.get("fcf_yield")
+        if fy is not None and fy >= 0.05:
+            c.add(0.1, f"FCF yield {pct(fy, 1)}")  # Nov 15
     else:
         c.no("negative free cash flow")
+    roic = m.get("roic")  # Nov 15: returns on capital count toward health
+    if roic is not None:
+        if roic >= 0.15:
+            c.add(0.15, f"ROIC {pct(roic)}")
+        elif roic >= 0.10:
+            c.add(0.08, f"ROIC {pct(roic)}")
+        elif roic < 0.05:
+            c.no(f"ROIC only {pct(roic)}")
     ni = m.get("net_income")
     if ni is None:
         c.miss("net income")

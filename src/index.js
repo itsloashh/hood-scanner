@@ -16,7 +16,7 @@ import { classify } from './utility.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { tagNarratives, clusterLeaders, rotationSignal } from './narrative.js';
-import { chartFeatures, holderTrend, scoreCoin, regime as computeRegime } from './score.js';
+import { chartFeatures, holderTrend, scoreCoin, tierFor, regime as computeRegime } from './score.js';
 import { communitySignals } from './community.js';
 import { openPosition, updatePositions, equity, stats, planFor } from './paper.js';
 import { loadState, saveState, appendCsv, SNAPSHOT_COLUMNS, TRADE_COLUMNS, DATA_DIR } from './store.js';
@@ -280,7 +280,7 @@ async function deepCheck(pool, state, leaders, now, w, { force = false, catalyst
       })
     : null;
 
-  if (lane === 'micro' && score) filt.warnings.push('Micro lane — survivor bounce. Keep size small (≤5% of the wallet); these often fade after the bounce.');
+  if (lane === 'micro' && score) filt.warnings.push(`Micro lane — survivor bounce. Keep size small (≤${CONFIG.microMaxPositionPct}% of the wallet); these often fade after the bounce.`);
   if (score?.parts.inflatedHoldersPenalty) {
     filt.warnings.push(`Holder count looks padded — only ${usdOf(score.usdPerHolder)} of market cap per holder (airdropped dust wallets?)`);
   }
@@ -610,11 +610,12 @@ export async function main() {
       runStats[r.lane] += 1;
       rememberQuietBase(state, r, now);
       const s = r.score.total;
-      candidates.push(candidateRow(r, s >= buyBar && !r.score.buyBlocked ? 'buy' : s >= watchBar ? 'watch' : 'scored', now));
+      const tierScore = tierFor(r.score, buyBar, watchBar);
+      candidates.push(candidateRow(r, tierScore || 'scored', now));
       log(`✓ ${pool.baseToken.symbol}: score ${s}`);
       const token = pool.baseToken.address;
 
-      let tierNow = s >= buyBar && !r.score.buyBlocked ? 'buy' : s >= watchBar ? 'watch' : null;
+      let tierNow = tierScore;
       const prof = winnerProfile(pool, r.score, r.lane);
       if (tierNow && !prof.ok) {
         log(`  ${pool.baseToken.symbol}: score ${s} but not the winner profile — ${prof.misses.join('; ')}`);
@@ -775,7 +776,9 @@ function writeRules() {
     updated: new Date().toISOString(),
     lanes: C.lanes,
     buyScore: C.alertScore, watchScore: C.watchScore, regimeAdjust: C.regimeAdjust,
-    profile: C.profile, tracking: C.tracking, scorecard: C.scorecard,
+    profile: C.profile, buyGates: C.buyGates, secondaryBridgeMax: C.secondaryBridgeMax, microMaxPositionPct: C.microMaxPositionPct,
+    smartBonus: { perWallet: C.wallets.smartBonusPerWallet, max: C.wallets.smartBonusMax },
+    tracking: C.tracking, scorecard: C.scorecard,
     pump: { minChangePct: C.pump.minChangePct, cooldownHours: C.pump.cooldownHours },
     ignition: { minVolMultiple: C.ignition.minVolMultiple, hours: C.ignition.hours, maxPriceAboveBasePct: C.ignition.maxPriceAboveBasePct, cooldownHours: C.ignition.cooldownHours, minVolume24hUsd: C.ignition.minVolume24hUsd },
     digestEveryHours: C.digestEveryHours, target: [C.targetMinX, C.targetMaxX],
@@ -907,7 +910,7 @@ export async function checkCoin(ca, now = Date.now()) {
   const s = r.score?.total ?? 0;
   const prof = r.score ? winnerProfile(pool, r.score, r.lane) : { ok: true, misses: [] };
   if (!prof.ok) failed.push(`not the winner profile — ${prof.misses.join('; ')}`);
-  const tier = failed.length ? 'none' : s >= CONFIG.alertScore && !r.score.buyBlocked ? 'buy' : s >= CONFIG.watchScore ? 'watch' : 'none';
+  const tier = failed.length ? 'none' : tierFor(r.score) || 'none';
   r.zones = await zonesFor(pool.poolAddress, pool.priceUsd, r.candles, { chartCache: {} }, now);
   await notify(checkMessage({ ...r, failed, verdict: tier, plan: planFor(pool.priceUsd), regime: { state: 'neutral' }, warnings: r.filt.warnings }));
   return { failed, score: s, tier };

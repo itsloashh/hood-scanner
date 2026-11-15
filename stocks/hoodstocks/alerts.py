@@ -65,7 +65,7 @@ class Alerts:
     # ── Opportunity ───────────────────────────────────
     def opportunity(self, d: dict, prev_best: dict | None) -> bool:
         r = d["row"]
-        if r["experimental"] or r["quarantined"] or r["score"] < config.ALERT["opportunity_min_score"] or r["confidence"] < config.ALERT["opportunity_min_confidence"]:
+        if not is_opportunity(r):
             return False
         # a repeat needs a class upgrade AND +10 points over the last alerted score (score changes alone don't re-alert)
         key = f"opp:{r['id']}:{r['class']}"
@@ -120,6 +120,17 @@ class Alerts:
         return self.deliver(f"{kind}:{sid}:{ev['item']}:{ev['filed']}", kind, sid, text, score=row.get("score"), trigger=f"8-K {ev['item']}")
 
 
+def is_opportunity(r: dict) -> bool:
+    """Opportunity-grade stock: score 72+, confidence 55+, not micro/quarantined, and a Value-lens name must pass
+    the quality overlay (ROIC + earnings yield, or F-Score 7+) unless insiders are buying heavily right now."""
+    A = config.ALERT
+    if r.get("experimental") or r.get("quarantined") or r["score"] < A["opportunity_min_score"] or r["confidence"] < A["opportunity_min_confidence"]:
+        return False
+    if r.get("profile") == "value" and not r.get("quality_ok") and not r.get("insider_strong"):
+        return False
+    return True
+
+
 def opportunity_text(d: dict) -> str:
     r, m, sc, risk = d["row"], d["metrics"], d["scenarios"], d["risk"]
     cur = r["currency"]
@@ -138,6 +149,9 @@ def opportunity_text(d: dict) -> str:
           f"FCF {money(m.get('fcf'))} · Debt {money(m.get('debt'))} · Cash {money(m.get('cash'))}",
           "", "<b>Valuation</b>",
           f"P/E {fmt(m.get('pe'))} · EV/EBITDA {fmt(m.get('ev_ebitda'))} · FCF yield {pct(m.get('fcf_yield'), 1)}"]
+    q = d.get("quality") or {}
+    if q.get("why"):
+        L += [f"Quality: {_e(' · '.join(q['why']))}" + ("" if q.get("ok") or r.get("profile") != "value" else " — below the quality bar, alerted on strong insider buying")]
     if risk["review"] or risk["quarantine"]:
         L += ["", "<b>Risk</b>"] + [f"• {_e(x)}" for x in (risk["quarantine"] + risk["review"])[:3]]
     if sc.get("available"):

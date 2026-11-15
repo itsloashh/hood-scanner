@@ -60,10 +60,10 @@ def score(m: dict, px: dict, model: str, sector_med: dict, peer_med: dict) -> tu
         if fy is None:
             c.miss("free cash flow")
         elif fy >= 0.08:
-            c.add(0.22, f"FCF yield {pct(fy, 1)} (≥ 8%)")
+            c.add(0.3, f"FCF yield {pct(fy, 1)} (≥ 8%)")  # Nov 15: was 0.22
             cheap_signals += 1
         elif fy >= 0.05:
-            c.add(0.14, f"FCF yield {pct(fy, 1)} (≥ 5%)")
+            c.add(0.2, f"FCF yield {pct(fy, 1)} (≥ 5%)")  # Nov 15: was 0.14
             cheap_signals += 1
         elif fy > 0:
             c.add(0.04, f"positive FCF yield {pct(fy, 1)}")
@@ -77,7 +77,7 @@ def score(m: dict, px: dict, model: str, sector_med: dict, peer_med: dict) -> tu
         else:
             c.no(f"{pct(off)} below its 52-week high, but no valuation measure says it's cheap — a decline alone isn't value")
     if m.get("roic") is not None and m["roic"] >= 0.12 and model not in ("bank", "insurance", "financial", "reit"):
-        c.add(0.08, f"ROIC {pct(m['roic'])} — cheapness of a high-return business")
+        c.add(0.15, f"ROIC {pct(m['roic'])} — cheapness of a high-return business")  # Nov 15: was 0.08
     c.clamp()
     detail["cheap_signals"] = cheap_signals
     return c, detail

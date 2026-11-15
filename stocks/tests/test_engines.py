@@ -324,7 +324,8 @@ def test_daily_index_parse():
 def _detail(score=82, conf=70, cls="Strong research candidate"):
     row = {"id": "SEC1", "ticker": "SYN", "name": "Synthetic Co", "exchange": "NYSE", "country": "US", "currency": "USD", "cap": "mid",
            "profile": "value", "sector": "Technology", "price": 25.0, "price_date": "2026-11-13", "mcap": 2.5e9, "score": score, "class": cls,
-           "confidence": conf, "risk": "Moderate", "experimental": False, "quarantined": False}
+           "confidence": conf, "risk": "Moderate", "experimental": False, "quarantined": False,
+           "quality_ok": True, "insider_strong": False}
     return {"row": row, "metrics": {}, "scenarios": {"available": False, "why": "test"}, "risk": {"review": [], "quarantine": []},
             "why": ["FCF yield 9%"], "institutional": []}
 
@@ -340,6 +341,35 @@ def test_alerts_deduplicate_and_score_change_alone_does_not_realert(monkeypatch)
     assert not al.opportunity(_detail(score=60), None)  # below threshold
     assert not al.opportunity(_detail(conf=30), None)  # weak evidence
     assert len(sent) == 1 and "not a buy instruction" in sent[0]
+
+
+def test_quality_overlay_gates_value_opportunities(monkeypatch):
+    """Nov 15: a Value-lens name that fails the quality overlay can't alert unless insiders are buying heavily."""
+    from hoodstocks.engines import quality as Q
+    good = {"net_income": 100, "ocf": 140, "ni_growth": 0.1, "net_debt": -5, "current_ratio": 1.6, "dilution_1y": 0.0,
+            "gross_margin": 0.42, "gross_margin_prev": 0.40, "rev_growth": 0.06, "roic": 0.18, "earnings_yield": 0.07, "ev": 1000, "operating_income": 90}
+    weak = {"net_income": -5, "ocf": -2, "ni_growth": -0.3, "net_debt_ebitda": 4.0, "current_ratio": 0.8, "dilution_1y": 0.09,
+            "gross_margin": 0.30, "gross_margin_prev": 0.34, "rev_growth": -0.05, "roic": 0.03, "earnings_yield": -0.01}
+    assert Q.fscore(good, "general")["score"] == 9
+    assert Q.overlay(good, "general")["ok"] and Q.overlay(good, "general")["roic_cheap"]
+    assert Q.fscore(weak, "general")["score"] <= 1 and not Q.overlay(weak, "general")["ok"]
+    assert Q.fscore({"net_income": 1}, "general")["score"] is None  # too little data
+    big = {"buyers_30d": 2, "buys_value_90d": 300_000, "buys": []}
+    assert Q.strong_insiders(big) and not Q.strong_insiders({"buyers_30d": 2, "buys_value_90d": 120_000, "buys": []})
+    assert Q.strong_insiders({"buyers_30d": 1, "buys_value_90d": 260_000, "buys": [{"senior": True, "value": 260_000}]})
+    monkeypatch.setattr(AL, "send", lambda http, text, **k: True)
+    al = AL.Alerts(http=None)
+    al.db = {"sent": {}, "log": []}
+    d = _detail()
+    d["row"]["quality_ok"] = False
+    assert not al.opportunity(d, None)
+    d["row"]["insider_strong"] = True
+    assert al.opportunity(d, None)
+    g = _detail()
+    g["row"].update({"id": "SEC2", "profile": "growth", "quality_ok": False})
+    assert al.opportunity(g, None)  # the overlay only applies to Value-lens names
+    assert not al.opportunity(_detail(score=71), None)  # bar is 72 now
+    assert not al.opportunity(_detail(conf=54), None)  # confidence bar is 55 now
 
 
 # 19. Telegram authorisation: only the configured chat ─────────

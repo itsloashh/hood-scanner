@@ -10,7 +10,7 @@ from pathlib import Path
 
 from . import config, fundamentals as F, master as M, metrics as MET, store, zones as ZN
 from .engines import confidence as CONF, dividend as DIV, etf as ETF, growth as GROW, insider as INS, institutional as INST
-from .engines import macro as MAC, risk as RISK, scoring as SC, value as VAL
+from .engines import macro as MAC, quality as QUAL, risk as RISK, scoring as SC, value as VAL
 from .http import FetchError, Http
 from .prices import merge_bars, needs_refetch, stats as pxstats
 from .providers import macro as macro_src, nasdaq, news as news_src, registry
@@ -543,7 +543,7 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
             "valuation": VAL.score(m, px, s["model"], sector_med.get(s.get("sector") or "", {}), ind_med.get(s.get("industry") or "", {}))[0] if snap else SC.Component("valuation", missing=["financial statements"]),
             "institutional": INST.score(inst_ch, holders13),
             "growth_catalysts": GROW.score(m, events) if snap else SC.Component("growth_catalysts", missing=["financial statements"]),
-            "market_sector": SC.market_sector(px, s.get("sector"), rot, tilt),
+            "market_sector": SC.market_sector(px, s.get("sector"), rot, tilt, sector_px),
             "insider_strategic": INS.score(ins),
             "data_quality": SC.data_quality(ver),
             "income_quality": DIV.score(m, dy, s["model"]),
@@ -551,6 +551,7 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
         profiles = SC.choose_profiles(m, dy)
         results = {p: SC.combine(comps, p, verified_financials=verified, quarantined=quarantined) for p in profiles}
         best = max(results.values(), key=lambda x: x["score"])
+        qual = QUAL.overlay(m, s["model"]) if snap else {"ok": False, "fscore": None, "why": ["no verified financials"]}
         conf = CONF.score(snap, ver)
         risk_label = RISK.label(m, px, s["model"], flags, quarantined)
         scen = RISK.scenarios(m, s["model"], sector_med.get(s.get("sector") or "", {}), ind_med.get(s.get("industry") or "", {})) if snap else {"available": False, "why": "no verified financials"}
@@ -570,6 +571,7 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
             "insider_buyers_90d": ins.get("buyers_90d", 0), "inst_adds": len({c["manager"] for c in inst_ch if c["change"] in ("new", "increase")}),
             "upside": scen.get("upside_base") if scen.get("available") else None, "reward_risk": scen.get("reward_risk") if scen.get("available") else None,
             "verified": verified, "dual_listed": len(s["listings"]) > 1,
+            "quality_ok": qual["ok"], "fscore": qual.get("fscore"), "insider_strong": QUAL.strong_insiders(ins),
         }
         out_rows.append(row)
         details[r["sid"]] = {
@@ -583,7 +585,7 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
             "statements": statements_view(snap) if snap else None,
             "chart": [[x["t"], round(x["c"], 4)] for x in r["b"]["bars"][-260:]],
             "verification": ver, "eligibility": "experimental microcap" if experimental else "standard",
-            "zones": zn, "yahoo": s["listings"][0]["yahoo"],
+            "zones": zn, "yahoo": s["listings"][0]["yahoo"], "quality": qual,
         }
     # scalp levels from hourly bars for the names most likely to be called
     focus = sorted((d for d in details.values() if not d["row"]["quarantined"]), key=lambda d: -d["row"]["score"])[:60]

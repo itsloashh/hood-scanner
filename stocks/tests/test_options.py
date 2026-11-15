@@ -114,3 +114,35 @@ def test_paper_exits():
     assert p4["status"] == "closed" and "time exit" in p4["exit_reason"]
     s = OP.summary([p2, p3])
     assert s["closed"] == 2 and s["win_rate"] == 0.5
+
+
+def test_nov15_call_only_when_cheap_liquid_no_earnings_and_tier_a():
+    # cheap options, very liquid, no earnings, Tier A as a call → plain call
+    st = OP.build_setup(ROW, detail(), chain(iv=0.22), uptrend_bars(), None, 0.04, TODAY)
+    assert st["recommended"] == "call" and st["points"] >= OP.CFG["tiers"]["A"]
+    # same chain but a weaker stock: the call wouldn't be Tier A → debit spread
+    weak = dict(ROW, score=61, confidence=76, insider_buyers_90d=0)
+    st2 = OP.build_setup(weak, detail(), chain(iv=0.22), uptrend_bars(), None, 0.04, TODAY)
+    assert st2["recommended"] == "spread"
+    # wider (but still tradeable) spreads → not "very liquid" → debit spread
+    st3 = OP.build_setup(ROW, detail(), chain(iv=0.22, spread=0.08), uptrend_bars(), None, 0.04, TODAY)
+    assert st3["recommended"] == "spread"
+
+
+def test_nov15_gates_tiers_and_contract_rules():
+    assert OP.CFG["tiers"] == {"A": 10.0, "B": 8.0, "C": 5.0}
+    assert not OP.gate(dict(ROW, score=59), detail()) and OP.gate(dict(ROW, score=60), detail())
+    assert not OP.gate(dict(ROW, confidence=74), detail()) and OP.gate(dict(ROW, confidence=75), detail())
+    # 30- and 58-day expiries are outside 35–55 → none
+    assert OP.build_setup(ROW, detail(), chain(exps=(30, 58)), uptrend_bars(), None, 0.04, TODAY) is None
+    # open interest 120 (< 150) and an 11% spread (> 10%) are both too thin now
+    assert OP.build_setup(ROW, detail(), chain(oi=120), uptrend_bars(), None, 0.04, TODAY).get("skip")
+    assert OP.build_setup(ROW, detail(), chain(spread=0.11), uptrend_bars(), None, 0.04, TODAY).get("skip")
+
+
+def test_nov15_alerts_need_a_strong_underlying():
+    base = dict(ROW, profile="growth", quality_ok=True, insider_strong=False)
+    assert OP.stock_grade(dict(base, score=82)) == "high-class"
+    assert OP.stock_grade(dict(base, score=74, confidence=80)) == "opportunity"
+    assert OP.stock_grade(dict(base, score=70, confidence=80)) is None  # below the 72 Opportunity bar
+    assert OP.stock_grade(dict(base, score=74, profile="value", quality_ok=False)) is None  # fails the quality overlay
