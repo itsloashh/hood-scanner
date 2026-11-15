@@ -28,7 +28,7 @@ BROWSER = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko
 CFG = {
     # Nov 15 tightening: score 55→60, confidence 70→75, DTE 30–60→35–55, OI 100→150, spread 12%→10%, tiers A 9→10, B 7→8
     "min_score": 60, "min_confidence": 75, "min_mcap": 1e9, "min_tp1_rr": 1.2,
-    "dte": (35, 55), "dte_target": 45, "exit_dte": 21,
+    "dte": (35, 55), "dte_fallback": (30, 60), "dte_target": 45, "exit_dte": 21,  # 35–55 preferred; 30–60 only when no 35–55 expiry exists
     "long_delta": 0.60, "long_delta_band": (0.45, 0.75),
     "min_oi": 150, "max_spread_pct": 0.10,
     # spread when IV > 1.05× realised (or earnings before expiry); a plain call only when IV ≤ 1.0× realised,
@@ -156,19 +156,24 @@ def is_monthly(e: str) -> bool:
 
 
 def pick_expiry(calls: list[dict], today: date) -> tuple[str, int] | None:
-    """Among 35–55 day expiries, prefer ones with a liquid ~0.60-delta call, then monthlies, then closest to 45 days."""
-    lo, hi = CFG["dte"]
+    """Prefer a 35–55 day expiry (one with a liquid ~0.60-delta call, then a monthly, then closest to 45 days).
+    Monthlies are ~4–5 weeks apart, so some weeks no expiry lands in 35–55: then fall back to 30–60."""
     dlo, dhi = CFG["long_delta_band"]
-    best = None
-    for e in sorted({c["expiry"] for c in calls}):
-        n = (date.fromisoformat(e) - today).days
-        if not lo <= n <= hi:
-            continue
-        liquid_longs = sum(1 for c in calls if c["expiry"] == e and dlo <= c["delta"] <= dhi and liquid(c))
-        key = (liquid_longs > 0, is_monthly(e), -abs(n - CFG["dte_target"]))
-        if best is None or key > best[0]:
-            best = (key, e, n)
-    return (best[1], best[2]) if best else None
+    fallback = None
+    for lo, hi in (CFG["dte"], CFG.get("dte_fallback") or CFG["dte"]):
+        best = None
+        for e in sorted({c["expiry"] for c in calls}):
+            n = (date.fromisoformat(e) - today).days
+            if not lo <= n <= hi:
+                continue
+            liquid_longs = sum(1 for c in calls if c["expiry"] == e and dlo <= c["delta"] <= dhi and liquid(c))
+            key = (liquid_longs > 0, is_monthly(e), -abs(n - CFG["dte_target"]))
+            if best is None or key > best[0]:
+                best = (key, e, n)
+        if best and best[0][0]:  # an expiry with a liquid long call
+            return best[1], best[2]
+        fallback = fallback or best  # keep the preferred-window pick (even if illiquid) so the skip reason names it
+    return (fallback[1], fallback[2]) if fallback else None
 
 
 def diagnose(calls: list[dict], expiry: str) -> str:
@@ -285,6 +290,8 @@ def build_setup(row: dict, detail: dict, chain: dict, bars: list[dict], earnings
     else:
         rec = spread
         pts, why, against = points(spread, row, tm, em, tp1, spot, iv_ratio, atm_iv, hv, earnings, earn_in)
+    if not CFG["dte"][0] <= dte <= CFG["dte"][1]:
+        against.append(f"{dte}-day expiry is outside the preferred {CFG['dte'][0]}–{CFG['dte'][1]} days (none available this week)")
     tier = next((t for t, th in CFG["tiers"].items() if pts >= th), None)
     sc, cf = row["score"], row["confidence"]
     return {

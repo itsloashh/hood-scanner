@@ -133,8 +133,12 @@ def test_nov15_gates_tiers_and_contract_rules():
     assert OP.CFG["tiers"] == {"A": 10.0, "B": 8.0, "C": 5.0}
     assert not OP.gate(dict(ROW, score=59), detail()) and OP.gate(dict(ROW, score=60), detail())
     assert not OP.gate(dict(ROW, confidence=74), detail()) and OP.gate(dict(ROW, confidence=75), detail())
-    # 30- and 58-day expiries are outside 35–55 → none
-    assert OP.build_setup(ROW, detail(), chain(exps=(30, 58)), uptrend_bars(), None, 0.04, TODAY) is None
+    # 35–55 preferred; when no expiry lands there, fall back to 30–60 and say so
+    st = OP.build_setup(ROW, detail(), chain(exps=(20, 40, 58)), uptrend_bars(), None, 0.04, TODAY)
+    assert st["dte"] == 40
+    st = OP.build_setup(ROW, detail(), chain(exps=(20, 33, 61)), uptrend_bars(), None, 0.04, TODAY)
+    assert st["dte"] == 33 and any("outside the preferred 35–55" in a for a in st["against"])
+    assert OP.build_setup(ROW, detail(), chain(exps=(20, 28, 65)), uptrend_bars(), None, 0.04, TODAY) is None
     # open interest 120 (< 150) and an 11% spread (> 10%) are both too thin now
     assert OP.build_setup(ROW, detail(), chain(oi=120), uptrend_bars(), None, 0.04, TODAY).get("skip")
     assert OP.build_setup(ROW, detail(), chain(spread=0.11), uptrend_bars(), None, 0.04, TODAY).get("skip")

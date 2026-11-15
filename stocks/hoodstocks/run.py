@@ -196,7 +196,7 @@ def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: boo
         t = d["row"]["ticker"]
         st = OP.build_setup(d["row"], d, chains.get(t), bars_of(d), earnings.get(t), rate)
         if not st:
-            skipped.append({"ticker": t, "why": "no chain / no 35–55 day expiry"})
+            skipped.append({"ticker": t, "why": "no chain / no 30–60 day expiry"})
             continue
         if st.get("skip"):
             skipped.append({"ticker": t, "why": st["skip"]})

@@ -46,7 +46,7 @@ Tests: `cd stocks && pip install pytest && python -m pytest` (43 tests, syntheti
 
 - **Gate:** US stock, score 60+, evidence 75+, market cap $1B+, swing zones with TP1 reward/risk ≥ 1.2.
 - **Chains:** Cboe delayed quotes (~15 min) for the best ~60 by score + timing; Nasdaq earnings calendar.
-- **Expiry:** 35–55 days, closest to 45; exit by 21 days left.
+- **Expiry:** 35–55 days preferred, closest to 45 (30–60 only in weeks when no expiry lands in 35–55); exit by 21 days left.
 - **Structure:** call debit spread (buy ~0.60 delta, sell the strike nearest TP2) whenever IV > 1.05× realised volatility or
   earnings fall before expiry. A plain ~0.60-delta call only when IV ≤ 1.0× realised, no earnings, a very liquid contract
   (spread ≤ 5%, OI 1,000+) and the setup is Tier A as a call.
