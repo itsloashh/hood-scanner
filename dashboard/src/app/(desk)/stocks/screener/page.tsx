@@ -2,7 +2,7 @@ import { loadUniverse } from '@/lib/stocks';
 import { StockScreener } from '@/components/StockScreener';
 import { NotReady } from '@/components/stock-ui';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Screener · Hood Desk' };
 
 export default async function ScreenerPage() {

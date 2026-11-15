@@ -3,7 +3,7 @@ import { Pill, Section } from '@/components/ui';
 import { NotReady, Tag, pctS } from '@/components/stock-ui';
 import { ago, date } from '@/lib/format';
 
-export const revalidate = 600;
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Economy · Hood Desk' };
 
 export default async function MacroPage() {
@@ -16,8 +16,8 @@ export default async function MacroPage() {
         <Pill>Updated {ago(Date.parse(macro.updated))}</Pill>
         {macro.usdcad && <Pill>USD/CAD {macro.usdcad.toFixed(4)}</Pill>}
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Section title="Economic readings" hint="Direction over the last month (quarter for GDP). Reading = what that direction usually means for stocks." className="lg:col-span-2">
+      <div className="grid gap-4 @4xl:grid-cols-3">
+        <Section title="Economic readings" hint="Direction over the last month (quarter for GDP). Reading = what that direction usually means for stocks." className="@4xl:col-span-2">
           <div className="scroll-x">
             <table className="w-full min-w-[520px] text-sm">
               <thead className="text-left text-xs text-faint">

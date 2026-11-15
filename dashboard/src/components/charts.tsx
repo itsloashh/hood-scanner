@@ -7,7 +7,7 @@ export function HBars({ rows, max, color = 'var(--color-gold)' }: { rows: BarRow
   return (
     <div className="space-y-2.5">
       {rows.map((r) => (
-        <div key={r.label} className="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-sm sm:grid-cols-[minmax(0,12rem)_1fr_auto]">
+        <div key={r.label} className="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-3 text-sm @2xl:grid-cols-[minmax(0,12rem)_1fr_auto]">
           <div className="truncate text-dim" title={r.label}>
             {r.label}
           </div>
@@ -69,7 +69,7 @@ export function Columns({ data, height = 160, color = 'var(--color-gold)', highl
       </div>
       <div className="mt-2 flex gap-1.5">
         {data.map((d) => (
-          <div key={d.label} className="flex-1 truncate text-center text-[10px] text-faint sm:text-[11px]">
+          <div key={d.label} className="flex-1 truncate text-center text-[10px] text-faint @2xl:text-[11px]">
             {d.label}
           </div>
         ))}
@@ -175,7 +175,7 @@ export function SplitColumns({ data, height = 130 }: { data: { label: string; to
       </div>
       <div className="mt-2 flex gap-1.5">
         {data.map((d) => (
-          <div key={d.label} className="flex-1 truncate text-center text-[10px] text-faint sm:text-[11px]">
+          <div key={d.label} className="flex-1 truncate text-center text-[10px] text-faint @2xl:text-[11px]">
             {d.label}
           </div>
         ))}

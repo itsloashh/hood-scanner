@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { COMPONENT_LABEL, loadDetail, PROFILE_LABEL, riskTone, type ComponentScore, type Valued } from '@/lib/stocks';
-import { Area } from '@/components/charts';
+import { TradeChart } from '@/components/TradeChart';
 import { money, num, pctS, ScorePair, Tag } from '@/components/stock-ui';
 import { Section } from '@/components/ui';
 import { date, pct, price as fmtPrice } from '@/lib/format';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -70,8 +70,8 @@ export default async function StockPage({ params }: { params: Promise<{ id: stri
           <div className="eyebrow mb-1.5">
             {r.exchange} · {r.country} · {r.sector ?? '—'} · {r.cap ?? '?'} cap {r.experimental && '· experimental microcap'}
           </div>
-          <h1 className="display text-3xl lg:text-4xl">
-            {r.ticker} <span className="text-xl text-dim lg:text-2xl">{r.name}</span>
+          <h1 className="display text-3xl @4xl:text-4xl">
+            {r.ticker} <span className="text-xl text-dim @4xl:text-2xl">{r.name}</span>
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <span className="num text-lg">{r.currency === 'CAD' ? 'C' : ''}{fmtPrice(r.price)}</span>
@@ -85,6 +85,16 @@ export default async function StockPage({ params }: { params: Promise<{ id: stri
         <ScorePair score={r.score} confidence={r.confidence} size="lg" />
       </div>
 
+      <Section title="Chart & zones" hint="Delayed Yahoo candles · zones from price data (ATR + swing highs/lows)" className="mb-4">
+        <TradeChart
+          kind="stock"
+          symbol={d.yahoo ?? d.security.listings[0]?.ticker.replace('.', '-')}
+          callPrice={null}
+          stored={d.zones ? { swing: d.zones.swing, scalp: d.zones.scalp } : null}
+          runner={d.scenarios.available && d.scenarios.base && r.mcap ? (d.scenarios.base / r.mcap) * r.price : null}
+          currency={r.currency}
+        />
+      </Section>
       {(d.risk.quarantine.length > 0 || best.caps.length > 0) && (
         <div className="card mb-4 border-down/40 p-4 text-sm">
           {d.risk.quarantine.map((q) => <div key={q} className="text-down">Quarantined: {q}</div>)}
@@ -92,8 +102,8 @@ export default async function StockPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Section title="Why it scores this way" hint={`Score method v${best.version} · every point traced to a reason`} className="lg:col-span-2">
+      <div className="grid gap-4 @4xl:grid-cols-3">
+        <Section title="Why it scores this way" hint={`Score method v${best.version} · every point traced to a reason`} className="@4xl:col-span-2">
           <div className="mb-3 flex flex-wrap gap-2 text-xs">
             {Object.values(d.results).map((p) => (
               <span key={p.profile} className={`rounded-full border px-2.5 py-1 ${p.profile === d.best_profile ? 'border-gold text-gold-2' : 'border-line-2 text-dim'}`}>
@@ -143,11 +153,9 @@ export default async function StockPage({ params }: { params: Promise<{ id: stri
         </div>
       </div>
 
-      <Section title="Price, last 12 months" hint="Delayed daily closes" className="mt-4">
-        <Area points={d.chart.map(([t, c]) => [Date.parse(t), c] as [number, number])} height={150} fmt={(v) => fmtPrice(v)} />
-      </Section>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-3">
         <Section title="Valuation">
           <Metric label="Market cap (USD)" v={money(m.mcap)} />
           <Metric label="P/E (TTM)" v={num(m.pe)} />
@@ -181,7 +189,7 @@ export default async function StockPage({ params }: { params: Promise<{ id: stri
         </Section>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
         <Section title="Insider activity (Form 4)" hint={`Open-market purchases only · ${d.insider.buyers_90d} buyer(s) in 90 days · sales ${money(d.insider.sells_value_90d)}`}>
           {d.insider.buys.length ? (
             <ul className="divide-y divide-line/60 text-sm">
@@ -219,7 +227,7 @@ export default async function StockPage({ params }: { params: Promise<{ id: stri
         </Section>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
         <Section title="Filed events (8-K)" hint="Item types from the filing index — details are in each filing">
           {d.events.length ? (
             <ul className="space-y-2 text-sm">

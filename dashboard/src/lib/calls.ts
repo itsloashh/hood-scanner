@@ -1,5 +1,5 @@
 // Turns the bot's scorecard (one row per alert) into one "call" per coin with its full timeline.
-import type { CalledCoin, Prefs, Prices, ScannerState, ScoreEntry } from './data';
+import type { CalledCoin, CallZones, Prefs, Prices, ScannerState, ScoreEntry } from './data';
 
 export type Tier = ScoreEntry['tier'];
 export type Status = 'win' | 'stopped' | 'expired' | 'open';
@@ -39,6 +39,7 @@ export type Call = {
   pref: 'follow' | 'mute' | null;
   milestones: Record<string, number>;
   ageDays: number;
+  zones: CallZones | null;
 };
 
 const first = <T,>(xs: T[]) => (xs.length ? xs[0] : undefined);
@@ -123,6 +124,7 @@ export function buildCalls(state: ScannerState, prices: Prices, prefs: Prefs, no
       pref: prefs.coins?.[token] ?? null,
       milestones: called?.milestones ?? {},
       ageDays: (now - firstAt) / 86_400_000,
+      zones: rows.find((r) => r.zones)?.zones ?? null,
     });
   }
   return calls.sort((a, b) => b.firstAt - a.firstAt);

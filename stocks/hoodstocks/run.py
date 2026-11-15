@@ -32,7 +32,7 @@ def write_outputs(ctx: Ctx, res: dict, etfs: list[dict], macro: dict) -> None:
     rows = _round(res["rows"])
     std = sorted([r for r in rows if not r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
     micro = sorted([r for r in rows if r["experimental"] and not r["quarantined"]], key=lambda r: -r["score"])
-    slim = [{k: v for k, v in _round(r, 4).items() if k not in ("model", "dual_listed", "industry", "price_date", "exchange")} for r in rows]  # dashboard list (keeps it under 2 MB)
+    slim = [{k: v for k, v in _round(r, 4).items() if k not in ("model", "dual_listed", "industry", "price_date", "exchange", "currency", "class", "flags", "verified", "ret_1y", "ev_ebitda", "ret_3m")} for r in rows]  # dashboard list (keeps it under 2 MB)
     for r, full in zip(slim, rows):
         r["price"] = full["price"]
     store.write("universe.json", {"updated": store.now_iso(), "count": len(rows), "rows": slim}, compact=True)

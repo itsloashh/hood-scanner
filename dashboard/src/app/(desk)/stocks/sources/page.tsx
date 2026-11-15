@@ -3,7 +3,7 @@ import { Section, Empty } from '@/components/ui';
 import { Tag } from '@/components/stock-ui';
 import { ago } from '@/lib/format';
 
-export const revalidate = 120;
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Data sources · Hood Desk' };
 
 const TONE: Record<string, 'up' | 'warn' | 'down' | 'dim'> = { ok: 'up', degraded: 'warn', down: 'down', blocked: 'down' };
@@ -23,7 +23,7 @@ export default async function SourcesPage() {
         </div>
         {h.error && <p className="mt-3 text-sm text-down">{h.error}</p>}
       </Section>
-      <div className="mt-4 grid gap-3 md:grid-cols-2">
+      <div className="mt-4 grid gap-3 @3xl:grid-cols-2">
         {Object.entries(h.providers).map(([k, p]) => (
           <div key={k} className="card p-4">
             <div className="flex items-start justify-between gap-3">

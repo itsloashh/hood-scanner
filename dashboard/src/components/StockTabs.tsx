@@ -13,7 +13,7 @@ const TABS = [
 export function StockTabs() {
   const path = usePathname();
   return (
-    <div className="no-scrollbar -mx-4 mb-6 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0">
+    <div className="no-scrollbar -mx-4 mb-6 flex gap-1 overflow-x-auto border-b border-line px-4 @2xl:mx-0 @2xl:px-0">
       {TABS.map((t) => {
         const on = t.href === '/stocks' ? path === '/stocks' : path.startsWith(t.href);
         return (

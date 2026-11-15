@@ -50,7 +50,7 @@ export function StockRow({ r, rank }: { r: Row; rank?: number }) {
           {r.name} · {r.sector ?? '—'} · {r.cap ?? '—'} cap · {PROFILE_LABEL[r.profile]}
         </div>
       </div>
-      <div className="hidden text-right text-xs sm:block">
+      <div className="hidden text-right text-xs @2xl:block">
         <div className={riskTone(r.risk)}>{r.risk}</div>
         <div className="text-faint">{money(r.mcap)}</div>
       </div>

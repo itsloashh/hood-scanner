@@ -4,7 +4,7 @@ import { Columns, HBars, Scatter } from '@/components/charts';
 import { PageHeader, Section } from '@/components/ui';
 import { pct, usd } from '@/lib/format';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Analysis · Hood Desk' };
 
 const TIER_LABEL: Record<string, string> = { watch: 'Watch', buy: 'Buy zone', ignition: 'Ignition', pump: 'Pump' };
@@ -104,7 +104,7 @@ export default async function AnalysisPage() {
         {s.n} coins called, {s.hit2x} hit 2×. Darker bars are groups with fewer than 3 coins — treat them as hints, not rules. These sharpen as more calls close.
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 @4xl:grid-cols-2">
         <Section title="2× rate by alert type" hint="Coins that ever got this alert, and how many reached 2× from the first call">
           <HBars rows={rateRows(everTier, (k) => TIER_LABEL[k] ?? k)} max={1} />
         </Section>
@@ -125,8 +125,8 @@ export default async function AnalysisPage() {
         </Section>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-5">
-        <Section title="Score vs peak" hint="Each dot is a coin · blue = micro, gold = quality · dashed line = 2×" className="lg:col-span-3">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-5">
+        <Section title="Score vs peak" hint="Each dot is a coin · blue = micro, gold = quality · dashed line = 2×" className="@4xl:col-span-3">
           <Scatter
             points={calls
               .filter((c) => c.score != null)
@@ -135,12 +135,12 @@ export default async function AnalysisPage() {
             yLabel="peak multiple"
           />
         </Section>
-        <Section title="How high they went" hint="Peak since first alert, number of coins" className="lg:col-span-2">
+        <Section title="How high they went" hint="Peak since first alert, number of coins" className="@4xl:col-span-2">
           <Columns data={peakBuckets.map(([label, f]) => ({ label, value: calls.filter((c) => f(c.peakX)).length }))} highlightFrom={3} height={190} />
         </Section>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
         <Section title="Winners vs losers" hint="Coins that hit 2× against closed coins that never did">
           <Compare calls={calls} />
         </Section>

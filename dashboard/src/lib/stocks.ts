@@ -1,26 +1,7 @@
 // Stock research data written by the Python engine (stocks/) into data/stocks in the repo.
-const REPO = process.env.SCANNER_REPO || 'itsloashh/hood-scanner';
-const BRANCH = process.env.SCANNER_BRANCH || 'main';
-const RAW = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/data/stocks`;
+import { rawJson } from './source';
 
-async function get<T>(path: string, fallback: T, revalidate = 300): Promise<T> {
-  if (process.env.STOCKS_LOCAL_DIR) {
-    // local preview against files on disk (never set in production)
-    try {
-      const fs = await import('node:fs/promises');
-      return JSON.parse(await fs.readFile(`${process.env.STOCKS_LOCAL_DIR}/${decodeURIComponent(path)}`, 'utf8')) as T;
-    } catch {
-      return fallback;
-    }
-  }
-  try {
-    const res = await fetch(`${RAW}/${path}`, { next: { revalidate, tags: ['stocks'] } });
-    if (!res.ok) return fallback;
-    return (await res.json()) as T;
-  } catch {
-    return fallback;
-  }
-}
+const get = <T,>(path: string, fallback: T, _revalidate?: number) => rawJson<T>(`data/stocks/${path}`, fallback);
 
 export type Row = {
   id: string;
@@ -87,7 +68,10 @@ export type Detail = {
   chart: [string, number][];
   verification: Record<string, boolean | number | null>;
   eligibility: string;
+  yahoo?: string;
+  zones?: { at: number; price: number; swing: ZonePlan | null; scalp: ZonePlan | null } | null;
 };
+export type ZonePlan = { entry: number[]; stop: number; hold: number[]; tps: { label: string; price: number; rr: number | null; why?: string }[]; atr: number; basis: string };
 
 export type Universe = { updated: string; count: number; rows: Row[] };
 export type Etf = { id: string; ticker: string; label: string; currency: string; price: number; price_date: string; score: number; confidence: number; available: boolean; total_return_1y?: number; price_return_1y?: number; yield?: number | null; vol_1y?: number; max_dd_1y?: number; ret_3m?: number; nav_erosion?: boolean; chart?: [string, number][] };
@@ -126,3 +110,8 @@ export function classTone(score: number) {
 export function riskTone(r: string) {
   return r === 'Low' ? 'text-up' : r === 'Moderate' ? 'text-gold-2' : r === 'High' ? 'text-warn' : 'text-down';
 }
+
+export type StockAlertLog = { alert_id: string; security_id: string | null; alert_type: string; trigger_event: string | null; score: number | null; created_at: string; delivery_status: string };
+export type StockRules = { updated: string; alert: Record<string, number>; eligibility: Record<string, number>; caps: Record<string, number>; classes: [number, string][]; score_version: string; dividend: Record<string, number>; managers: number };
+export const loadStockAlerts = () => get<{ log: StockAlertLog[] } | null>('alerts.json', null);
+export const loadStockRules = () => get<StockRules | null>('rules.json', null);

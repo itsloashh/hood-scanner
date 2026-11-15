@@ -1,21 +1,11 @@
 // Reads the scanner's own data files straight from the GitHub repo the bot commits to.
 // Nothing new to run: every scan commit is picked up within a couple of minutes.
 
-const REPO = process.env.SCANNER_REPO || 'itsloashh/hood-scanner';
-const BRANCH = process.env.SCANNER_BRANCH || 'main';
-const RAW = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/data`;
+import { rawJson } from './source';
 
-export const REVALIDATE_SEC = 120;
+export const REVALIDATE_SEC = 15;
 
-async function getJson<T>(path: string, fallback: T, revalidate = REVALIDATE_SEC): Promise<T> {
-  try {
-    const res = await fetch(`${RAW}/${path}`, { next: { revalidate, tags: ['scanner'] } });
-    if (!res.ok) return fallback;
-    return (await res.json()) as T;
-  } catch {
-    return fallback;
-  }
-}
+const getJson = <T,>(path: string, fallback: T) => rawJson<T>(`data/${path}`, fallback);
 
 // ── Raw shapes (only the fields the dashboard uses) ──────────────
 export type ScoreEntry = {
@@ -35,7 +25,10 @@ export type ScoreEntry = {
   lastX?: number;
   outcome?: 'win' | 'stopped' | 'expired' | null;
   closedAt?: number;
+  zones?: CallZones | null;
 };
+
+export type CallZones = { at: number; swing: { entry: number[]; stop: number; tps: { l: string; p: number; rr: number | null }[]; atr: number } | null; scalp: { entry: number[]; stop: number; tps: { l: string; p: number; rr: number | null }[]; atr: number } | null };
 
 export type CalledCoin = {
   symbol: string;
@@ -130,3 +123,19 @@ export async function poolCandles(pool: string, sinceMs: number): Promise<Candle
     return [];
   }
 }
+
+export type CoinRules = {
+  updated: string;
+  lanes: { microMaxMarketCap: number; quality: { minHolders: number; minUsdPerHolder: number; minLiquidityUsd: number; minDrawdownPct: number; maxDrawdownPct: number } };
+  buyScore: number;
+  watchScore: number;
+  regimeAdjust: { riskOn: number; riskOff: number };
+  profile: { enabled: boolean; lanes: string[]; minBuyers24h: number; minBuySell: number; minVolRatio: number; change24h: [number, number] };
+  tracking: { followScoreJump: number; followPriceMovePct: number; followEveryHours: number; minGapHours: number; forgetDays: number };
+  scorecard: { winX: number; stopX: number; days: number };
+  pump: { minChangePct: number; cooldownHours: number };
+  ignition: { minVolMultiple: number; hours: number; maxPriceAboveBasePct: number; cooldownHours: number; minVolume24hUsd: number };
+  digestEveryHours: number;
+  target: [number, number];
+};
+export const loadCoinRules = () => getJson<CoinRules | null>('rules.json', null);

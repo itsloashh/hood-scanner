@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { loadAll, poolCandles } from '@/lib/data';
+import { loadAll } from '@/lib/data';
 import { buildCalls } from '@/lib/calls';
-import { PriceChart } from '@/components/PriceChart';
+import { TradeChart } from '@/components/TradeChart';
 import { Mult, Outcome, Pill, Section, Stat, TIER_META, TierBadge } from '@/components/ui';
 import { date, price, short, usd } from '@/lib/format';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -23,7 +23,6 @@ export default async function CoinPage({ params }: { params: Promise<{ token: st
   const c = buildCalls(state, prices, prefs).find((x) => x.token === token.toLowerCase() || x.token === token);
   if (!c) notFound();
 
-  const candles = c.pool ? await poolCandles(c.pool, c.firstAt - 5 * 86_400_000) : [];
   const timeline = [
     ...c.events.map((e) => ({ at: e.at, kind: 'alert' as const, tier: e.tier, text: `${TIER_META[e.tier]?.label ?? e.tier} alert`, detail: `${price(e.price)}${e.score != null ? ` · score ${e.score}` : ''}` })),
     ...Object.entries(c.milestones).map(([k, at]) => ({ at, kind: 'milestone' as const, tier: null, text: MILESTONE[k] ?? k, detail: '' })),
@@ -32,8 +31,8 @@ export default async function CoinPage({ params }: { params: Promise<{ token: st
 
   return (
     <>
-      <Link href="/calls" className="mb-4 inline-block text-sm text-dim hover:text-text">
-        ← All calls
+      <Link href="/coins" className="mb-4 inline-block text-sm text-dim hover:text-text">
+        ← All coins
       </Link>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
@@ -63,7 +62,14 @@ export default async function CoinPage({ params }: { params: Promise<{ token: st
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+      <Section title="Chart & zones" hint="Live candles from GeckoTerminal · call zones from price data" className="mb-4">
+        {c.pool ? (
+          <TradeChart kind="coin" pool={c.pool} callPrice={c.firstPrice} callAt={c.firstAt} stored={c.zones ?? null} runner={c.firstPrice * 3} />
+        ) : (
+          <p className="text-sm text-dim">No pool on record for this coin, so there’s no chart.</p>
+        )}
+      </Section>
+      <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-3 @5xl:grid-cols-6">
         <Stat label="Call price" value={<span className="text-xl">{price(c.firstPrice)}</span>} sub={`mcap ${usd(c.mcapAtCall)}`} />
         <Stat label="Peak" value={<Mult v={c.peakX} strong />} sub="best since first alert" />
         <Stat label="Lowest" value={<Mult v={c.lowX} />} sub="worst since first alert" />
@@ -72,19 +78,9 @@ export default async function CoinPage({ params }: { params: Promise<{ token: st
         <Stat label="Liquidity" value={<span className="text-xl">{usd(c.nowLiq)}</span>} sub={c.ethTrend ? `ETH was ${c.ethTrend} at call` : undefined} />
       </div>
 
-      <Section title="Price since the call" hint="Dashed lines are 2×, 3× and −50% from the first call price" className="mt-4">
-        {candles.length > 2 ? (
-          <PriceChart
-            candles={candles}
-            callPrice={c.firstPrice}
-            markers={c.events.map((e) => ({ at: e.at, label: TIER_META[e.tier]?.label ?? e.tier, color: TIER_META[e.tier]?.color ?? 'var(--color-dim)' }))}
-          />
-        ) : (
-          <p className="text-sm text-dim">Price history isn’t available for this pool right now (GeckoTerminal may be rate limiting). Try again in a few minutes.</p>
-        )}
-      </Section>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
         <Section title="Timeline">
           <ol className="relative space-y-4 border-l border-line pl-5">
             {timeline.map((t, i) => (

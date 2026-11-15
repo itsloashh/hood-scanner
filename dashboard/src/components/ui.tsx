@@ -4,10 +4,10 @@ import { x } from '@/lib/format';
 
 export function PageHeader({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: React.ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4 lg:mb-8">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4 @4xl:mb-8">
       <div>
         {eyebrow && <div className="eyebrow mb-1.5">{eyebrow}</div>}
-        <h1 className="display text-3xl leading-tight lg:text-4xl">{title}</h1>
+        <h1 className="display text-3xl leading-tight @4xl:text-4xl">{title}</h1>
       </div>
       {children}
     </div>
@@ -17,9 +17,9 @@ export function PageHeader({ eyebrow, title, children }: { eyebrow?: string; tit
 export function Stat({ label, value, sub, tone }: { label: string; value: React.ReactNode; sub?: React.ReactNode; tone?: 'up' | 'down' | 'gold' }) {
   const c = tone === 'up' ? 'text-up' : tone === 'down' ? 'text-down' : tone === 'gold' ? 'text-gold-2' : 'text-text';
   return (
-    <div className="card p-4 lg:p-5">
+    <div className="card p-4 @4xl:p-5">
       <div className="eyebrow">{label}</div>
-      <div className={`num mt-2 text-2xl font-medium lg:text-[1.7rem] ${c}`}>{value}</div>
+      <div className={`num mt-2 text-2xl font-medium @4xl:text-[1.7rem] ${c}`}>{value}</div>
       {sub && <div className="mt-1 text-xs text-dim">{sub}</div>}
     </div>
   );
@@ -27,7 +27,7 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
 
 export function Section({ title, hint, children, className = '', action }: { title: string; hint?: string; children: React.ReactNode; className?: string; action?: React.ReactNode }) {
   return (
-    <section className={`card min-w-0 p-4 lg:p-6 ${className}`}>
+    <section className={`card min-w-0 p-4 @4xl:p-6 ${className}`}>
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <h2 className="display text-lg">{title}</h2>
@@ -75,7 +75,7 @@ export function Mult({ v, strong }: { v: number | null; strong?: boolean }) {
 
 export function CoinLink({ c }: { c: Pick<Call, 'token' | 'symbol' | 'pref'> }) {
   return (
-    <Link href={`/calls/${c.token}`} className="font-semibold text-text hover:text-gold-2">
+    <Link href={`/coins/${c.token}`} className="font-semibold text-text hover:text-gold-2">
       ${c.symbol}
       {c.pref === 'follow' && <span className="ml-1 text-gold" title="Followed">★</span>}
       {c.pref === 'mute' && <span className="ml-1 text-faint" title="Muted">⦸</span>}

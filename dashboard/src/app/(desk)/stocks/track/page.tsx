@@ -4,7 +4,7 @@ import { Section, Empty } from '@/components/ui';
 import { pctS } from '@/components/stock-ui';
 import { date } from '@/lib/format';
 
-export const revalidate = 600;
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Track record · Hood Desk' };
 
 const ORDER = ['<40', '40–49', '50–59', '60–69', '70+'];
@@ -45,7 +45,7 @@ export default async function TrackPage() {
           <Empty>No candidates recorded yet. The first research run seeds this list; returns fill in as 30/90/180/365-day windows close.</Empty>
         )}
         {groups.length > 0 && (
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <div className="mt-4 grid gap-2 @2xl:grid-cols-3">
             {groups.map(([k, g]) => (
               <div key={k} className="rounded-lg bg-panel-2 p-3 text-sm">
                 <div className="text-xs text-faint">{k.replace(':', ' · ')}</div>

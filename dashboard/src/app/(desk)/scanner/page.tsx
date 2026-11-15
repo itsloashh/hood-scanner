@@ -3,7 +3,7 @@ import { Area, HBars } from '@/components/charts';
 import { PageHeader, Pill, Section, Stat } from '@/components/ui';
 import { ago, date, signedPct, usd } from '@/lib/format';
 
-export const revalidate = 120;
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Scanner · Hood Desk' };
 
 export default async function ScannerPage() {
@@ -35,7 +35,7 @@ export default async function ScannerPage() {
 
       {run && (
         <>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 @3xl:grid-cols-4 @5xl:grid-cols-6">
             <Stat label="Coins scanned" value={run.scanned} sub={`${run.universe} in the universe`} />
             <Stat label="Passed quick filter" value={run.quickPass} />
             <Stat label="Passed deep check" value={run.deepPass} sub={`${run.micro} micro · ${run.quality} quality`} />
@@ -44,7 +44,7 @@ export default async function ScannerPage() {
             <Stat label="Watchlist" value={run.watchlist} sub={`market ${run.regime}`} />
           </div>
 
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
             <Section title="Why coins get cut" hint={`Last 24h, across ${funnel.length} scans`}>
               <HBars rows={cutRows.map(([k, v]) => ({ label: k, value: v, display: `${Math.round((v / cutTotal) * 100)}%` }))} color="var(--color-line-2)" />
             </Section>
@@ -61,7 +61,7 @@ export default async function ScannerPage() {
         </>
       )}
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
         <Section title="ETH" hint={state.eth ? `${usd(state.eth.price, 0)} · 24h ${signedPct(state.eth.h24)} · 7d ${signedPct(state.eth.d7)} · trend ${state.eth.trend}` : undefined}>
           <Area points={(state.ethHistory ?? []).map(([t, p]) => [t, p] as [number, number])} fmt={(v) => usd(v, 0)} />
         </Section>

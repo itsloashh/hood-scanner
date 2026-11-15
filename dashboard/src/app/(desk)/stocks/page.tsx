@@ -4,7 +4,7 @@ import { NotReady, StockRow, Tag, money, pctS } from '@/components/stock-ui';
 import { PageHeader, Pill, Section, Stat } from '@/components/ui';
 import { ago, pct } from '@/lib/format';
 
-export const revalidate = 300;
+export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Stocks · Hood Desk' };
 
 const ROT_TONE: Record<string, 'up' | 'gold' | 'warn' | 'down'> = { leading: 'up', improving: 'gold', weakening: 'warn', lagging: 'down' };
@@ -38,18 +38,18 @@ export default async function StocksPage({ searchParams }: { searchParams: Promi
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 @4xl:grid-cols-4">
         <Stat label="Strong 80+" value={counts.strong} sub="research candidates" tone="gold" />
         <Stat label="Developing 70–79" value={counts.dev} tone="up" />
         <Stat label="Early watch 60–69" value={counts.watch} />
         <Stat label="Insider buying" value={uni.rows.filter((r) => r.insider_buyers_90d > 0).length} sub="names with open-market buys, 90d" />
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-3">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-3">
         <Section
           title="Top research candidates"
           hint="Ranked by opportunity score. Evidence is scored separately — read both."
-          className="lg:col-span-2"
+          className="@4xl:col-span-2"
           action={<Link href="/stocks/screener" className="text-xs text-gold hover:text-gold-2">Screener →</Link>}
         >
           <div className="no-scrollbar mb-3 flex gap-1.5 overflow-x-auto">
@@ -99,7 +99,7 @@ export default async function StocksPage({ searchParams }: { searchParams: Promi
         </div>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
         <Section title="Insider buying" hint="Open-market purchases by officers and directors (Form 4) — not awards, exercises or plan trades">
           <div className="-mx-2 divide-y divide-line/60">
             {insiders.map((r) => <StockRow key={r.id} r={r} />)}
@@ -114,7 +114,7 @@ export default async function StocksPage({ searchParams }: { searchParams: Promi
         </Section>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+      <div className="mt-4 grid gap-4 @4xl:grid-cols-2">
         <Section title="ETFs" hint="Price and distributions only — fees, flows and holdings have no free source">
           <div className="scroll-x">
             <table className="w-full min-w-[420px] text-sm">

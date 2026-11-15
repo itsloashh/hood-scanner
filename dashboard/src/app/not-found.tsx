@@ -5,7 +5,7 @@ export default function NotFound() {
       <div>
         <h1 className="display text-3xl">Not found</h1>
         <p className="mt-2 text-dim">That coin isn’t in the bot’s call history.</p>
-        <Link href="/calls" className="mt-4 inline-block text-gold">Back to calls</Link>
+        <Link href="/coins" className="mt-4 inline-block text-gold">Back to coins</Link>
       </div>
     </main>
   );

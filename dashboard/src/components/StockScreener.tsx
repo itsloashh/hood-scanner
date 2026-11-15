@@ -61,7 +61,7 @@ export function StockScreener({ rows }: { rows: Row[] }) {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ticker or name" className={`${sel} w-full sm:w-44`} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ticker or name" className={`${sel} w-full @2xl:w-44`} />
         <select value={profile} onChange={(e) => setProfile(e.target.value)} className={sel} aria-label="Strategy">
           <option value="all">Best lens</option><option value="value">Value</option><option value="growth">Growth</option><option value="dividend">Dividend</option>
         </select>

@@ -66,7 +66,7 @@ export function CallsTable({ calls, initial }: { calls: Call[]; initial?: { outc
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search ticker or address" className={`${sel} w-full sm:w-56`} />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search ticker or address" className={`${sel} w-full @2xl:w-56`} />
         <select value={outcome} onChange={(e) => setOutcome(e.target.value as OutcomeF)} className={sel} aria-label="Outcome">
           <option value="all">All outcomes</option>
           <option value="2x">Hit 2×</option>
@@ -105,7 +105,7 @@ export function CallsTable({ calls, initial }: { calls: Call[]; initial?: { outc
       </div>
 
       {/* Desktop table */}
-      <div className="card scroll-x hidden md:block">
+      <div className="card scroll-x hidden @3xl:block">
         <table className="w-full min-w-[920px] text-sm">
           <thead className="border-b border-line text-left text-xs text-faint">
             <tr>
@@ -169,9 +169,9 @@ export function CallsTable({ calls, initial }: { calls: Call[]; initial?: { outc
       </div>
 
       {/* Mobile cards */}
-      <div className="space-y-2.5 md:hidden">
+      <div className="space-y-2.5 @3xl:hidden">
         {rows.map((c) => (
-          <Link key={c.token} href={`/calls/${c.token}`} className="card block p-4 active:bg-panel-2">
+          <Link key={c.token} href={`/coins/${c.token}`} className="card block p-4 active:bg-panel-2">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="font-semibold">
