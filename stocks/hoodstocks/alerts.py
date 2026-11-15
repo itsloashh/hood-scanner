@@ -139,8 +139,31 @@ def opportunity_text(d: dict) -> str:
               f"Base upside {pct(sc['upside_base'])} vs bear downside {pct(sc['downside_bear'])}"]
     else:
         L += ["", f"Valuation range: unavailable ({_e(sc.get('why'))})"]
+    L += zone_lines(d.get("zones"), cur)
     L += ["", f"Sources: SEC XBRL filings, Yahoo delayed prices · {DASH}/{r['id']}", "<i>Research candidate — not a buy instruction.</i>"]
     return "\n".join(L)
+
+
+def zone_lines(z: dict | None, cur: str = "USD") -> list[str]:
+    if not z:
+        return []
+    p0 = z["price"]
+    m = lambda x: money(x, cur)  # noqa: E731
+    pc = lambda x: f"{(x / p0 - 1) * 100:+.0f}%"  # noqa: E731
+    def tp(t):
+        rr = f", {t['rr']:.1f}R" if t.get("rr") is not None else ""
+        return f"{t['label']} {m(t['price'])} ({pc(t['price'])}{rr})"
+
+    L = ["", "<b>Zones</b> (from price data — speculative)"]
+    s = z.get("swing")
+    if s:
+        L.append(f"Swing: entry {m(s['entry'][0])}–{m(s['entry'][1])} · stop {m(s['stop'])} ({pc(s['stop'])})")
+        L.append("Targets: " + " · ".join(tp(t) for t in s["tps"]))
+        L.append(f"Hold while above {m(s['hold'][0])}; after TP1 move the stop to entry")
+    c = z.get("scalp")
+    if c:
+        L.append(f"Scalp (1h): entry {m(c['entry'][0])}–{m(c['entry'][1])} · stop {m(c['stop'])} · " + " · ".join(tp(t) for t in c["tps"]))
+    return L
 
 
 def fmt(x):

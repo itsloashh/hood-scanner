@@ -10,7 +10,7 @@ from ..http import FetchError, Http
 UA = "Mozilla/5.0 (compatible; hood-desk-stocks/1.0; +github.com/itsloashh/hood-scanner)"
 
 
-def parse_chart(j: dict) -> dict | None:
+def parse_chart(j: dict, intraday: bool = False) -> dict | None:
     r = (j.get("chart") or {}).get("result") or []
     if not r:
         return None
@@ -25,7 +25,7 @@ def parse_chart(j: dict) -> dict | None:
         if c is None:
             continue
         bars.append({
-            "t": datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%d"),
+            "t": datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%d") if intraday is False else datetime.fromtimestamp(t, timezone.utc).strftime("%Y-%m-%dT%H:%M"),
             "o": (q.get("open") or [None])[i], "h": (q.get("high") or [None])[i], "l": (q.get("low") or [None])[i],
             "c": c, "v": (q.get("volume") or [0])[i] or 0,
             "adj": adj[i] if adj and i < len(adj) and adj[i] is not None else c,
@@ -52,10 +52,10 @@ class Yahoo:
     def __init__(self, http: Http):
         self.http = http
 
-    def chart(self, symbol: str, range_: str = "5y", cache_hours: float = 12) -> dict | None:
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?range={range_}&interval=1d&events=div%2Csplits&includeAdjustedClose=true"
+    def chart(self, symbol: str, range_: str = "5y", cache_hours: float = 12, interval: str = "1d") -> dict | None:
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{urllib.parse.quote(symbol)}?range={range_}&interval={interval}&events=div%2Csplits&includeAdjustedClose=true"
         try:
-            return parse_chart(self.http.json(url, ua=UA, accept="*/*", cache_hours=cache_hours))
+            return parse_chart(self.http.json(url, ua=UA, accept="*/*", cache_hours=cache_hours), intraday=interval != "1d")
         except FetchError as e:
             if e.status == 404:
                 return None

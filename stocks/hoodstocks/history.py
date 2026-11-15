@@ -24,6 +24,7 @@ def record_discoveries(details: dict, macro: dict) -> list[dict]:
             "profile": r["profile"], "cap": r["cap"], "experimental": r["experimental"], "risk": r["risk"], "sector": r["sector"],
             "evidence": d["why"], "periods": {k: (d.get("statements") or {}).get(k, {}).get("end") for k in ("revenue", "net_income")} if d.get("statements") else {},
             "valuation": {k: d["scenarios"].get(k) for k in ("method", "base", "bear", "bull", "assumptions")} if d["scenarios"].get("available") else None,
+            "zones": d.get("zones"),
             "score_version": config.SCORE_VERSION, "thesis_status": "open", "benchmark": config.BENCHMARK.get(r["country"], "SPY"),
         }
         new.append(rec)

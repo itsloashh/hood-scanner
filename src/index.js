@@ -8,6 +8,7 @@ import * as bs from './blockscout.js';
 import * as dp from './dexpaprika.js';
 import { quickFilter, deepFilter, pumpFilter, ageDays, tally, laneOf, laneChartCheck, copycatOf, buildKnownTickers, normSymbol } from './filters.js';
 import { pumpPlan, loadPullbacks } from './pump.js';
+import { zones as callZones, compactZones } from './zones.js';
 import { loadHolders } from './holders-job.js';
 import { recordAlert, updateScorecard, summarize } from './scorecard.js';
 import { ethPriceFrom, recordEth, ethContext, ownMove, isEthPaired } from './eth.js';
@@ -316,6 +317,21 @@ async function cachedInfo(token, state, now) {
   return info;
 }
 
+// Entry / stop / hold / take-profit levels for a call: swing from daily candles, scalp from hourly (DexPaprika, free)
+async function zonesFor(poolAddress, price, daily, state, now, hourly = null) {
+  try {
+    const d = daily || (await cachedDaily(poolAddress, state, now));
+    let h = hourly;
+    if (!h) {
+      try { h = await dp.hourly(poolAddress, 24); } catch { h = null; }
+    }
+    return callZones({ price, daily: d, hourly: h, runner: price * CONFIG.targetMinX, maxStopPct: 0.5, at: now });
+  } catch (e) {
+    log(`zones failed: ${e.message}`);
+    return null;
+  }
+}
+
 // Daily candles re-used for 1h (stored compactly); today's move comes from the live pool price
 async function cachedDaily(poolAddress, state, now) {
   state.chartCache ||= {};
@@ -396,6 +412,7 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
     if (pool?.priceUsd) {
       try {
         const hourly = await dp.hourly(base.pool, 24);
+        base._hourly = hourly;
         sig = ignitionSignal(base, hourly, { priceNow: pool.priceUsd, movePct: ownMove(pool, pool.change.h6 ?? pool.change.h1, pool.change.h6 != null ? eth.h6 : null) });
         if (sig) state.health.ignitionSource.dexpaprika += 1;
       } catch (e) {
@@ -416,10 +433,11 @@ async function checkIgnition(state, poolByToken, candidates, runStats, now, outO
     log(`🔥 ignition ${base.symbol}: ${sig.mult.toFixed(1)}× hourly volume`);
     const mcap = pool?.marketCap ?? null;
     if (loadPrefs()[token] === 'mute') continue;
-    await notify(ignitionMessage({ token, base, sig, pool }), { buttons: coinButtons(token) });
+    const z = await zonesFor(base.pool, sig.price, null, state, now, base._hourly || null);
+    await notify(ignitionMessage({ token, base, sig, pool, zones: z }), { buttons: coinButtons(token) });
     state.ignitionAlerts[token] = { at: now, symbol: base.symbol };
     state.scorecard ||= [];
-    recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score, kind: base.kind, ethTrend: eth.trend, mcap: pool?.marketCap ?? null, pool: base.pool }, now);
+    recordAlert(state.scorecard, { token, symbol: base.symbol, tier: 'ignition', lane: base.lane, price: sig.price, score: base.score, kind: base.kind, ethTrend: eth.trend, mcap: pool?.marketCap ?? null, pool: base.pool, zones: compactZones(z) }, now);
     candidates.push({
       token, symbol: base.symbol, pool: base.pool, tier: 'ignition', score: base.score ?? null, price: sig.price,
       mcap, liquidity: pool?.liquidityUsd ?? null, change24h: pool?.change.h24 ?? null, washLikely: false, lane: base.lane,
@@ -616,13 +634,14 @@ export async function main() {
           ? openPosition(state.paper, { token, symbol: pool.baseToken.symbol, pool: pool.poolAddress, price: pool.priceUsd, score: s }, now)
           : null;
         await priceCrossCheck(r);
+        r.zones = await zonesFor(pool.poolAddress, pool.priceUsd, r.candles, state, now);
         await notify(alertMessage({ ...r, tier: tierNow, plan: planFor(pool.priceUsd), regime: reg, warnings: r.filt.warnings, paperOpened }), { buttons: coinButtons(token) });
       } else if (d.kind === 'update') {
         const c = called[token];
         await notify(updateMessage({ symbol: pool.baseToken.symbol, token, reasons: d.reasons, tier: tierNow, score: s, price: pool.priceUsd, mcap: pool.marketCap, firstPrice: c.firstPrice, firstAt: c.firstAt, lane: r.lane }), { buttons: coinButtons(token) });
       }
       if (d.kind) {
-        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: tierNow, lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend, mcap: pool.marketCap, pool: pool.poolAddress }, now);
+        recordAlert(state.scorecard, { token, symbol: pool.baseToken.symbol, tier: tierNow, lane: r.lane, price: pool.priceUsd, score: s, kind: r.kind, ethTrend: eth.trend, mcap: pool.marketCap, pool: pool.poolAddress, zones: compactZones(r.zones) }, now);
         (tierNow === 'buy' ? state.alerts : state.watchAlerts)[token] = { at: now, score: s, symbol: pool.baseToken.symbol };
         markSent(called, { token, symbol: pool.baseToken.symbol, tier: tierNow, score: s, price: pool.priceUsd }, now);
         if (d.kind === 'full') runStats[tierNow] += 1;
@@ -872,6 +891,7 @@ export async function checkCoin(ca, now = Date.now()) {
   const prof = r.score ? winnerProfile(pool, r.score, r.lane) : { ok: true, misses: [] };
   if (!prof.ok) failed.push(`not the winner profile — ${prof.misses.join('; ')}`);
   const tier = failed.length ? 'none' : s >= CONFIG.alertScore && !r.score.buyBlocked ? 'buy' : s >= CONFIG.watchScore ? 'watch' : 'none';
+  r.zones = await zonesFor(pool.poolAddress, pool.priceUsd, r.candles, { chartCache: {} }, now);
   await notify(checkMessage({ ...r, failed, verdict: tier, plan: planFor(pool.priceUsd), regime: { state: 'neutral' }, warnings: r.filt.warnings }));
   return { failed, score: s, tier };
 }

@@ -1683,6 +1683,25 @@ await test('winner profile: revival with buyers back + volume 2×+ passes; dead 
   assert.equal(winnerProfile(pool(10, 10, 0), { volRatio: 0.5 }, 'quality').ok, true);
 });
 
+await test('zones: entry at support, stop under it, targets at resistance, R:R positive; nothing without data', async () => {
+  const { zones, plan, atr } = await import('../src/zones.js');
+  // SYNTHETIC daily candles: range 1.00–1.20 with a dip to 0.95 and a high at 1.30
+  const mk = (i, c, h = c * 1.03, l = c * 0.97) => ({ t: i, o: c, h, l, c });
+  const daily = Array.from({ length: 40 }, (_, i) => mk(i, 1.1 + 0.05 * Math.sin(i / 3)));
+  daily[20] = mk(20, 0.97, 1.0, 0.95);
+  daily[30] = mk(30, 1.25, 1.3, 1.2);
+  const price = 1.0;
+  const z = zones({ price, daily, hourly: daily.slice(-24) });
+  const s = z.swing;
+  assert.ok(s.stop < s.entry[0] && s.entry[0] <= price && s.entry[1] === price);
+  assert.ok(s.tps[0].price > price && s.tps[1].price > s.tps[0].price);
+  assert.ok(s.tps.every((t) => t.rr > 0));
+  assert.ok(1 - s.stop / price <= 0.5); // never more than 50% under price
+  assert.ok(atr(daily) > 0);
+  assert.equal(plan([], 1), null);
+  assert.equal(zones({ price: 1, daily: null, hourly: null }), null);
+});
+
 console.log = origLog;
 console.log(`\n${failures ? `${failures} test(s) failed` : 'all tests passed'} · ${calls.length} mocked API calls`);
 process.exit(failures ? 1 : 0);

@@ -71,6 +71,25 @@ const chartUrl = (pool) => `https://www.geckoterminal.com/${CONFIG.network}/pool
 const tokenUrl = (t) => `https://robinhoodchain.blockscout.com/token/${t}`;
 
 // ── coin alert ──────────────────────────────────────────────
+// 📐 Zones block shared by every call message (levels come from src/zones.js)
+export function zoneLines(z) {
+  if (!z) return [];
+  const L = ['', '📐 ZONES (from price data — speculative)'];
+  const pct = (p) => `${p >= z.price ? '+' : ''}${Math.round((p / z.price - 1) * 100)}%`;
+  const tp = (t) => `${t.label} ${px(t.price)} (${pct(t.price)}${t.rr != null ? `, ${t.rr.toFixed(1)}R` : ''})`;
+  if (z.swing) {
+    const s = z.swing;
+    L.push(bullet(`Swing entry ${px(s.entry[0])}–${px(s.entry[1])} · stop ${px(s.stop)} (${pct(s.stop)})`));
+    L.push(bullet(`Swing targets: ${s.tps.map(tp).join(' · ')}`));
+    L.push(bullet(`Hold while above ${px(s.hold[0])}; after TP1, move the stop to entry`));
+  }
+  if (z.scalp) {
+    const s = z.scalp;
+    L.push(bullet(`Scalp (1h): entry ${px(s.entry[0])}–${px(s.entry[1])} · stop ${px(s.stop)} · ${s.tps.map(tp).join(' · ')}`));
+  }
+  return L;
+}
+
 export function alertMessage(c) {
   const { tier, pool, score, conc, chart, plan, rotation, narratives, holdersCount, holderChangePct, age, warnings, regime, paperOpened, community, flow } = c;
   const sym = pool.baseToken.symbol;
@@ -213,6 +232,8 @@ export function alertMessage(c) {
   } else {
     L.push(bullet(`Not a buy yet. If it reaches the buy zone: stop ${px(plan.stop)}, first target ${px(plan.takeProfits[0].price)} (3x)`));
   }
+
+  L.push(...zoneLines(c.zones));
 
   // Links
   L.push('', '🔗 LINKS');
@@ -368,7 +389,7 @@ export function digestMessage({ paper, eq, stats, regime, funnel, buy24h, watch2
 }
 
 // ── 🔥 IGNITION: volume exploding out of a quiet base ───────
-export function ignitionMessage({ token, base, sig, pool }) {
+export function ignitionMessage({ token, base, sig, pool, zones = null }) {
   const L = [];
   L.push(`🔥 IGNITION · $${base.symbol}`);
   L.push(`Hourly volume just jumped to ${sig.mult.toFixed(1)}× its quiet-base normal, and price is up ${pctTxt(sig.movePct)} in the last ${CONFIG.ignition.hours}h.`);
@@ -387,6 +408,7 @@ export function ignitionMessage({ token, base, sig, pool }) {
   L.push(bullet(`Most pumps pull back — the plan still sells half at ${CONFIG.paper.takeProfits[0].x}x. Send /check ${token.slice(0, 8)}… for the full report.`));
   L.push('', `Chart: ${chartUrl(base.pool)}`);
   L.push(`CA: ${token}`);
+  L.push(...zoneLines(zones));
   return L.filter((l) => l !== null).join('\n');
 }
 

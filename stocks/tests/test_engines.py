@@ -437,3 +437,16 @@ def test_13f_with_schema_location_parses():
                                 '<ns1:informationTable xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns1="http://www.sec.gov/x" xsi:schemaLocation="http://www.sec.gov/x x.xsd">').replace("</informationTable>", "</ns1:informationTable>")
     xml = xml.replace("<infoTable>", "<ns1:infoTable>").replace("</infoTable>", "</ns1:infoTable>")
     assert len(SEC.parse_13f_table(xml)) == 3
+
+
+def test_zones_match_rules():
+    from hoodstocks import zones as ZN
+    import math
+    c = [{"t": i, "o": 100, "h": 100 + 5 * math.sin(i / 3) + 2, "l": 100 + 5 * math.sin(i / 3) - 2, "c": 100 + 5 * math.sin(i / 3)} for i in range(80)]
+    z = ZN.zones(100.0, c, c[-40:], runner=130)
+    s = z["swing"]
+    assert s["stop"] < s["entry"][0] <= 100 == s["entry"][1]
+    assert s["tps"][0]["price"] > 100 and all(t["rr"] > 0 for t in s["tps"])
+    assert s["tps"][-1]["price"] == 130 and s["tps"][-1]["label"] == "Runner"
+    assert z["scalp"] and all(t["label"] != "Runner" for t in z["scalp"]["tps"])
+    assert ZN.zones(100.0, [], None) is None

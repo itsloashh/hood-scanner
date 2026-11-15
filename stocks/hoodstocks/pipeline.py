@@ -8,7 +8,7 @@ import traceback
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
-from . import config, fundamentals as F, master as M, metrics as MET, store
+from . import config, fundamentals as F, master as M, metrics as MET, store, zones as ZN
 from .engines import confidence as CONF, dividend as DIV, etf as ETF, growth as GROW, insider as INS, institutional as INST
 from .engines import macro as MAC, risk as RISK, scoring as SC, value as VAL
 from .http import FetchError, Http
@@ -488,6 +488,7 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
         rows.append({"sid": sid, "s": s, "b": b, "px": px, "snap": snap, "m": m, "mcap": mcap, "price_usd": price_usd, "adv_usd": adv_usd,
                      "currency": cur, "cf": cf})
     log(f"scoring {len(rows)} stocks")
+    bars_by_sym = bars
     sector_med = MET.peer_medians(rows, lambda r: r["s"].get("sector"))
     ind_med = MET.peer_medians(rows, lambda r: r["s"].get("industry"))
     # breadth: share of each sector's stocks above their 50-day average
@@ -554,6 +555,8 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
         risk_label = RISK.label(m, px, s["model"], flags, quarantined)
         scen = RISK.scenarios(m, s["model"], sector_med.get(s.get("sector") or "", {}), ind_med.get(s.get("industry") or "", {})) if snap else {"available": False, "why": "no verified financials"}
         experimental = cap == "micro"
+        model_px = (scen["base"] / r["mcap"] * px["last"]) if scen.get("available") and r["mcap"] and scen.get("base", 0) > 0 else None
+        zn = ZN.zones(px["last"], r["b"]["bars"], None, runner=model_px if model_px and model_px > px["last"] else None)
         row = {
             "id": r["sid"], "ticker": s["ticker"], "name": s["name"], "exchange": s["exchange"], "country": s["country"],
             "currency": r["currency"], "sector": s.get("sector"), "industry": s.get("industry"), "model": s["model"],
@@ -579,8 +582,28 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
             "statements": statements_view(snap) if snap else None,
             "chart": [[x["t"], round(x["c"], 4)] for x in r["b"]["bars"][-260:]],
             "verification": ver, "eligibility": "experimental microcap" if experimental else "standard",
+            "zones": zn, "yahoo": s["listings"][0]["yahoo"],
         }
+    # scalp levels from hourly bars for the names most likely to be called
+    focus = sorted((d for d in details.values() if not d["row"]["quarantined"]), key=lambda d: -d["row"]["score"])[:60]
+    focus += [d for d in details.values() if d["row"]["insider_buyers_90d"] and d not in focus][:20]
+    for d in focus:
+        if ctx.left() < 12 * 60:
+            break
+        try:
+            h = ctx.yahoo.chart(d["yahoo"], "1mo", cache_hours=0, interval="60m")
+        except Exception:
+            continue
+        if h and h.get("bars"):
+            z = d.get("zones") or {}
+            runner = next((t["price"] for t in ((z.get("swing") or {}).get("tps") or []) if t["label"] == "Runner"), None)
+            d["zones"] = ZN.zones(d["row"]["price"], [b for b in bars_for(d, bars_by_sym)], h["bars"], runner=runner)
     return {"rows": out_rows, "details": details, "rotation": rot, "sector_medians": sector_med}
+
+
+def bars_for(d: dict, bars: dict) -> list[dict]:
+    b = bars.get(d["yahoo"])
+    return b["bars"] if b else []
 
 
 def reporting_currency(cf: dict | None) -> str | None:
