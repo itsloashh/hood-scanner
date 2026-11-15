@@ -29,7 +29,7 @@ CFG = {
     "min_score": 55, "min_confidence": 70, "min_mcap": 1e9, "min_tp1_rr": 1.2,
     "dte": (30, 60), "dte_target": 45, "exit_dte": 21,
     "long_delta": 0.60, "long_delta_band": (0.45, 0.75),
-    "min_oi": 300, "max_spread_pct": 0.12,
+    "min_oi": 100, "max_spread_pct": 0.12,
     "cheap_iv_ratio": 1.15, "expensive_iv_ratio": 1.4,
     "tiers": {"A": 9.0, "B": 7.0, "C": 5.0},
     "max_chains": 60, "alert_cooldown_days": 14, "max_alerts_per_run": 3,
@@ -147,14 +147,34 @@ def liquid(c: dict) -> bool:
     return c["bid"] > 0 and c["oi"] >= CFG["min_oi"] and spread_pct(c) <= CFG["max_spread_pct"]
 
 
+def is_monthly(e: str) -> bool:
+    d = date.fromisoformat(e)
+    return d.weekday() == 4 and 15 <= d.day <= 21  # standard monthly expiry (3rd Friday): the deepest liquidity
+
+
 def pick_expiry(calls: list[dict], today: date) -> tuple[str, int] | None:
-    exps = sorted({c["expiry"] for c in calls})
+    """Among 30–60 day expiries, prefer ones with a liquid ~0.60-delta call, then monthlies, then closest to 45 days."""
     lo, hi = CFG["dte"]
-    ok = [(e, (date.fromisoformat(e) - today).days) for e in exps]
-    ok = [(e, n) for e, n in ok if lo <= n <= hi]
-    if not ok:
-        return None
-    return min(ok, key=lambda x: abs(x[1] - CFG["dte_target"]))
+    dlo, dhi = CFG["long_delta_band"]
+    best = None
+    for e in sorted({c["expiry"] for c in calls}):
+        n = (date.fromisoformat(e) - today).days
+        if not lo <= n <= hi:
+            continue
+        liquid_longs = sum(1 for c in calls if c["expiry"] == e and dlo <= c["delta"] <= dhi and liquid(c))
+        key = (liquid_longs > 0, is_monthly(e), -abs(n - CFG["dte_target"]))
+        if best is None or key > best[0]:
+            best = (key, e, n)
+    return (best[1], best[2]) if best else None
+
+
+def diagnose(calls: list[dict], expiry: str) -> str:
+    dlo, dhi = CFG["long_delta_band"]
+    band = [c for c in calls if c["expiry"] == expiry and dlo <= c["delta"] <= dhi]
+    if not band:
+        return f"no calls with delta {dlo}–{dhi} at {expiry}"
+    c = min(band, key=lambda c: abs(c["delta"] - CFG["long_delta"]))
+    return f"best {expiry} {c['strike']:g}C: bid {c['bid']}, ask {c['ask']}, OI {c['oi']:.0f}, spread {spread_pct(c) * 100:.0f}%"
 
 
 def timing(bars: list[dict], price: float, zones: dict) -> dict:
@@ -205,7 +225,7 @@ def build_setup(row: dict, detail: dict, chain: dict, bars: list[dict], earnings
     lo, hi = CFG["long_delta_band"]
     longs = [c for c in calls if lo <= c["delta"] <= hi and liquid(c)]
     if not longs:
-        return {"ticker": row["ticker"], "skip": "no liquid ~0.60-delta call in the 30–60 day window", "expiry": expiry}
+        return {"ticker": row["ticker"], "skip": f"no liquid ~0.60-delta call ({diagnose(calls, expiry)})", "expiry": expiry}
     long = min(longs, key=lambda c: abs(c["delta"] - CFG["long_delta"]))
     shorts = [c for c in calls if c["strike"] > long["strike"] and c["strike"] >= tp1 and c["bid"] > 0 and c["oi"] >= CFG["min_oi"] / 2 and spread_pct(c) <= CFG["max_spread_pct"] * 1.5]
     short = min(shorts, key=lambda c: abs(c["strike"] - tp2)) if shorts else None
