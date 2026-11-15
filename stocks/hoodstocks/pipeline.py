@@ -556,7 +556,8 @@ def run_scores(ctx: Ctx, master: dict, subs: dict, bars: dict, facts: dict, insi
         scen = RISK.scenarios(m, s["model"], sector_med.get(s.get("sector") or "", {}), ind_med.get(s.get("industry") or "", {})) if snap else {"available": False, "why": "no verified financials"}
         experimental = cap == "micro"
         model_px = (scen["base"] / r["mcap"] * px["last"]) if scen.get("available") and r["mcap"] and scen.get("base", 0) > 0 else None
-        zn = ZN.zones(px["last"], r["b"]["bars"], None, runner=model_px if model_px and model_px > px["last"] else None)
+        # the model value is a runner target only when it's within reach (≤ +60%); further out it's a thesis, not a level
+        zn = ZN.zones(px["last"], r["b"]["bars"], None, runner=model_px if model_px and px["last"] < model_px <= px["last"] * 1.6 else None)
         row = {
             "id": r["sid"], "ticker": s["ticker"], "name": s["name"], "exchange": s["exchange"], "country": s["country"],
             "currency": r["currency"], "sector": s.get("sector"), "industry": s.get("industry"), "model": s["model"],
