@@ -1,13 +1,13 @@
 {
- "updated": "2026-11-15T19:23:57Z",
+ "updated": "2026-11-15T19:25:49Z",
  "error": null,
  "stages": {
   "options": {
    "ok": true,
-   "sec": 127
+   "sec": 32
   }
  },
- "minutes": 2.1,
+ "minutes": 0.5,
  "providers": {
   "sec_edgar": {
    "name": "SEC EDGAR (submissions, XBRL company facts, Form 4, 13F, 8-K)",
@@ -19,7 +19,7 @@
    "limits": "10 requests/second, must send an identifying User-Agent",
    "licensing": "public domain US government data",
    "status": "not used this run",
-   "checked": "2026-11-15T19:23:57Z"
+   "checked": "2026-11-15T19:25:49Z"
   },
   "yahoo": {
    "name": "Yahoo Finance chart API",
@@ -31,7 +31,7 @@
    "limits": "unpublished; throttled to ~3/s",
    "licensing": "personal research use only; not licensed real-time data; may change without notice",
    "status": "not used this run",
-   "checked": "2026-11-15T19:23:57Z"
+   "checked": "2026-11-15T19:25:49Z"
   },
   "fred": {
    "name": "FRED (St. Louis Fed)",
@@ -43,7 +43,7 @@
    "limits": "keyless CSV download",
    "licensing": "public, cite source",
    "status": "not used this run",
-   "checked": "2026-11-15T19:23:57Z"
+   "checked": "2026-11-15T19:25:49Z"
   },
   "bank_of_canada": {
    "name": "Bank of Canada Valet API",
@@ -55,7 +55,7 @@
    "limits": "none published",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-15T19:23:57Z"
+   "checked": "2026-11-15T19:25:49Z"
   },
   "openfigi": {
    "name": "OpenFIGI mapping",
@@ -67,7 +67,7 @@
    "limits": "25 requests/min keyless",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-15T19:23:57Z"
+   "checked": "2026-11-15T19:25:49Z"
   },
   "google_news": {
    "name": "Google News RSS (discovery only)",
@@ -79,7 +79,7 @@
    "limits": "throttled",
    "licensing": "headlines and links only; articles are not copied",
    "status": "not used this run",
-   "checked": "2026-11-15T19:23:57Z"
+   "checked": "2026-11-15T19:25:49Z"
   },
   "sedar_plus": {
    "name": "SEDAR+ (Canadian filings)",
@@ -120,24 +120,13 @@
   }
  },
  "http": {
-  "api.nasdaq.com": {
-   "calls": 50,
-   "ok": 50,
-   "errors": 0,
-   "retries": 0,
-   "r429": 0,
-   "seconds": 93.6,
-   "cache_hits": 0,
-   "last_error": null,
-   "consecutive_fail": 0
-  },
   "cdn.cboe.com": {
    "calls": 61,
    "ok": 59,
    "errors": 1,
    "retries": 1,
    "r429": 0,
-   "seconds": 26.1,
+   "seconds": 7.9,
    "cache_hits": 0,
    "last_error": "403 https://cdn.cboe.com/api/global/delayed_quotes/options/WTM.json <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message></Error>",
    "consecutive_fail": 0
