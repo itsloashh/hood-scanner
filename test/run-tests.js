@@ -605,6 +605,22 @@ await test('telegram relay: commands trigger GitHub, strangers and forged reques
   await worker.scheduled({ cron: '23 14 * * *' }, env, ctx);
   await Promise.all(waits);
   assert.deepEqual(dispatched.slice(-2).map((d) => d.wf), ['scan.yml', 'research.yml']);
+
+  // dashboard bridge: needs DASH_KEY, returns screens instead of messaging Telegram
+  const dash = (body, key) => worker.fetch(new Request('https://bot.example.workers.dev/api/bot', {
+    method: 'POST', headers: { 'content-type': 'application/json', ...(key ? { authorization: `Bearer ${key}` } : {}) }, body: JSON.stringify(body),
+  }), { ...env, DASH_KEY: 'k'.repeat(32) });
+  assert.equal((await dash({ text: '/status' })).status, 403);
+  assert.equal((await dash({ text: '/status' }, 'wrong')).status, 403);
+  const sentBefore = sent.length;
+  const st = await (await dash({ text: '/status' }, 'k'.repeat(32))).json();
+  assert.match(st.screens[0].text, /190 coins → 3 survived/);
+  const sc = await (await dash({ text: '/scan' }, 'k'.repeat(32))).json();
+  assert.match(sc.screens[0].text, /Scan started/);
+  assert.equal(dispatched.at(-1).wf, 'scan.yml');
+  const ck = await (await dash({ cb: `ck:${CA.toLowerCase()}` }, 'k'.repeat(32))).json();
+  assert.match(ck.toast, /Full report/);
+  assert.equal(sent.length, sentBefore, 'dashboard requests never post to Telegram');
   globalThis.fetch = prevFetch;
 });
 

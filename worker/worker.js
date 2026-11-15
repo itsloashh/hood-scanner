@@ -85,6 +85,11 @@ const COMMANDS = [
 ];
 
 async function tg(env, method, body) {
+  // dashboard requests: collect what the bot would have sent instead of sending it to Telegram
+  if (env.__capture) {
+    env.__capture.push({ method, body });
+    return { ok: true, result: { message_id: env.__capture.length } };
+  }
   const res = await fetch(`https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/${method}`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -1141,6 +1146,29 @@ async function sendScreen(env, chatId, scr) {
   return tg(env, 'sendMessage', { chat_id: chatId, text: scr.text, reply_markup: { inline_keyboard: scr.kb }, disable_web_page_preview: true });
 }
 
+// ── dashboard bridge: same handlers as Telegram, output captured ──
+export async function dashboardBot(env, body = {}) {
+  const cap = [];
+  const denv = Object.create(env);
+  denv.__capture = cap;
+  const chat = { id: env.ALLOWED_CHAT_ID };
+  const out = { toast: '', screens: [], kb: null };
+  try {
+    if (body.cb) await handleCallback(denv, { id: 'dash', data: String(body.cb).slice(0, 64), message: { chat, message_id: 1, text: String(body.screen || '').slice(0, 40) } });
+    else if (body.text) await handleMessage(denv, { chat, text: String(body.text).slice(0, 500) });
+    else return { ...out, error: 'Send a command (text) or a button (cb).' };
+  } catch (e) {
+    out.error = String(e.message).slice(0, 200);
+  }
+  for (const c of cap) {
+    const ik = c.body?.reply_markup?.inline_keyboard;
+    if (c.method === 'answerCallbackQuery') out.toast = c.body.text || '';
+    else if (c.method === 'sendMessage' || c.method === 'editMessageText') out.screens.push({ text: c.body.text || '', kb: ik || [] });
+    else if (c.method === 'editMessageReplyMarkup') out.kb = ik || [];
+  }
+  return out;
+}
+
 // ── button taps ─────────────────────────────────────────────
 export async function handleCallback(env, cq) {
   priceErrors.length = 0;
@@ -1342,6 +1370,15 @@ export default {
         }
       }
       return new Response('ok'); // always 200 so Telegram doesn't retry
+    }
+
+    // Hood Desk dashboard: runs any bot command or button tap and returns the screen instead of
+    // posting it to Telegram. Server-to-server only, guarded by the DASH_KEY secret.
+    if (url.pathname === '/api/bot') {
+      if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+      if (!env.DASH_KEY || env.DASH_KEY.length < 20 || request.headers.get('authorization') !== `Bearer ${env.DASH_KEY}`) return new Response('Forbidden', { status: 403 });
+      const body = await request.json().catch(() => ({}));
+      return Response.json(await dashboardBot(env, body), { headers: { 'cache-control': 'no-store' } });
     }
 
     return new Response('hood-scanner bot is running', { status: 200 });
