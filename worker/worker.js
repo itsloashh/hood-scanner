@@ -1151,6 +1151,14 @@ async function sendScreen(env, chatId, scr) {
   return tg(env, 'sendMessage', { chat_id: chatId, text: scr.text, reply_markup: { inline_keyboard: scr.kb }, disable_web_page_preview: true });
 }
 
+// US market session (Toronto/New York time), with a little room either side for the open and expiry settlement
+export function tradeClock(t = Date.now()) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+  if (p.weekday === 'Sat' || p.weekday === 'Sun') return false;
+  const m = Number(p.hour) * 60 + Number(p.minute);
+  return m >= 9 * 60 + 25 && m <= 16 * 60 + 20;
+}
+
 // ── messages the bot starts itself (not replies): Hood Desk inbox + push, and Telegram unless switched off ──
 export async function outbound(env, text, { kb = null, kind = 'update', url = null, source = 'bot' } = {}) {
   let telegram = true;
@@ -1193,6 +1201,10 @@ async function hubApi(request, env, path) {
   if (!env.HUB) return json({ error: 'hub not deployed yet' });
   if (path === 'inbox') return json(await hubCall(env, 'list', { since: body.since, before: body.before, limit: body.limit }));
   if (path === 'prefs') return json(await hubCall(env, 'prefs', { set: body.set }));
+  if (path === 'trade') {
+    if (body.op === 'get') return json(await hubCall(env, 'tget'));
+    if (body.op === 'put') return json(await hubCall(env, 'tput', { acct: body.acct, ver: body.ver }));
+  }
   if (path === 'push') {
     if (body.op === 'key') return json(await hubCall(env, 'key'));
     if (body.op === 'sub') return json(await hubCall(env, 'sub', { subscription: body.subscription, device: body.device }));
@@ -1374,6 +1386,10 @@ export default {
     const fxJob = event.cron === '23 14 * * *' ? null : fxClock(event.scheduledTime || Date.now());
     if (event.cron !== '23 14 * * *' && budgetClock(event.scheduledTime || Date.now()) && env.PAPER) ctx.waitUntil(budgetTick(env).catch(() => {}));
     if (fxJob) ctx.waitUntil(dispatch(env, 'fx.yml', { mode: fxJob }).catch(() => {}));
+    // Hood Desk terminal: fill limit/stop orders, take-profits and stops, settle expiries (market hours, every 5 min)
+    if (event.cron === '*/5 * * * *' && env.DASH_URL && env.DASH_KEY && tradeClock(event.scheduledTime || Date.now())) {
+      ctx.waitUntil(fetch(`${env.DASH_URL.replace(/\/+$/, '')}/api/trade/tick`, { method: 'POST', headers: { authorization: `Bearer ${String(env.DASH_KEY).trim()}` } }).catch(() => {}));
+    }
     const job = event.cron === '23 14 * * *' ? 'research.yml' : 'scan.yml';
     if (job === 'scan.yml' && env.PAPER) ctx.waitUntil(paperTick(env).catch(() => {}));
     // older 15-min cron setups dispatch every time; the 5-min cron only on quarter hours
@@ -1430,28 +1446,7 @@ export default {
 
     // Hood Desk dashboard: runs any bot command or button tap and returns the screen instead of
     // posting it to Telegram. Server-to-server only, guarded by the DASH_KEY secret.
-    // connectivity probe for market data from Cloudflare (statuses only)
-    if (url.pathname === '/api/probe') {
-      if (!dashOk(request, env)) return new Response('Forbidden', { status: 403 });
-      const ua = 'Mozilla/5.0 (compatible; hood-desk-stocks/1.0; +github.com/itsloashh/hood-scanner)';
-      const t = async (u, h = {}) => {
-        try {
-          const r = await fetch(u, { headers: { 'user-agent': ua, ...h } });
-          const txt = await r.text();
-          return { status: r.status, bytes: txt.length };
-        } catch (e) {
-          return { status: 0, err: e.name };
-        }
-      };
-      return Response.json({
-        yahoo: await t('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=1d&interval=5m'),
-        yahoo2: await t('https://query2.finance.yahoo.com/v8/finance/chart/AAPL?range=1d&interval=5m'),
-        cboe: await t('https://cdn.cboe.com/api/global/delayed_quotes/options/AAPL.json'),
-        cboeQuote: await t('https://cdn.cboe.com/api/global/delayed_quotes/quotes/AAPL.json'),
-      });
-    }
-
-    const hubPath = url.pathname.match(/^\/api\/(event|inbox|prefs|push)$/)?.[1];
+    const hubPath = url.pathname.match(/^\/api\/(event|inbox|prefs|push|trade)$/)?.[1];
     if (hubPath) return hubApi(request, env, hubPath);
 
     if (url.pathname === '/api/bot') {

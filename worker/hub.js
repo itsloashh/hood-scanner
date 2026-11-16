@@ -66,6 +66,15 @@ export class Hub {
         return json({ ok: true, devices: (await this.subs()).length });
       case 'subs':
         return json({ subs: await this.subs(), vapid: await this.vapid() });
+      // stocks/options paper account (Hood Desk terminal): versioned so two writers can't overwrite each other
+      case 'tget':
+        return json({ acct: (await s.get('trade:acct')) || null, ver: (await s.get('trade:ver')) || 0 });
+      case 'tput': {
+        const ver = (await s.get('trade:ver')) || 0;
+        if (Number(body.ver) !== ver) return json({ ok: false, conflict: true, ver });
+        await s.put({ 'trade:acct': body.acct, 'trade:ver': ver + 1 });
+        return json({ ok: true, ver: ver + 1 });
+      }
       case 'key':
         return json({ publicKey: (await this.vapid()).publicKey, devices: (await this.subs()).length, prefs: await this.prefs() });
       case 'prefs': {

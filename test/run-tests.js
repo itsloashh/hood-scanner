@@ -667,6 +667,17 @@ await test('Hood Desk hub: inbox, Web Push (encrypted + VAPID), signed events fr
   await api('push', { op: 'test' });
   assert.equal((await (await api('push', { op: 'key' })).json()).devices, 0);
   assert.deepEqual(splitText('\n<b>POTENTIAL</b> OPPORTUNITY\nline2', true), { title: 'POTENTIAL OPPORTUNITY', body: 'line2' });
+
+  // terminal paper account: versioned writes, stale writers are refused
+  const t0 = await (await api('trade', { op: 'get' })).json();
+  assert.deepEqual(t0, { acct: null, ver: 0 });
+  assert.equal((await (await api('trade', { op: 'put', acct: { cash: 10000 }, ver: 0 })).json()).ver, 1);
+  assert.equal((await (await api('trade', { op: 'put', acct: { cash: 1 }, ver: 0 })).json()).conflict, true);
+  assert.equal((await (await api('trade', { op: 'get' })).json()).acct.cash, 10000);
+  const { tradeClock } = await import('../worker/worker.js');
+  assert.equal(tradeClock(Date.parse('2026-11-16T15:00:00Z')), true); // Mon 10:00 ET
+  assert.equal(tradeClock(Date.parse('2026-11-16T22:00:00Z')), false); // Mon 17:00 ET
+  assert.equal(tradeClock(Date.parse('2026-11-15T15:00:00Z')), false); // Sunday
   globalThis.fetch = prevFetch;
 });
 

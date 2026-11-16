@@ -9,7 +9,9 @@
   // Secrets (TELEGRAM_BOT_TOKEN, ALLOWED_CHAT_ID, GITHUB_TOKEN, WEBHOOK_SECRET) are added in the
   // Cloudflare dashboard and are never stored here.
   "vars": {
-    "GITHUB_REPO": "itsloashh/hood-scanner"
+    "GITHUB_REPO": "itsloashh/hood-scanner",
+    // Hood Desk (the dashboard): the bot pings its paper-trading terminal every 5 min in market hours
+    "DASH_URL": "https://hood-desk.vercel.app"
   },
   // The bot's clock: scan + paper TP/SL every 15 min, research daily ~10:23 AM Toronto
   "triggers": {
