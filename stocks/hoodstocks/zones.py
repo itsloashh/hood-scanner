@@ -71,6 +71,34 @@ def plan(c: list[dict] | None, price: float | None, *, max_stop_pct: float = 0.2
             "basis": "support + ATR" if sup is not None else "ATR only (no nearby support)"}
 
 
+def plan_short(c: list[dict] | None, price: float | None, *, max_stop_pct: float = 0.25) -> dict | None:
+    """Mirror of plan() for a short / put: entry from price up to the nearest resistance (within 1.25 ATR), stop ½ ATR
+    above it (kept 1–3 ATR above price), take-profits at the next supports below (else 2 and 4 ATR down)."""
+    c = [x for x in (c or []) if x.get("h") is not None and x.get("l") is not None and x.get("c") is not None]
+    if len(c) < 10 or not price:
+        return None
+    a = atr(c)
+    if not a:
+        return None
+    highs, lows = pivots(c)
+    resist = _cluster(sorted([x for x in highs if x > price]), a * 0.5)
+    supports = _cluster(sorted([x for x in lows if x < price * 0.998], reverse=True), a * 0.5)
+    res = next((r for r in resist if r - price <= 1.25 * a), None)
+    entry_high = min(res, price + a) if res is not None else price + 0.5 * a
+    stop = (res if res is not None else entry_high) + 0.5 * a
+    stop = max(stop, price + a)
+    stop = min(stop, price + 3 * a, price * (1 + max_stop_pct))
+    entry_mid = (price + entry_high) / 2
+    tp1 = next((x for x in supports if x <= price - 0.8 * a), price - 2 * a)
+    tp2 = next((x for x in supports if x <= tp1 - 0.8 * a), min(tp1 - 1.5 * a, price - 4 * a))
+    tps = [{"label": "TP1", "price": tp1, "why": "first support" if tp1 in supports else "2× normal move down", "sell": 0.5},
+           {"label": "TP2", "price": tp2, "why": "next support" if tp2 in supports else "4× normal move down", "sell": 0.5}]
+    for t in tps:
+        t["rr"] = (entry_mid - t["price"]) / (stop - entry_mid) if stop > entry_mid else None
+    return {"direction": "short", "atr": a, "atr_pct": a / price, "entry": [price, entry_high], "stop": stop, "stop_pct": stop / price - 1,
+            "tps": tps, "resistance": res, "supports": supports[:4], "basis": "resistance + ATR" if res is not None else "ATR only (no nearby resistance)"}
+
+
 def zones(price: float | None, daily: list[dict] | None, hourly: list[dict] | None = None, runner: float | None = None) -> dict | None:
     swing = plan(daily[-260:] if daily else None, price, max_stop_pct=0.25, runner=runner)
     scalp = plan(hourly, price, max_stop_pct=0.08)

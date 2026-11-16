@@ -210,6 +210,47 @@ def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: boo
         else:
             skipped.append({"ticker": t, "why": f"{st['points']} points (below tier C)", "against": st["against"][:3]})
     setups.sort(key=lambda s: ("ABC".index(s["tier"]), -s["points"]))
+
+    # ── bearish: put setups on verifiably weak stocks (options_bear.py) ──
+    from . import options_bear as OPB
+    # the daily run sees every scored stock and saves the pool; midday passes read it (or build a partial one from detail pages)
+    pool = OPB.write_pool(details) if len(details) > 1500 else ((store.read("options/bear_pool.json", {}) or {}).get("pool") or [p for p in (OPB.pool_record(d) for d in details.values()) if p])
+
+    def bars_sym(sym):
+        b = bars.get(sym) or cache_get("bars", sym) or {}
+        return b.get("bars") or []
+
+    sec_ret = {sec: OPB.trend(bars_sym(etf))["ret_3m"] for sec, etf in config.SECTOR_ETF.items()}
+    spy = OPB.trend(bars_sym("SPY"))
+    spx_up = bool(spy["price"] > spy["ma50"]) if spy["price"] and spy["ma50"] else None
+    bear_c, bear_skipped, bear_setups = [], [], []
+    for rec in pool:
+        b = bars_sym(rec["yahoo"])
+        ok, why, tr = OPB.gate(rec, b, sec_ret.get(rec["row"].get("sector") or ""))
+        if ok:
+            bear_c.append((rec, tr, b))
+        else:
+            bear_skipped.append({"ticker": rec["row"]["ticker"], "why": why})
+    bear_c.sort(key=lambda x: -OPB.prelim(x[0], x[1]))
+    bear_c = bear_c[: OPB.BEAR["max_chains"]]
+    for rec, tr, b in bear_c:
+        t = rec["row"]["ticker"]
+        if t not in chains and ctx.left() >= 3 * 60:
+            ch = OP.fetch_chain(ctx.http, t)
+            if ch:
+                chains[t] = ch
+        st = OPB.build_setup(rec, tr, chains.get(t), b, earnings.get(t), rate, spx_up)
+        if not st:
+            bear_skipped.append({"ticker": t, "why": "no chain / no 30–60 day expiry"})
+        elif st.get("skip"):
+            bear_skipped.append({"ticker": t, "why": st["skip"]})
+        elif st["tier"]:
+            st["stock_grade"] = OPB.grade(rec)
+            bear_setups.append(st)
+        else:
+            bear_skipped.append({"ticker": t, "why": f"{st['points']} points (below tier C)", "against": st["against"][:3]})
+    bear_setups.sort(key=lambda s: ("ABC".index(s["tier"]), -s["points"]))
+
     # paper: mark open positions, open new ones for alert-grade setups
     for p in paper["positions"]:
         if p["status"] == "open":
@@ -225,16 +266,31 @@ def run_options(ctx: Ctx, details: dict, bars: dict, macro: dict, alerts_on: boo
         if sent:
             paper["positions"].append(OP.open_paper(st))
             open_tickers.add(st["ticker"])
+    puts_sent = 0  # puts have their own limit; the shared optn: cooldown also blocks a put and a call on one ticker within 14 days
+    for st in [s for s in bear_setups if s["tier"] in ("A", "B")]:
+        if st["ticker"] in open_tickers:
+            continue
+        if not st.get("stock_grade"):
+            st["not_alerted"] = "the stock isn't short-grade (score 25 or under, confidence 75+, 3+ red flags)"
+            continue
+        if puts_sent >= OPB.BEAR["max_alerts_per_run"]:
+            break
+        if al and al.option(st):
+            puts_sent += 1
+            paper["positions"].append(OP.open_paper(st))
+            open_tickers.add(st["ticker"])
     if al:
         al.save()
     paper["summary"] = OP.summary(paper["positions"])
     paper["updated"] = store.now_iso()
     store.write("options/paper.json", paper)
     out = {"updated": store.now_iso(), "rate": rate, "config": OP.CFG, "setups": setups, "skipped": skipped[:80], "checked": len(cands),
-           "chains": len(chains), "notes": ["Bullish call setups only (V1).", "Cboe delayed quotes; Nasdaq earnings calendar.",
+           "bear": {"rules": OPB.BEAR, "setups": bear_setups, "skipped": bear_skipped[:80], "pool": len(pool), "checked": len(bear_c), "spx_above_ma50": spx_up},
+           "chains": len(chains), "notes": ["Calls on strong stocks, puts on verifiably weak ones.", "Cboe delayed quotes; Nasdaq earnings calendar.",
                                               "Tier A/B are alerted (max 3 per run, one per stock per 2 weeks) and paper-tracked when the stock is Opportunity-grade or scores 80+."]}
     store.write("options/setups.json", out)
     log(f"options: {len(cands)} candidates, {len(chains)} chains, {len(setups)} setups ({sum(s['tier'] == 'A' for s in setups)} A, {sum(s['tier'] == 'B' for s in setups)} B)")
+    log(f"puts: pool {len(pool)}, passed gate {len(bear_c)}, {len(bear_setups)} setups ({sum(s['tier'] == 'A' for s in bear_setups)} A, {sum(s['tier'] == 'B' for s in bear_setups)} B)")
     return out
 
 

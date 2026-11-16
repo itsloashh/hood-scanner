@@ -191,17 +191,21 @@ def zone_lines(z: dict | None, cur: str = "USD") -> list[str]:
 def option_text(st: dict) -> str:
     s = st["structures"][st["recommended"]]
     u = st["underlying"]
-    legs = " / ".join(f"{'Buy' if l['side'] == 'buy' else 'Sell'} {l['strike']:g}C" for l in s["legs"])
-    name = "CALL" if s["kind"] == "call" else "CALL DEBIT SPREAD"
-    L = [f"<b>OPTION SETUP · Tier {st['tier']}</b> · ${_e(st['ticker'])} — {_e(st['name'])}", "",
+    bear = st.get("direction") == "bear"
+    cp = "P" if bear else "C"
+    legs = " / ".join(f"{'Buy' if l['side'] == 'buy' else 'Sell'} {l['strike']:g}{cp}" for l in s["legs"])
+    name = ("PUT" if s["kind"] == "put" else "PUT DEBIT SPREAD") if bear else ("CALL" if s["kind"] == "call" else "CALL DEBIT SPREAD")
+    L = [f"<b>{'🐻 BEARISH ' if bear else ''}OPTION SETUP · Tier {st['tier']}</b> · ${_e(st['ticker'])} — {_e(st['name'])}", "",
          f"<b>{name}</b> {legs} · exp {st['expiry']} ({st['dte']} days)",
          f"Cost ≈ ${s['debit']:.2f} (${s['cost']:,.0f}/contract, max loss) · mid ${s['debit_mid']:.2f}",
          f"Breakeven at expiry ${s['breakeven']:.2f}" + (f" · max gain ${s['max_gain']:,.0f}" if s.get("max_gain") else ""),
          "", "<b>Plan (underlying)</b>",
-         f"Now ${st['spot']:.2f} · entry {u['entry'][0]:.2f}–{u['entry'][1]:.2f} · stop {u['stop']:.2f}",
+         f"Now ${st['spot']:.2f} · {'short ' if bear else ''}entry {u['entry'][0]:.2f}–{u['entry'][1]:.2f} · stop {u['stop']:.2f}{' (close above)' if bear else ''}",
          f"TP1 {u['tp1']:.2f} → ≈ {'+' if s['profit_tp1'] >= 0 else ''}${s['profit_tp1']:,.0f} · TP2 {u['tp2']:.2f} → ≈ +${s['profit_tp2']:,.0f} · stop → ≈ ${s['loss_at_stop']:,.0f}",
          f"Exit by {st['exit_by']} (21 days left) if neither level hits",
          "", "<b>Why</b>"] + [f"• {_e(x)}" for x in st["why"][:5]]
+    if bear and st.get("red_flags"):
+        L += ["<b>Red flags in the filings</b>"] + [f"• {_e(x)}" for x in st["red_flags"][:4]]
     if st["against"]:
         L += ["<b>Watch out</b>"] + [f"• {_e(x)}" for x in st["against"][:3]]
     iv = f"IV {st['atm_iv'] * 100:.0f}%" + (f" vs realised {max(x for x in (st['hv20'], st['hv60']) if x) * 100:.0f}%" if (st.get("hv20") or st.get("hv60")) else "")

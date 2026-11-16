@@ -47,6 +47,13 @@ def _ncdf(x: float) -> float:
     return 0.5 * (1 + math.erf(x / math.sqrt(2)))
 
 
+def bs_put(s: float, k: float, t: float, sigma: float, r: float = 0.04) -> float:
+    """Black-Scholes put value via put-call parity. t in years."""
+    if t <= 0 or sigma <= 0:
+        return max(0.0, k - s)
+    return bs_call(s, k, t, sigma, r) - s + k * math.exp(-r * t)
+
+
 def bs_call(s: float, k: float, t: float, sigma: float, r: float = 0.04) -> float:
     """Black-Scholes call value. t in years."""
     if t <= 0 or sigma <= 0:
@@ -92,18 +99,18 @@ def sma(bars: list[dict], n: int) -> float | None:
 # ── data ─────────────────────────────────────────────────
 def parse_chain(j: dict) -> dict:
     d = j.get("data") or {}
-    calls = []
+    calls, puts = [], []
     for o in d.get("options") or []:
         m = OCC.match(o.get("option") or "")
-        if not m or m["cp"] != "C":
+        if not m:
             continue
-        calls.append({
+        (calls if m["cp"] == "C" else puts).append({
             "symbol": o["option"], "expiry": f"20{m['y']}-{m['m']}-{m['d']}", "strike": int(m["k"]) / 1000,
             "bid": o.get("bid") or 0.0, "ask": o.get("ask") or 0.0, "iv": o.get("iv") or 0.0, "delta": o.get("delta") or 0.0,
             "theta": o.get("theta") or 0.0, "vega": o.get("vega") or 0.0, "oi": o.get("open_interest") or 0.0,
             "volume": o.get("volume") or 0.0, "last": o.get("last_trade_price"),
         })
-    return {"spot": d.get("current_price") or d.get("close"), "iv30": d.get("iv30"), "as_of": j.get("timestamp") or d.get("last_trade_time"), "calls": calls}
+    return {"spot": d.get("current_price") or d.get("close"), "iv30": d.get("iv30"), "as_of": j.get("timestamp") or d.get("last_trade_time"), "calls": calls, "puts": puts}
 
 
 def fetch_chain(http, sym: str) -> dict | None:
@@ -394,7 +401,7 @@ def mark(position: dict, chains: dict[str, dict], today: date | None = None) -> 
     ch = chains.get(position["ticker"])
     if not ch:
         return position
-    by = {c["symbol"]: c for c in ch["calls"]}
+    by = {c["symbol"]: c for c in ch["calls"] + ch.get("puts", [])}
     value = 0.0
     for l in position["legs"]:
         c = by.get(l["symbol"])
@@ -409,14 +416,17 @@ def mark(position: dict, chains: dict[str, dict], today: date | None = None) -> 
     reason = None
     tp_pct = CFG["take_profit_pct"]["spread" if position["kind"] == "spread" else "call"]
     max_value = position.get("max_value")
-    if spot and spot >= position["underlying"]["tp2"]:
+    bear = position.get("direction") == "bear"
+    hit_tp2 = spot and (spot <= position["underlying"]["tp2"] if bear else spot >= position["underlying"]["tp2"])
+    hit_stop = spot and (spot > position["underlying"]["stop"] if bear else spot < position["underlying"]["stop"])
+    if hit_tp2:
         reason = "underlying reached TP2"
     elif position["kind"] == "spread" and max_value and value >= tp_pct * max_value:
         reason = f"spread worth {tp_pct:.0%} of its max"
-    elif position["kind"] == "call" and (position["pnl_pct"] or 0) >= tp_pct:
-        reason = f"call up {tp_pct:.0%}"
-    elif spot and spot < position["underlying"]["stop"]:
-        reason = "underlying below the stop"
+    elif position["kind"] in ("call", "put") and (position["pnl_pct"] or 0) >= tp_pct:
+        reason = f"{position['kind']} up {tp_pct:.0%}"
+    elif hit_stop:
+        reason = "underlying above the short stop" if bear else "underlying below the stop"
     elif (date.fromisoformat(position["expiry"]) - today).days <= CFG["exit_dte"]:
         reason = f"{CFG['exit_dte']} days to expiry — time exit"
     if reason:
@@ -431,7 +441,7 @@ def open_paper(setup: dict) -> dict:
         "kind": s["kind"], "legs": [{k: l[k] for k in ("side", "symbol", "strike", "expiry")} for l in s["legs"]], "expiry": setup["expiry"],
         "debit": s["debit"], "max_value": (s["max_gain"] / 100 + s["debit"]) if s.get("max_gain") is not None else None,
         "opened": store.now_iso(), "spot_open": setup["spot"], "underlying": setup["underlying"], "status": "open",
-        "value": s["debit"], "pnl": 0.0, "pnl_pct": 0.0,
+        "value": s["debit"], "pnl": 0.0, "pnl_pct": 0.0, "direction": setup.get("direction", "bull"),
     }
 
 
