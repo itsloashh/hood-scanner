@@ -1430,6 +1430,27 @@ export default {
 
     // Hood Desk dashboard: runs any bot command or button tap and returns the screen instead of
     // posting it to Telegram. Server-to-server only, guarded by the DASH_KEY secret.
+    // connectivity probe for market data from Cloudflare (statuses only)
+    if (url.pathname === '/api/probe') {
+      if (!dashOk(request, env)) return new Response('Forbidden', { status: 403 });
+      const ua = 'Mozilla/5.0 (compatible; hood-desk-stocks/1.0; +github.com/itsloashh/hood-scanner)';
+      const t = async (u, h = {}) => {
+        try {
+          const r = await fetch(u, { headers: { 'user-agent': ua, ...h } });
+          const txt = await r.text();
+          return { status: r.status, bytes: txt.length };
+        } catch (e) {
+          return { status: 0, err: e.name };
+        }
+      };
+      return Response.json({
+        yahoo: await t('https://query1.finance.yahoo.com/v8/finance/chart/AAPL?range=1d&interval=5m'),
+        yahoo2: await t('https://query2.finance.yahoo.com/v8/finance/chart/AAPL?range=1d&interval=5m'),
+        cboe: await t('https://cdn.cboe.com/api/global/delayed_quotes/options/AAPL.json'),
+        cboeQuote: await t('https://cdn.cboe.com/api/global/delayed_quotes/quotes/AAPL.json'),
+      });
+    }
+
     const hubPath = url.pathname.match(/^\/api\/(event|inbox|prefs|push)$/)?.[1];
     if (hubPath) return hubApi(request, env, hubPath);
 
