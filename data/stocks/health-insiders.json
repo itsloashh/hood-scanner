@@ -1,13 +1,13 @@
 {
- "updated": "2026-11-16T22:51:20Z",
+ "updated": "2026-11-17T05:22:16Z",
  "error": null,
  "stages": {
   "insiders": {
    "ok": true,
-   "sec": 2
+   "sec": 84
   }
  },
- "minutes": 0.0,
+ "minutes": 1.4,
  "providers": {
   "sec_edgar": {
    "name": "SEC EDGAR (submissions, XBRL company facts, Form 4, 13F, 8-K)",
@@ -18,11 +18,11 @@
    "freshness": "filings appear minutes after acceptance; 13F is quarterly and up to 45 days after quarter end",
    "limits": "10 requests/second, must send an identifying User-Agent",
    "licensing": "public domain US government data",
-   "status": "down",
-   "calls": 2,
+   "status": "degraded",
+   "calls": 490,
    "errors": 1,
-   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261116.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>NF392V",
-   "checked": "2026-11-16T22:51:20Z"
+   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261117.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>51FC24",
+   "checked": "2026-11-17T05:22:16Z"
   },
   "yahoo": {
    "name": "Yahoo Finance chart API",
@@ -34,7 +34,7 @@
    "limits": "unpublished; throttled to ~3/s",
    "licensing": "personal research use only; not licensed real-time data; may change without notice",
    "status": "not used this run",
-   "checked": "2026-11-16T22:51:20Z"
+   "checked": "2026-11-17T05:22:16Z"
   },
   "fred": {
    "name": "FRED (St. Louis Fed)",
@@ -46,7 +46,7 @@
    "limits": "keyless CSV download",
    "licensing": "public, cite source",
    "status": "not used this run",
-   "checked": "2026-11-16T22:51:20Z"
+   "checked": "2026-11-17T05:22:16Z"
   },
   "bank_of_canada": {
    "name": "Bank of Canada Valet API",
@@ -58,7 +58,7 @@
    "limits": "none published",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-16T22:51:20Z"
+   "checked": "2026-11-17T05:22:16Z"
   },
   "openfigi": {
    "name": "OpenFIGI mapping",
@@ -70,7 +70,7 @@
    "limits": "25 requests/min keyless",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-16T22:51:20Z"
+   "checked": "2026-11-17T05:22:16Z"
   },
   "google_news": {
    "name": "Google News RSS (discovery only)",
@@ -82,7 +82,7 @@
    "limits": "throttled",
    "licensing": "headlines and links only; articles are not copied",
    "status": "not used this run",
-   "checked": "2026-11-16T22:51:20Z"
+   "checked": "2026-11-17T05:22:16Z"
   },
   "sedar_plus": {
    "name": "SEDAR+ (Canadian filings)",
@@ -124,15 +124,15 @@
  },
  "http": {
   "www.sec.gov": {
-   "calls": 2,
-   "ok": 0,
+   "calls": 490,
+   "ok": 488,
    "errors": 1,
    "retries": 1,
    "r429": 0,
-   "seconds": 0.8,
-   "cache_hits": 1,
-   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261116.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>NF392V",
-   "consecutive_fail": 1
+   "seconds": 21.6,
+   "cache_hits": 2,
+   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261117.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>51FC24",
+   "consecutive_fail": 0
   }
  }
 }
