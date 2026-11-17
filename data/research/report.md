@@ -1,12 +1,12 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-16 23:26 UTC from 220 coins._
+_Generated 2026-11-17 14:24 UTC from 220 coins._
 
 ## The base rate
-71 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 118 of 220 coins.
-- **4 went 3–10x** within 30 days (our target)
+71 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 69 of 220 coins.
+- **1 went 3–10x** within 30 days (our target)
 - 3 went past 10x (outliers — listed, not used to learn)
-- 20 never reached 3x
-- Community check skipped (no wallet data this run).
+- 3 never reached 3x
+- Community check: 22 of 28 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
 
 **Hit rate on real setups: 15%** (7 wins / 47). Any parameter is only worth adding if coins with it beat this.
 
@@ -70,26 +70,20 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $PONS — 32× from $15690k (2026-08-04)
 - $COLLECT — 27× from $5k (2026-11-04)
 
-## After a pump: pullback odds (from 170 past pumps)
+## Thrown out by the community check
+- $PEPONS (DUD) — only 8 real buyers
+
+## After a pump: pullback odds (from 171 past pumps)
 - **+50–100% day** (50 examples): 80% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 64–105%) · low came after ~5 day(s) · 34% made a new high within 2 weeks · 32% gave back the whole move
 - **+100–200% day** (24 examples): 83% pulled back 30%+ within a week · typically gave back 100% of the move (middle half: 69–110%) · low came after ~6 day(s) · 29% made a new high within 2 weeks · 46% gave back the whole move
-- **+200+% day** (96 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 92–100%) · low came after ~5 day(s) · 15% made a new high within 2 weeks · 24% gave back the whole move
+- **+200+% day** (97 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 92–100%) · low came after ~5 day(s) · 14% made a new high within 2 weeks · 26% gave back the whole move
 
 ## Smart wallets
-Wallet history wasn’t available this run.
+No wallet showed up early in multiple real winners yet — the sample grows every day.
 
 ## Notes
-- $HMM: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $HOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $INDEX: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $POO: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $AGE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $RIBBIT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $AD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $MORT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $UBTC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $PEPONS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $RWM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $POO: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $STONKBROKER: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
 
-_Wallet history: 0 setup(s) checked · history jump worked 1× / failed 0×._
+_Wallet history: 1 setup(s) checked · history jump worked 4× / failed 0×._
