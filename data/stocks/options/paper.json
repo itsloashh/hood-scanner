@@ -1,7 +1,42 @@
 {
- "positions": [],
+ "positions": [
+  {
+   "id": "HYMC-2027-01-15-2026-11-18",
+   "ticker": "HYMC",
+   "sec_id": "SEC1718405",
+   "tier": "B",
+   "kind": "put",
+   "legs": [
+    {
+     "side": "buy",
+     "symbol": "HYMC270115P00020000",
+     "strike": 20.0,
+     "expiry": "2027-01-15"
+    }
+   ],
+   "expiry": "2027-01-15",
+   "debit": 5.3,
+   "max_value": null,
+   "opened": "2026-11-18T04:27:15Z",
+   "spot_open": 15.85,
+   "underlying": {
+    "entry": [
+     15.6899995803833,
+     17.385642528533936
+    ],
+    "stop": 18.647820711135864,
+    "tp1": 11.029999732971191,
+    "tp2": 9.1899995803833
+   },
+   "status": "open",
+   "value": 5.3,
+   "pnl": 0.0,
+   "pnl_pct": 0.0,
+   "direction": "bear"
+  }
+ ],
  "summary": {
-  "open": 0,
+  "open": 1,
   "closed": 0,
   "win_rate": null,
   "avg_pct": null,
@@ -19,5 +54,5 @@
    }
   }
  },
- "updated": "2026-11-17T23:12:33Z"
+ "updated": "2026-11-18T04:27:15Z"
 }
