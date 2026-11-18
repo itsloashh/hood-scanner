@@ -1,7 +1,42 @@
 {
- "positions": [],
+ "positions": [
+  {
+   "id": "CPNG-2027-01-15-2026-11-18",
+   "ticker": "CPNG",
+   "sec_id": "SEC1834584",
+   "tier": "B",
+   "kind": "put",
+   "legs": [
+    {
+     "side": "buy",
+     "symbol": "CPNG270115P00016000",
+     "strike": 16.0,
+     "expiry": "2027-01-15"
+    }
+   ],
+   "expiry": "2027-01-15",
+   "debit": 2.15,
+   "max_value": null,
+   "opened": "2026-11-18T22:44:18Z",
+   "spot_open": 14.26,
+   "underlying": {
+    "entry": [
+     14.0,
+     14.782714094434466
+    ],
+    "stop": 15.351357085364205,
+    "tp1": 12.434571811131068,
+    "tp2": 10.869143622262136
+   },
+   "status": "open",
+   "value": 2.15,
+   "pnl": 0.0,
+   "pnl_pct": 0.0,
+   "direction": "bear"
+  }
+ ],
  "summary": {
-  "open": 0,
+  "open": 1,
   "closed": 0,
   "win_rate": null,
   "avg_pct": null,
@@ -19,5 +54,5 @@
    }
   }
  },
- "updated": "2026-11-17T23:12:33Z"
+ "updated": "2026-11-18T22:44:18Z"
 }

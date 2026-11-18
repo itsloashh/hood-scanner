@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-17T23:12:33Z",
+ "updated": "2026-11-18T22:44:18Z",
  "rate": 0.0388,
  "config": {
   "min_score": 60,
@@ -41,648 +41,60 @@
  },
  "setups": [
   {
-   "ticker": "TGT",
-   "id": "SEC27419",
-   "name": "TARGET CORP",
-   "sector": "Consumer Discretionary",
-   "as_of": "2026-11-17 23:03:55",
-   "spot": 156.6,
-   "score": 69.6,
-   "confidence": 100,
-   "tier": "C",
-   "points": 7.5,
-   "why": [
-    "stock score 70",
-    "evidence 100",
-    "uptrend (above 50-day, 50-day above 200-day)",
-    "RSI 54 (healthy)",
-    "option reward/risk 1.5 at TP1",
-    "TP1 (+9.0%) inside the options-implied move (\u00b113.5%)",
-    "very liquid contract (tight spread, 1,000+ open interest)"
-   ],
-   "against": [
-    "earnings 2026-11-18 before expiry (IV crush risk)",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2026-12-18",
-   "dte": 31,
-   "exit_by": "2026-11-27",
-   "earnings": "2026-11-18",
-   "earnings_in_window": true,
-   "atm_iv": 0.4646,
-   "hv20": 0.40540594589030926,
-   "hv60": 0.3095394358635877,
-   "iv_ratio": 1.146011805474868,
-   "iv30": 46.333,
-   "expected_move": 21.2033937277133,
-   "underlying": {
-    "entry": [
-     160.18,
-     161.45
-    ],
-    "stop": 155.982,
-    "tp1": 170.75,
-    "tp2": 183.321,
-    "zones_at": 1794763294486
-   },
-   "timing": {
-    "ma50": 156.28819946289062,
-    "ma200": 136.99254970550538,
-    "rsi": 53.54260522460404,
-    "uptrend": true,
-    "above_ma50": true,
-    "in_zone": false,
-    "extended": false,
-    "rsi_ok": true,
-    "ret_1m": 0.015169231015760065
-   },
-   "recommended": "spread",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "TGT261218C00155000",
-       "strike": 155.0,
-       "expiry": "2026-12-18",
-       "bid": 11.0,
-       "ask": 11.4,
-       "mid": 11.2,
-       "iv": 0.4646,
-       "delta": 0.6195,
-       "theta": -0.1314,
-       "oi": 1620.0,
-       "volume": 77.0,
-       "spread_pct": 0.0357
-      }
-     ],
-     "debit": 11.4,
-     "debit_mid": 11.2,
-     "cost": 1140.0,
-     "max_loss": 1140.0,
-     "max_gain": null,
-     "breakeven": 166.4,
-     "profit_tp1": 583.32,
-     "profit_tp2": 1742.41,
-     "loss_at_stop": -482.91,
-     "rr_tp1": 1.21,
-     "rr_tp2": 3.61,
-     "theta_day": -13.14
-    },
-    "spread": {
-     "kind": "spread",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "TGT261218C00155000",
-       "strike": 155.0,
-       "expiry": "2026-12-18",
-       "bid": 11.0,
-       "ask": 11.4,
-       "mid": 11.2,
-       "iv": 0.4646,
-       "delta": 0.6195,
-       "theta": -0.1314,
-       "oi": 1620.0,
-       "volume": 77.0,
-       "spread_pct": 0.0357
-      },
-      {
-       "side": "sell",
-       "symbol": "TGT261218C00180000",
-       "strike": 180.0,
-       "expiry": "2026-12-18",
-       "bid": 2.02,
-       "ask": 2.34,
-       "mid": 2.18,
-       "iv": 0.4452,
-       "delta": 0.2056,
-       "theta": -0.0955,
-       "oi": 2075.0,
-       "volume": 41.0,
-       "spread_pct": 0.1468
-      }
-     ],
-     "debit": 9.38,
-     "debit_mid": 9.02,
-     "cost": 938.0,
-     "max_loss": 938.0,
-     "max_gain": 1562.0,
-     "breakeven": 164.38,
-     "profit_tp1": 495.0,
-     "profit_tp2": 1083.84,
-     "loss_at_stop": -321.65,
-     "rr_tp1": 1.54,
-     "rr_tp2": 3.37,
-     "theta_day": -3.59
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": null
-  },
-  {
-   "ticker": "QCOM",
-   "id": "SEC804328",
-   "name": "QUALCOMM INC/DE",
-   "sector": "Technology",
-   "as_of": "2026-11-17 23:06:01",
-   "spot": 169.49,
-   "score": 66.5,
-   "confidence": 100,
-   "tier": "C",
-   "points": 7.5,
-   "why": [
-    "stock score 66",
-    "evidence 100",
-    "RSI 46 (healthy)",
-    "option reward/risk 2.2 at TP1",
-    "TP1 (+10.3%) inside the options-implied move (\u00b116.2%)",
-    "options cheap: IV 56% vs realised 69%",
-    "insider buying / fund additions"
-   ],
-   "against": [
-    "not in an uptrend",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2026-12-18",
-   "dte": 31,
-   "exit_by": "2026-11-27",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.5561,
-   "hv20": 0.687513758919404,
-   "hv60": 0.5369412860316012,
-   "iv_ratio": 0.8088565396480896,
-   "iv30": 57.97,
-   "expected_move": 27.468275173996087,
-   "underlying": {
-    "entry": [
-     172.32,
-     172.47
-    ],
-    "stop": 161.976,
-    "tp1": 186.89,
-    "tp2": 196.09,
-    "zones_at": 1794763278734
-   },
-   "timing": {
-    "ma50": 178.72839965820313,
-    "ma200": 170.2844500732422,
-    "rsi": 46.42460705350756,
-    "uptrend": false,
-    "above_ma50": false,
-    "in_zone": false,
-    "extended": false,
-    "rsi_ok": true,
-    "ret_1m": -0.015222826105747989
-   },
-   "recommended": "spread",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "QCOM261218C00160000",
-       "strike": 160.0,
-       "expiry": "2026-12-18",
-       "bid": 13.9,
-       "ask": 15.05,
-       "mid": 14.475,
-       "iv": 0.5815,
-       "delta": 0.6257,
-       "theta": -0.1766,
-       "oi": 2111.0,
-       "volume": 5.0,
-       "spread_pct": 0.0794
-      }
-     ],
-     "debit": 15.05,
-     "debit_mid": 14.475,
-     "cost": 1505.0,
-     "max_loss": 1505.0,
-     "max_gain": null,
-     "breakeven": 175.05,
-     "profit_tp1": 1302.48,
-     "profit_tp2": 2168.03,
-     "loss_at_stop": -619.33,
-     "rr_tp1": 2.1,
-     "rr_tp2": 3.5,
-     "theta_day": -17.66
-    },
-    "spread": {
-     "kind": "spread",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "QCOM261218C00160000",
-       "strike": 160.0,
-       "expiry": "2026-12-18",
-       "bid": 13.9,
-       "ask": 15.05,
-       "mid": 14.475,
-       "iv": 0.5815,
-       "delta": 0.6257,
-       "theta": -0.1766,
-       "oi": 2111.0,
-       "volume": 5.0,
-       "spread_pct": 0.0794
-      },
-      {
-       "side": "sell",
-       "symbol": "QCOM261218C00195000",
-       "strike": 195.0,
-       "expiry": "2026-12-18",
-       "bid": 2.14,
-       "ask": 2.46,
-       "mid": 2.3,
-       "iv": 0.5392,
-       "delta": 0.179,
-       "theta": -0.1092,
-       "oi": 1991.0,
-       "volume": 61.0,
-       "spread_pct": 0.1391
-      }
-     ],
-     "debit": 12.91,
-     "debit_mid": 12.175,
-     "cost": 1291.0,
-     "max_loss": 1291.0,
-     "max_gain": 2209.0,
-     "breakeven": 172.91,
-     "profit_tp1": 1004.28,
-     "profit_tp2": 1444.0,
-     "loss_at_stop": -445.51,
-     "rr_tp1": 2.25,
-     "rr_tp2": 3.24,
-     "theta_day": -6.74
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": null
-  },
-  {
-   "ticker": "M",
-   "id": "SEC794367",
-   "name": "Macy's, Inc.",
-   "sector": "Consumer Discretionary",
-   "as_of": "2026-11-17 21:18:04",
-   "spot": 23.39,
-   "score": 74.8,
-   "confidence": 100,
-   "tier": "C",
-   "points": 6.5,
-   "why": [
-    "stock score 75",
-    "evidence 100",
-    "uptrend (above 50-day, 50-day above 200-day)",
-    "RSI 50 (healthy)",
-    "option reward/risk 3.4 at TP1",
-    "TP1 (+11.6%) inside the options-implied move (\u00b117.1%)",
-    "insider buying / fund additions"
-   ],
-   "against": [
-    "earnings 2026-12-02 before expiry (IV crush risk)",
-    "plain call only because no debit spread could be built (call rules not all met)",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2026-12-18",
-   "dte": 31,
-   "exit_by": "2026-11-27",
-   "earnings": "2026-12-02",
-   "earnings_in_window": true,
-   "atm_iv": 0.5866,
-   "hv20": 0.5591658857293003,
-   "hv60": 0.4431659776869363,
-   "iv_ratio": 1.0490625679621324,
-   "iv30": 55.644,
-   "expected_move": 3.9985883391118824,
-   "underlying": {
-    "entry": [
-     23.88,
-     24.7
-    ],
-    "stop": 23.3307,
-    "tp1": 26.1,
-    "tp2": 29.0943,
-    "zones_at": 1794763285163
-   },
-   "timing": {
-    "ma50": 23.217000083923338,
-    "ma200": 21.868049993515015,
-    "rsi": 49.87660239763477,
-    "uptrend": true,
-    "above_ma50": true,
-    "in_zone": false,
-    "extended": false,
-    "rsi_ok": true,
-    "ret_1m": -0.025416666666666643
-   },
-   "recommended": "call",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "M261218C00022000",
-       "strike": 22.0,
-       "expiry": "2026-12-18",
-       "bid": 2.2,
-       "ask": 2.42,
-       "mid": 2.31,
-       "iv": 0.5747,
-       "delta": 0.6853,
-       "theta": -0.022,
-       "oi": 1541.0,
-       "volume": 78.0,
-       "spread_pct": 0.0952
-      }
-     ],
-     "debit": 2.42,
-     "debit_mid": 2.31,
-     "cost": 242.0,
-     "max_loss": 242.0,
-     "max_gain": null,
-     "breakeven": 24.42,
-     "profit_tp1": 180.77,
-     "profit_tp2": 471.93,
-     "loss_at_stop": -53.13,
-     "rr_tp1": 3.4,
-     "rr_tp2": 8.88,
-     "theta_day": -2.2
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": "opportunity"
-  },
-  {
-   "ticker": "THC",
-   "id": "SEC70318",
-   "name": "TENET HEALTHCARE CORP",
-   "sector": "Health Care",
-   "as_of": "2026-11-17 23:05:35",
-   "spot": 282.07,
-   "score": 69.1,
-   "confidence": 100,
-   "tier": "C",
-   "points": 6.5,
-   "why": [
-    "stock score 69",
-    "evidence 100",
-    "uptrend (above 50-day, 50-day above 200-day)",
-    "price inside the entry zone",
-    "RSI 62 (healthy)",
-    "TP1 (+6.9%) inside the options-implied move (\u00b115.3%)",
-    "options cheap: IV 38% vs realised 40%"
-   ],
-   "against": [
-    "option payoff at TP1 doesn't beat the loss at the stop",
-    "plain call only because no debit spread could be built (call rules not all met)",
-    "59-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2027-01-15",
-   "dte": 59,
-   "exit_by": "2026-12-25",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.3816,
-   "hv20": 0.4035279877358881,
-   "hv60": 0.3173921082151679,
-   "iv_ratio": 0.9456593138460568,
-   "iv30": 37.871,
-   "expected_move": 43.275773408043065,
-   "underlying": {
-    "entry": [
-     276.87,
-     286.03
-    ],
-    "stop": 270.23,
-    "tp1": 301.44,
-    "tp2": 339.147,
-    "zones_at": 1794763294824
-   },
-   "timing": {
-    "ma50": 268.3804000854492,
-    "ma200": 225.33875022888185,
-    "rsi": 62.05861523413197,
-    "uptrend": true,
-    "above_ma50": true,
-    "in_zone": true,
-    "extended": false,
-    "rsi_ok": true,
-    "ret_1m": 0.05545369504209541
-   },
-   "recommended": "call",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "THC270115C00260000",
-       "strike": 260.0,
-       "expiry": "2027-01-15",
-       "bid": 30.2,
-       "ask": 32.8,
-       "mid": 31.5,
-       "iv": 0.3819,
-       "delta": 0.7451,
-       "theta": -0.1154,
-       "oi": 246.0,
-       "volume": 0.0,
-       "spread_pct": 0.0825
-      }
-     ],
-     "debit": 32.8,
-     "debit_mid": 31.5,
-     "cost": 3280.0,
-     "max_loss": 3280.0,
-     "max_gain": null,
-     "breakeven": 292.8,
-     "profit_tp1": 1058.78,
-     "profit_tp2": 4723.03,
-     "loss_at_stop": -1498.3,
-     "rr_tp1": 0.71,
-     "rr_tp2": 3.15,
-     "theta_day": -11.54
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": null
-  },
-  {
-   "ticker": "BAH",
-   "id": "SEC1443646",
-   "name": "Booz Allen Hamilton Holding Corp",
+   "ticker": "PYPL",
+   "id": "SEC1633917",
+   "name": "PayPal Holdings, Inc.",
    "sector": "Industrials",
-   "as_of": "2026-11-17 21:35:00",
-   "spot": 86.1059,
-   "score": 64.3,
-   "confidence": 94,
-   "tier": "C",
-   "points": 6.5,
-   "why": [
-    "stock score 64",
-    "evidence 94",
-    "uptrend (above 50-day, 50-day above 200-day)",
-    "price inside the entry zone",
-    "RSI 61 (healthy)",
-    "TP1 (+4.7%) inside the options-implied move (\u00b114.9%)",
-    "options cheap: IV 37% vs realised 37%",
-    "insider buying / fund additions"
-   ],
-   "against": [
-    "option payoff at TP1 doesn't beat the loss at the stop",
-    "plain call only because no debit spread could be built (call rules not all met)",
-    "59-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2027-01-15",
-   "dte": 59,
-   "exit_by": "2026-12-25",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.3696,
-   "hv20": 0.37206670000214626,
-   "hv60": 0.3553170635389978,
-   "iv_ratio": 0.9933702747326433,
-   "iv30": 37.253,
-   "expected_move": 12.795122453753837,
-   "underlying": {
-    "entry": [
-     85.05,
-     86.22
-    ],
-    "stop": 83.0043,
-    "tp1": 90.18,
-    "tp2": 93.85,
-    "zones_at": 1794763279223
-   },
-   "timing": {
-    "ma50": 77.87299987792969,
-    "ma200": 76.16419996261597,
-    "rsi": 60.7592822892714,
-    "uptrend": true,
-    "above_ma50": true,
-    "in_zone": true,
-    "extended": false,
-    "rsi_ok": true,
-    "ret_1m": 0.15951922330998802
-   },
-   "recommended": "call",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "BAH270115C00085000",
-       "strike": 85.0,
-       "expiry": "2027-01-15",
-       "bid": 5.6,
-       "ask": 6.0,
-       "mid": 5.8,
-       "iv": 0.3696,
-       "delta": 0.5758,
-       "theta": -0.0406,
-       "oi": 177.0,
-       "volume": 27.0,
-       "spread_pct": 0.069
-      }
-     ],
-     "debit": 6.0,
-     "debit_mid": 5.8,
-     "cost": 600.0,
-     "max_loss": 600.0,
-     "max_gain": null,
-     "breakeven": 91.0,
-     "profit_tp1": 101.23,
-     "profit_tp2": 393.79,
-     "loss_at_stop": -328.33,
-     "rr_tp1": 0.31,
-     "rr_tp2": 1.2,
-     "theta_day": -4.06
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": null
-  },
-  {
-   "ticker": "AEO",
-   "id": "SEC919012",
-   "name": "AMERICAN EAGLE OUTFITTERS INC",
-   "sector": "Consumer Discretionary",
-   "as_of": "2026-11-17 22:53:15",
-   "spot": 21.18,
-   "score": 68.1,
+   "as_of": "2026-11-18 21:24:47",
+   "spot": 57.67,
+   "score": 68.2,
    "confidence": 100,
-   "tier": "C",
-   "points": 5.5,
+   "tier": "B",
+   "points": 8.5,
    "why": [
     "stock score 68",
     "evidence 100",
     "uptrend (above 50-day, 50-day above 200-day)",
-    "RSI 65 (healthy)",
-    "option reward/risk 1.8 at TP1",
-    "TP1 (+16.4%) inside the options-implied move (\u00b124.4%)"
+    "RSI 53 (healthy)",
+    "option reward/risk 2.4 at TP1",
+    "TP1 (+8.0%) inside the options-implied move (\u00b113.0%)",
+    "options cheap: IV 33% vs realised 40%"
    ],
    "against": [
-    "earnings 2026-12-01 before expiry (IV crush risk)",
     "plain call only because no debit spread could be built (call rules not all met)",
-    "59-day expiry is outside the preferred 35\u201355 days (none available this week)"
+    "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
    ],
    "expiry": "2027-01-15",
-   "dte": 59,
+   "dte": 58,
    "exit_by": "2026-12-25",
-   "earnings": "2026-12-01",
-   "earnings_in_window": true,
-   "atm_iv": 0.6078,
-   "hv20": 0.5693276878549249,
-   "hv60": 0.5447803159157572,
-   "iv_ratio": 1.0675749888259054,
-   "iv30": 69.193,
-   "expected_move": 5.175665794590233,
+   "earnings": null,
+   "earnings_in_window": false,
+   "atm_iv": 0.3264,
+   "hv20": 0.28703319350979706,
+   "hv60": 0.3975944386238632,
+   "iv_ratio": 0.8209370360654986,
+   "iv30": 30.845,
+   "expected_move": 7.503565294714561,
    "underlying": {
     "entry": [
-     21.2393,
-     21.71
+     58.8,
+     59.28
     ],
-    "stop": 20.7686,
-    "tp1": 24.66,
-    "tp2": 25.97,
-    "zones_at": 1794763296819
+    "stop": 57.5946,
+    "tp1": 62.31,
+    "tp2": 63.93,
+    "zones_at": 1794763296236
    },
    "timing": {
-    "ma50": 18.070599918365478,
-    "ma200": 18.180999994277954,
-    "rsi": 64.5453332445087,
+    "ma50": 55.78469970703125,
+    "ma200": 50.199949951171874,
+    "rsi": 52.95801575676598,
     "uptrend": true,
     "above_ma50": true,
     "in_zone": false,
     "extended": false,
     "rsi_ok": true,
-    "ret_1m": 0.1779755583556406
+    "ret_1m": 0.020527370605579742
    },
    "recommended": "call",
    "structures": {
@@ -691,32 +103,131 @@
      "legs": [
       {
        "side": "buy",
-       "symbol": "AEO270115C00022000",
-       "strike": 22.0,
+       "symbol": "PYPL270115C00055000",
+       "strike": 55.0,
        "expiry": "2027-01-15",
-       "bid": 1.67,
-       "ask": 1.82,
-       "mid": 1.745,
-       "iv": 0.6076,
-       "delta": 0.4947,
-       "theta": -0.0169,
-       "oi": 875.0,
-       "volume": 5.0,
-       "spread_pct": 0.086
+       "bid": 4.55,
+       "ask": 4.85,
+       "mid": 4.7,
+       "iv": 0.3188,
+       "delta": 0.6939,
+       "theta": -0.0214,
+       "oi": 11620.0,
+       "volume": 60.0,
+       "spread_pct": 0.0638
       }
      ],
-     "debit": 1.82,
-     "debit_mid": 1.745,
-     "cost": 182.0,
-     "max_loss": 182.0,
+     "debit": 4.85,
+     "debit_mid": 4.7,
+     "cost": 485.0,
+     "max_loss": 485.0,
      "max_gain": null,
-     "breakeven": 23.82,
-     "profit_tp1": 150.24,
-     "profit_tp2": 257.57,
-     "loss_at_stop": -85.96,
-     "rr_tp1": 1.75,
-     "rr_tp2": 3.0,
-     "theta_day": -1.69
+     "breakeven": 59.85,
+     "profit_tp1": 281.22,
+     "profit_tp2": 434.45,
+     "loss_at_stop": -115.95,
+     "rr_tp1": 2.43,
+     "rr_tp2": 3.75,
+     "theta_day": -2.14
+    }
+   },
+   "assumptions": [
+    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
+    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
+    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
+   ],
+   "stock_grade": null,
+   "not_alerted": "the stock isn't Opportunity-grade (72+, confidence 55+, quality overlay) or 80+"
+  },
+  {
+   "ticker": "KMB",
+   "id": "SEC55785",
+   "name": "KIMBERLY CLARK CORP",
+   "sector": "Materials",
+   "as_of": "2026-11-18 21:29:22",
+   "spot": 107.56,
+   "score": 62.8,
+   "confidence": 86,
+   "tier": "C",
+   "points": 7.5,
+   "why": [
+    "stock score 63",
+    "evidence 86",
+    "uptrend (above 50-day, 50-day above 200-day)",
+    "RSI 52 (healthy)",
+    "option reward/risk 4.0 at TP1",
+    "TP1 (+6.8%) inside the options-implied move (\u00b17.3%)",
+    "options cheap: IV 26% vs realised 38%"
+   ],
+   "against": [
+    "plain call only because no debit spread could be built (call rules not all met)",
+    "30-day expiry is outside the preferred 35\u201355 days (none available this week)"
+   ],
+   "expiry": "2026-12-18",
+   "dte": 30,
+   "exit_by": "2026-11-27",
+   "earnings": null,
+   "earnings_in_window": false,
+   "atm_iv": 0.255,
+   "hv20": 0.3771853220427077,
+   "hv60": 0.2949746323331277,
+   "iv_ratio": 0.6760602417374211,
+   "iv30": 25.559,
+   "expected_move": 7.8633058656988695,
+   "underlying": {
+    "entry": [
+     108.07,
+     109.43
+    ],
+    "stop": 105.85,
+    "tp1": 114.91,
+    "tp2": 123.75,
+    "zones_at": 1794763278853
+   },
+   "timing": {
+    "ma50": 102.94459991455078,
+    "ma200": 103.51274990081787,
+    "rsi": 52.08759588052175,
+    "uptrend": true,
+    "above_ma50": true,
+    "in_zone": false,
+    "extended": false,
+    "rsi_ok": true,
+    "ret_1m": 0.020396511367008596
+   },
+   "recommended": "call",
+   "structures": {
+    "call": {
+     "kind": "call",
+     "legs": [
+      {
+       "side": "buy",
+       "symbol": "KMB261218C00105000",
+       "strike": 105.0,
+       "expiry": "2026-12-18",
+       "bid": 4.0,
+       "ask": 4.25,
+       "mid": 4.125,
+       "iv": 0.261,
+       "delta": 0.6385,
+       "theta": -0.0568,
+       "oi": 1690.0,
+       "volume": 13.0,
+       "spread_pct": 0.0606
+      }
+     ],
+     "debit": 4.25,
+     "debit_mid": 4.125,
+     "cost": 425.0,
+     "max_loss": 425.0,
+     "max_gain": null,
+     "breakeven": 109.25,
+     "profit_tp1": 592.48,
+     "profit_tp2": 1466.87,
+     "loss_at_stop": -148.11,
+     "rr_tp1": 4.0,
+     "rr_tp2": 9.9,
+     "theta_day": -5.68
     }
    },
    "assumptions": [
@@ -731,36 +242,37 @@
    "id": "SEC764478",
    "name": "BEST BUY CO INC",
    "sector": "Consumer Discretionary",
-   "as_of": "2026-11-17 21:21:00",
-   "spot": 98.4,
+   "as_of": "2026-11-18 21:37:07",
+   "spot": 100.31,
    "score": 67.4,
    "confidence": 100,
    "tier": "C",
-   "points": 5.5,
+   "points": 6.5,
    "why": [
     "stock score 67",
     "evidence 100",
     "uptrend (above 50-day, 50-day above 200-day)",
-    "RSI 59 (healthy)",
-    "option reward/risk 7.2 at TP1",
-    "TP1 (+14.0%) inside the options-implied move (\u00b115.4%)"
+    "RSI 49 (healthy)",
+    "option reward/risk 3.5 at TP1",
+    "TP1 (+11.9%) inside the options-implied move (\u00b115.3%)",
+    "options cheap: IV 53% vs realised 54%"
    ],
    "against": [
     "earnings 2026-11-24 before expiry (IV crush risk)",
     "plain call only because no debit spread could be built (call rules not all met)",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
+    "30-day expiry is outside the preferred 35\u201355 days (none available this week)"
    ],
    "expiry": "2026-12-18",
-   "dte": 31,
+   "dte": 30,
    "exit_by": "2026-11-27",
    "earnings": "2026-11-24",
    "earnings_in_window": true,
-   "atm_iv": 0.5269,
-   "hv20": 0.511580185784757,
-   "hv60": 0.4286908373342854,
-   "iv_ratio": 1.0299460664054898,
-   "iv30": 53.093,
-   "expected_move": 15.109765063356695,
+   "atm_iv": 0.5321,
+   "hv20": 0.5393489527101462,
+   "hv60": 0.4405455090865147,
+   "iv_ratio": 0.9865598094263069,
+   "iv30": 52.816,
+   "expected_move": 15.302122856360691,
    "underlying": {
     "entry": [
      102.032,
@@ -772,15 +284,15 @@
     "zones_at": 1794763298491
    },
    "timing": {
-    "ma50": 93.90499984741211,
-    "ma200": 77.16675008773804,
-    "rsi": 58.642465252224426,
+    "ma50": 94.08639984130859,
+    "ma200": 77.32925008773803,
+    "rsi": 49.27644123210292,
     "uptrend": true,
     "above_ma50": true,
     "in_zone": false,
     "extended": false,
     "rsi_ok": true,
-    "ret_1m": 0.0622908660009609
+    "ret_1m": 0.10073524660660205
    },
    "recommended": "call",
    "structures": {
@@ -792,29 +304,29 @@
        "symbol": "BBY261218C00097500",
        "strike": 97.5,
        "expiry": "2026-12-18",
-       "bid": 6.3,
-       "ask": 6.9,
-       "mid": 6.6,
-       "iv": 0.5269,
-       "delta": 0.5726,
-       "theta": -0.0974,
-       "oi": 269.0,
-       "volume": 2.0,
-       "spread_pct": 0.0909
+       "bid": 7.4,
+       "ask": 7.9,
+       "mid": 7.65,
+       "iv": 0.5409,
+       "delta": 0.6158,
+       "theta": -0.099,
+       "oi": 268.0,
+       "volume": 0.0,
+       "spread_pct": 0.0654
       }
      ],
-     "debit": 6.9,
-     "debit_mid": 6.6,
-     "cost": 690.0,
-     "max_loss": 690.0,
+     "debit": 7.9,
+     "debit_mid": 7.65,
+     "cost": 790.0,
+     "max_loss": 790.0,
      "max_gain": null,
-     "breakeven": 104.4,
-     "profit_tp1": 848.56,
-     "profit_tp2": 1624.26,
-     "loss_at_stop": -116.99,
-     "rr_tp1": 7.25,
-     "rr_tp2": 13.88,
-     "theta_day": -9.74
+     "breakeven": 105.4,
+     "profit_tp1": 750.01,
+     "profit_tp2": 1524.46,
+     "loss_at_stop": -213.2,
+     "rr_tp1": 3.52,
+     "rr_tp2": 7.15,
+     "theta_day": -9.9
     }
    },
    "assumptions": [
@@ -825,140 +337,94 @@
    "stock_grade": null
   },
   {
-   "ticker": "GME",
-   "id": "SEC1326380",
-   "name": "GameStop Corp.",
-   "sector": "Consumer Discretionary",
-   "as_of": "2026-11-17 23:11:34",
-   "spot": 25.32,
-   "score": 65.6,
-   "confidence": 94,
+   "ticker": "XYL",
+   "id": "SEC1524472",
+   "name": "Xylem Inc.",
+   "sector": "Industrials",
+   "as_of": "2026-11-18 21:24:48",
+   "spot": 95.2,
+   "score": 71.7,
+   "confidence": 100,
    "tier": "C",
-   "points": 5.5,
+   "points": 6.0,
    "why": [
-    "stock score 66",
-    "evidence 94",
-    "uptrend (above 50-day, 50-day above 200-day)",
-    "RSI 56 (healthy)",
-    "option reward/risk 1.3 at TP1",
-    "TP1 (+6.2%) inside the options-implied move (\u00b115.8%)"
+    "stock score 72",
+    "evidence 100",
+    "option reward/risk 1.1 at TP1",
+    "TP1 (+8.5%) inside the options-implied move (\u00b111.5%)",
+    "options cheap: IV 29% vs realised 68%",
+    "insider buying / fund additions"
    ],
    "against": [
-    "earnings 2026-12-08 before expiry (IV crush risk)",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
+    "not in an uptrend",
+    "plain call only because no debit spread could be built (call rules not all met)",
+    "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
    ],
-   "expiry": "2026-12-18",
-   "dte": 31,
-   "exit_by": "2026-11-27",
-   "earnings": "2026-12-08",
-   "earnings_in_window": true,
-   "atm_iv": 0.5428,
-   "hv20": 0.35390485485121953,
-   "hv60": 0.39690976074382045,
-   "iv_ratio": 1.3675652596267145,
-   "iv30": 54.697,
-   "expected_move": 4.005326786029404,
+   "expiry": "2027-01-15",
+   "dte": 58,
+   "exit_by": "2026-12-25",
+   "earnings": null,
+   "earnings_in_window": false,
+   "atm_iv": 0.2887,
+   "hv20": 0.6822509875447068,
+   "hv60": 0.43011127758224627,
+   "iv_ratio": 0.4231580536643517,
+   "iv30": 29.859,
+   "expected_move": 10.95598166586372,
    "underlying": {
     "entry": [
-     25.3896,
-     25.85
+     92.0304,
+     94.18
     ],
-    "stop": 24.9293,
-    "tp1": 26.88,
-    "tp2": 28.3,
-    "zones_at": 1794763279164
+    "stop": 89.8807,
+    "tp1": 103.32,
+    "tp2": 109.14,
+    "zones_at": 1794763288817
    },
    "timing": {
-    "ma50": 24.379200019836425,
-    "ma200": 22.82095006942749,
-    "rsi": 55.912562704886426,
-    "uptrend": true,
-    "above_ma50": true,
+    "ma50": 101.80039978027344,
+    "ma200": 114.66250011444092,
+    "rsi": 41.70246732801478,
+    "uptrend": false,
+    "above_ma50": false,
     "in_zone": false,
     "extended": false,
-    "rsi_ok": true,
-    "ret_1m": -0.055576258695386294
+    "rsi_ok": false,
+    "ret_1m": -0.08045975927281324
    },
-   "recommended": "spread",
+   "recommended": "call",
    "structures": {
     "call": {
      "kind": "call",
      "legs": [
       {
        "side": "buy",
-       "symbol": "GME261218C00025000",
-       "strike": 25.0,
-       "expiry": "2026-12-18",
-       "bid": 1.76,
-       "ask": 1.87,
-       "mid": 1.815,
-       "iv": 0.5428,
-       "delta": 0.5756,
-       "theta": -0.0253,
-       "oi": 28770.0,
-       "volume": 1404.0,
-       "spread_pct": 0.0606
+       "symbol": "XYL270115C00090000",
+       "strike": 90.0,
+       "expiry": "2027-01-15",
+       "bid": 7.6,
+       "ask": 8.3,
+       "mid": 7.95,
+       "iv": 0.3273,
+       "delta": 0.7008,
+       "theta": -0.0344,
+       "oi": 1501.0,
+       "volume": 10.0,
+       "spread_pct": 0.0881
       }
      ],
-     "debit": 1.87,
-     "debit_mid": 1.815,
-     "cost": 187.0,
-     "max_loss": 187.0,
+     "debit": 8.3,
+     "debit_mid": 7.95,
+     "cost": 830.0,
+     "max_loss": 830.0,
      "max_gain": null,
-     "breakeven": 26.87,
-     "profit_tp1": 49.13,
-     "profit_tp2": 166.58,
-     "loss_at_stop": -77.22,
-     "rr_tp1": 0.64,
-     "rr_tp2": 2.16,
-     "theta_day": -2.53
-    },
-    "spread": {
-     "kind": "spread",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "GME261218C00025000",
-       "strike": 25.0,
-       "expiry": "2026-12-18",
-       "bid": 1.76,
-       "ask": 1.87,
-       "mid": 1.815,
-       "iv": 0.5428,
-       "delta": 0.5756,
-       "theta": -0.0253,
-       "oi": 28770.0,
-       "volume": 1404.0,
-       "spread_pct": 0.0606
-      },
-      {
-       "side": "sell",
-       "symbol": "GME261218C00027000",
-       "strike": 27.0,
-       "expiry": "2026-12-18",
-       "bid": 1.0,
-       "ask": 1.08,
-       "mid": 1.04,
-       "iv": 0.5618,
-       "delta": 0.3896,
-       "theta": -0.0255,
-       "oi": 7887.0,
-       "volume": 650.0,
-       "spread_pct": 0.0769
-      }
-     ],
-     "debit": 0.87,
-     "debit_mid": 0.775,
-     "cost": 87.0,
-     "max_loss": 87.0,
-     "max_gain": 113.0,
-     "breakeven": 25.87,
-     "profit_tp1": 28.62,
-     "profit_tp2": 60.73,
-     "loss_at_stop": -21.9,
-     "rr_tp1": 1.31,
-     "rr_tp2": 2.77,
-     "theta_day": 0.02
+     "breakeven": 98.3,
+     "profit_tp1": 554.02,
+     "profit_tp2": 1117.23,
+     "loss_at_stop": -491.65,
+     "rr_tp1": 1.13,
+     "rr_tp2": 2.27,
+     "theta_day": -3.44
     }
    },
    "assumptions": [
@@ -969,60 +435,258 @@
    "stock_grade": null
   },
   {
-   "ticker": "DAL",
-   "id": "SEC27904",
-   "name": "DELTA AIR LINES, INC.",
-   "sector": "Industrials",
-   "as_of": "2026-11-17 23:11:34",
-   "spot": 85.2748,
-   "score": 64.0,
+   "ticker": "M",
+   "id": "SEC794367",
+   "name": "Macy's, Inc.",
+   "sector": "Consumer Discretionary",
+   "as_of": "2026-11-18 21:22:23",
+   "spot": 24.88,
+   "score": 74.8,
    "confidence": 100,
    "tier": "C",
    "points": 5.5,
    "why": [
-    "stock score 64",
+    "stock score 75",
     "evidence 100",
     "uptrend (above 50-day, 50-day above 200-day)",
-    "RSI 55 (healthy)",
-    "TP1 (+5.2%) inside the options-implied move (\u00b117.2%)",
-    "options cheap: IV 43% vs realised 49%",
+    "RSI 47 (healthy)",
+    "TP1 (+4.9%) inside the options-implied move (\u00b120.0%)",
+    "options cheap: IV 50% vs realised 56%",
+    "very liquid contract (tight spread, 1,000+ open interest)",
     "insider buying / fund additions"
    ],
    "against": [
     "option payoff at TP1 doesn't beat the loss at the stop",
-    "59-day expiry is outside the preferred 35\u201355 days (none available this week)"
+    "earnings 2026-12-02 before expiry (IV crush risk)",
+    "plain call only because no debit spread could be built (call rules not all met)",
+    "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
    ],
    "expiry": "2027-01-15",
-   "dte": 59,
+   "dte": 58,
    "exit_by": "2026-12-25",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.4283,
-   "hv20": 0.4913128894927918,
-   "hv60": 0.36651454640059683,
-   "iv_ratio": 0.8717459060399508,
-   "iv30": 42.043,
-   "expected_move": 14.68413462521639,
+   "earnings": "2026-12-02",
+   "earnings_in_window": true,
+   "atm_iv": 0.5019,
+   "hv20": 0.5637658745774689,
+   "hv60": 0.4443018854630992,
+   "iv_ratio": 0.8902631795089831,
+   "iv30": 54.69,
+   "expected_move": 4.977773556360058,
    "underlying": {
     "entry": [
-     85.28,
-     86.25
+     23.88,
+     24.7
     ],
-    "stop": 82.955,
-    "tp1": 89.69,
-    "tp2": 95.01,
-    "zones_at": 1794763278870
+    "stop": 23.3307,
+    "tp1": 26.1,
+    "tp2": 29.0943,
+    "zones_at": 1794763285163
    },
    "timing": {
-    "ma50": 82.05380020141601,
-    "ma200": 77.77830001831055,
-    "rsi": 55.27470256451262,
+    "ma50": 23.23580005645752,
+    "ma200": 21.879049987792968,
+    "rsi": 46.72878517734431,
     "uptrend": true,
     "above_ma50": true,
     "in_zone": false,
     "extended": false,
     "rsi_ok": true,
-    "ret_1m": 0.13141564140207151
+    "ret_1m": 0.05423727109493193
+   },
+   "recommended": "call",
+   "structures": {
+    "call": {
+     "kind": "call",
+     "legs": [
+      {
+       "side": "buy",
+       "symbol": "M270115C00025000",
+       "strike": 25.0,
+       "expiry": "2027-01-15",
+       "bid": 1.82,
+       "ask": 1.91,
+       "mid": 1.865,
+       "iv": 0.5019,
+       "delta": 0.53,
+       "theta": -0.0168,
+       "oi": 4042.0,
+       "volume": 179.0,
+       "spread_pct": 0.0483
+      }
+     ],
+     "debit": 1.91,
+     "debit_mid": 1.865,
+     "cost": 191.0,
+     "max_loss": 191.0,
+     "max_gain": null,
+     "breakeven": 26.91,
+     "profit_tp1": 19.28,
+     "profit_tp2": 252.54,
+     "loss_at_stop": -120.04,
+     "rr_tp1": 0.16,
+     "rr_tp2": 2.1,
+     "theta_day": -1.68
+    }
+   },
+   "assumptions": [
+    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
+    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
+    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
+   ],
+   "stock_grade": "opportunity"
+  },
+  {
+   "ticker": "AEO",
+   "id": "SEC919012",
+   "name": "AMERICAN EAGLE OUTFITTERS INC",
+   "sector": "Consumer Discretionary",
+   "as_of": "2026-11-18 20:47:34",
+   "spot": 21.785,
+   "score": 68.1,
+   "confidence": 100,
+   "tier": "C",
+   "points": 5.5,
+   "why": [
+    "stock score 68",
+    "evidence 100",
+    "uptrend (above 50-day, 50-day above 200-day)",
+    "price inside the entry zone",
+    "RSI 63 (healthy)",
+    "option reward/risk 1.2 at TP1",
+    "TP1 (+13.2%) inside the options-implied move (\u00b123.8%)"
+   ],
+   "against": [
+    "earnings 2026-12-01 before expiry (IV crush risk)",
+    "plain call only because no debit spread could be built (call rules not all met)",
+    "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
+   ],
+   "expiry": "2027-01-15",
+   "dte": 58,
+   "exit_by": "2026-12-25",
+   "earnings": "2026-12-01",
+   "earnings_in_window": true,
+   "atm_iv": 0.5963,
+   "hv20": 0.5683777247826196,
+   "hv60": 0.539278917118056,
+   "iv_ratio": 1.0491262658614209,
+   "iv30": 69.87,
+   "expected_move": 5.178332561872497,
+   "underlying": {
+    "entry": [
+     21.2393,
+     21.71
+    ],
+    "stop": 20.7686,
+    "tp1": 24.66,
+    "tp2": 25.97,
+    "zones_at": 1794763296819
+   },
+   "timing": {
+    "ma50": 18.149799938201905,
+    "ma200": 18.163649997711182,
+    "rsi": 63.4859290179893,
+    "uptrend": true,
+    "above_ma50": true,
+    "in_zone": true,
+    "extended": false,
+    "rsi_ok": true,
+    "ret_1m": 0.21500276794258677
+   },
+   "recommended": "call",
+   "structures": {
+    "call": {
+     "kind": "call",
+     "legs": [
+      {
+       "side": "buy",
+       "symbol": "AEO270115C00021000",
+       "strike": 21.0,
+       "expiry": "2027-01-15",
+       "bid": 2.45,
+       "ask": 2.57,
+       "mid": 2.51,
+       "iv": 0.6065,
+       "delta": 0.6183,
+       "theta": -0.0168,
+       "oi": 446.0,
+       "volume": 5.0,
+       "spread_pct": 0.0478
+      }
+     ],
+     "debit": 2.57,
+     "debit_mid": 2.51,
+     "cost": 257.0,
+     "max_loss": 257.0,
+     "max_gain": null,
+     "breakeven": 23.57,
+     "profit_tp1": 150.43,
+     "profit_tp2": 266.14,
+     "loss_at_stop": -123.14,
+     "rr_tp1": 1.22,
+     "rr_tp2": 2.16,
+     "theta_day": -1.68
+    }
+   },
+   "assumptions": [
+    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
+    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
+    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
+   ],
+   "stock_grade": null
+  },
+  {
+   "ticker": "GAP",
+   "id": "SEC39911",
+   "name": "GAP INC",
+   "sector": "Consumer Discretionary",
+   "as_of": "2026-11-18 21:32:42",
+   "spot": 19.84,
+   "score": 91.8,
+   "confidence": 100,
+   "tier": "C",
+   "points": 5.0,
+   "why": [
+    "stock score 92",
+    "evidence 100",
+    "option reward/risk 3.5 at TP1",
+    "TP1 (+10.4%) inside the options-implied move (\u00b121.1%)"
+   ],
+   "against": [
+    "not in an uptrend",
+    "earnings 2026-11-19 before expiry (IV crush risk)",
+    "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
+   ],
+   "expiry": "2027-01-15",
+   "dte": 58,
+   "exit_by": "2026-12-25",
+   "earnings": "2026-11-19",
+   "earnings_in_window": true,
+   "atm_iv": 0.5302,
+   "hv20": 0.5260175815802629,
+   "hv60": 0.5040816130392428,
+   "iv_ratio": 1.007951100051014,
+   "iv30": 61.851,
+   "expected_move": 4.193232621609342,
+   "underlying": {
+    "entry": [
+     20.78,
+     21.07
+    ],
+    "stop": 20.1736,
+    "tp1": 21.9,
+    "tp2": 23.09,
+    "zones_at": 1794763282527
+   },
+   "timing": {
+    "ma50": 22.12080009460449,
+    "ma200": 22.7875,
+    "rsi": 33.76186013806981,
+    "uptrend": false,
+    "above_ma50": false,
+    "in_zone": false,
+    "extended": false,
+    "rsi_ok": false,
+    "ret_1m": -0.15717930210813058
    },
    "recommended": "spread",
    "structures": {
@@ -1031,372 +695,79 @@
      "legs": [
       {
        "side": "buy",
-       "symbol": "DAL270115C00085000",
-       "strike": 85.0,
+       "symbol": "GAP270115C00020000",
+       "strike": 20.0,
        "expiry": "2027-01-15",
-       "bid": 5.6,
-       "ask": 6.1,
-       "mid": 5.85,
-       "iv": 0.4283,
-       "delta": 0.538,
-       "theta": -0.0469,
-       "oi": 12139.0,
-       "volume": 331.0,
-       "spread_pct": 0.0855
+       "bid": 1.57,
+       "ask": 1.68,
+       "mid": 1.625,
+       "iv": 0.5302,
+       "delta": 0.5399,
+       "theta": -0.0143,
+       "oi": 905.0,
+       "volume": 902.0,
+       "spread_pct": 0.0677
       }
      ],
-     "debit": 6.1,
-     "debit_mid": 5.85,
-     "cost": 610.0,
-     "max_loss": 610.0,
+     "debit": 1.68,
+     "debit_mid": 1.625,
+     "cost": 168.0,
+     "max_loss": 168.0,
      "max_gain": null,
-     "breakeven": 91.1,
-     "profit_tp1": 106.43,
-     "profit_tp2": 519.39,
-     "loss_at_stop": -285.76,
-     "rr_tp1": 0.37,
-     "rr_tp2": 1.82,
-     "theta_day": -4.69
+     "breakeven": 21.68,
+     "profit_tp1": 78.41,
+     "profit_tp2": 174.75,
+     "loss_at_stop": -36.41,
+     "rr_tp1": 2.15,
+     "rr_tp2": 4.8,
+     "theta_day": -1.43
     },
     "spread": {
      "kind": "spread",
      "legs": [
       {
        "side": "buy",
-       "symbol": "DAL270115C00085000",
-       "strike": 85.0,
+       "symbol": "GAP270115C00020000",
+       "strike": 20.0,
        "expiry": "2027-01-15",
-       "bid": 5.6,
-       "ask": 6.1,
-       "mid": 5.85,
-       "iv": 0.4283,
-       "delta": 0.538,
-       "theta": -0.0469,
-       "oi": 12139.0,
-       "volume": 331.0,
-       "spread_pct": 0.0855
+       "bid": 1.57,
+       "ask": 1.68,
+       "mid": 1.625,
+       "iv": 0.5302,
+       "delta": 0.5399,
+       "theta": -0.0143,
+       "oi": 905.0,
+       "volume": 902.0,
+       "spread_pct": 0.0677
       },
       {
        "side": "sell",
-       "symbol": "DAL270115C00092500",
-       "strike": 92.5,
+       "symbol": "GAP270115C00022000",
+       "strike": 22.0,
        "expiry": "2027-01-15",
-       "bid": 2.62,
-       "ask": 2.95,
-       "mid": 2.785,
-       "iv": 0.4051,
-       "delta": 0.3329,
-       "theta": -0.0414,
-       "oi": 1404.0,
-       "volume": 15.0,
-       "spread_pct": 0.1185
+       "bid": 0.83,
+       "ask": 0.95,
+       "mid": 0.89,
+       "iv": 0.5282,
+       "delta": 0.358,
+       "theta": -0.0133,
+       "oi": 2744.0,
+       "volume": 0.0,
+       "spread_pct": 0.1348
       }
      ],
-     "debit": 3.48,
-     "debit_mid": 3.065,
-     "cost": 348.0,
-     "max_loss": 348.0,
-     "max_gain": 402.0,
-     "breakeven": 88.48,
-     "profit_tp1": 64.79,
-     "profit_tp2": 197.16,
-     "loss_at_stop": -121.44,
-     "rr_tp1": 0.53,
-     "rr_tp2": 1.62,
-     "theta_day": -0.55
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": null
-  },
-  {
-   "ticker": "CVS",
-   "id": "SEC64803",
-   "name": "CVS HEALTH Corp",
-   "sector": "Consumer Staples",
-   "as_of": "2026-11-17 21:29:10",
-   "spot": 85.81,
-   "score": 70.0,
-   "confidence": 100,
-   "tier": "C",
-   "points": 5.5,
-   "why": [
-    "stock score 70",
-    "evidence 100",
-    "RSI 50 (healthy)",
-    "option reward/risk 2.7 at TP1",
-    "options cheap: IV 32% vs realised 57%",
-    "insider buying / fund additions"
-   ],
-   "against": [
-    "not in an uptrend",
-    "TP1 needs more than the options-implied move (\u00b19.4%)",
-    "plain call only because no debit spread could be built (call rules not all met)",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2026-12-18",
-   "dte": 31,
-   "exit_by": "2026-11-27",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.321,
-   "hv20": 0.5660681825092869,
-   "hv60": 0.384138616970506,
-   "iv_ratio": 0.5670694978422209,
-   "iv30": 30.708,
-   "expected_move": 8.027445191922743,
-   "underlying": {
-    "entry": [
-     85.8657,
-     89.35
-    ],
-    "stop": 84.0579,
-    "tp1": 94.18,
-    "tp2": 98.43,
-    "zones_at": 1794763293183
-   },
-   "timing": {
-    "ma50": 89.49739990234374,
-    "ma200": 89.24060020446777,
-    "rsi": 49.60545295626167,
-    "uptrend": false,
-    "above_ma50": false,
-    "in_zone": false,
-    "extended": false,
-    "rsi_ok": true,
-    "ret_1m": -0.07091815252345768
-   },
-   "recommended": "call",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "CVS261218C00085000",
-       "strike": 85.0,
-       "expiry": "2026-12-18",
-       "bid": 3.65,
-       "ask": 3.9,
-       "mid": 3.775,
-       "iv": 0.321,
-       "delta": 0.5757,
-       "theta": -0.049,
-       "oi": 532.0,
-       "volume": 20.0,
-       "spread_pct": 0.0662
-      }
-     ],
-     "debit": 3.9,
-     "debit_mid": 3.775,
-     "cost": 390.0,
-     "max_loss": 390.0,
-     "max_gain": null,
-     "breakeven": 88.9,
-     "profit_tp1": 556.55,
-     "profit_tp2": 969.61,
-     "loss_at_stop": -204.97,
-     "rr_tp1": 2.72,
-     "rr_tp2": 4.73,
-     "theta_day": -4.9
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": null
-  },
-  {
-   "ticker": "INSW",
-   "id": "SEC1679049",
-   "name": "International Seaways, Inc.",
-   "sector": "Industrials",
-   "as_of": "2026-11-17 20:01:10",
-   "spot": 99.97,
-   "score": 72.9,
-   "confidence": 100,
-   "tier": "C",
-   "points": 5.0,
-   "why": [
-    "stock score 73",
-    "evidence 100",
-    "option reward/risk 5.4 at TP1",
-    "TP1 (+13.2%) inside the options-implied move (\u00b115.7%)"
-   ],
-   "against": [
-    "not in an uptrend",
-    "plain call only because no debit spread could be built (call rules not all met)",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2026-12-18",
-   "dte": 31,
-   "exit_by": "2026-11-27",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.5377,
-   "hv20": 0.512552221430945,
-   "hv60": 0.44976430069286866,
-   "iv_ratio": 1.0490638368493406,
-   "iv30": 53.144,
-   "expected_move": 15.665495755902608,
-   "underlying": {
-    "entry": [
-     101.58,
-     105.23
-    ],
-    "stop": 99.0701,
-    "tp1": 113.14,
-    "tp2": 120.0,
-    "zones_at": 1794763287481
-   },
-   "timing": {
-    "ma50": 108.77679946899414,
-    "ma200": 88.1614499092102,
-    "rsi": 44.539780566861765,
-    "uptrend": false,
-    "above_ma50": false,
-    "in_zone": false,
-    "extended": false,
-    "rsi_ok": false,
-    "ret_1m": -0.0910991731828199
-   },
-   "recommended": "call",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "INSW261218C00100000",
-       "strike": 100.0,
-       "expiry": "2026-12-18",
-       "bid": 5.1,
-       "ask": 5.6,
-       "mid": 5.35,
-       "iv": 0.5377,
-       "delta": 0.5349,
-       "theta": -0.1096,
-       "oi": 151.0,
-       "volume": 8.0,
-       "spread_pct": 0.0935
-      }
-     ],
-     "debit": 5.6,
-     "debit_mid": 5.35,
-     "cost": 560.0,
-     "max_loss": 560.0,
-     "max_gain": null,
-     "breakeven": 105.6,
-     "profit_tp1": 846.66,
-     "profit_tp2": 1480.85,
-     "loss_at_stop": -157.8,
-     "rr_tp1": 5.37,
-     "rr_tp2": 9.38,
-     "theta_day": -10.96
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": "opportunity"
-  },
-  {
-   "ticker": "DINO",
-   "id": "SEC1915657",
-   "name": "HF Sinclair Corp",
-   "sector": "Industrials",
-   "as_of": "2026-11-17 21:29:22",
-   "spot": 97.71,
-   "score": 73.6,
-   "confidence": 94,
-   "tier": "C",
-   "points": 5.0,
-   "why": [
-    "stock score 74",
-    "evidence 94",
-    "price inside the entry zone",
-    "option reward/risk 3.3 at TP1",
-    "options cheap: IV 51% vs realised 56%"
-   ],
-   "against": [
-    "not in an uptrend",
-    "TP1 needs more than the options-implied move (\u00b114.8%)",
-    "plain call only because no debit spread could be built (call rules not all met)",
-    "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2026-12-18",
-   "dte": 31,
-   "exit_by": "2026-11-27",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.508,
-   "hv20": 0.558286191407961,
-   "hv60": 0.4438107833300779,
-   "iv_ratio": 0.9099275744557778,
-   "iv30": 49.235,
-   "expected_move": 14.465622928036973,
-   "underlying": {
-    "entry": [
-     96.1786,
-     102.18
-    ],
-    "stop": 92.5593,
-    "tp1": 116.85,
-    "tp2": 127.48,
-    "zones_at": 1794763286824
-   },
-   "timing": {
-    "ma50": 112.3920002746582,
-    "ma200": 81.30010013580322,
-    "rsi": 33.91955860628063,
-    "uptrend": false,
-    "above_ma50": false,
-    "in_zone": true,
-    "extended": false,
-    "rsi_ok": false,
-    "ret_1m": -0.22012930572266698
-   },
-   "recommended": "call",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "DINO261218C00100000",
-       "strike": 100.0,
-       "expiry": "2026-12-18",
-       "bid": 4.6,
-       "ask": 5.0,
-       "mid": 4.8,
-       "iv": 0.4933,
-       "delta": 0.4777,
-       "theta": -0.0894,
-       "oi": 1317.0,
-       "volume": 6.0,
-       "spread_pct": 0.0833
-      }
-     ],
-     "debit": 5.0,
-     "debit_mid": 4.8,
-     "cost": 500.0,
-     "max_loss": 500.0,
-     "max_gain": null,
-     "breakeven": 105.0,
-     "profit_tp1": 1230.25,
-     "profit_tp2": 2267.54,
-     "loss_at_stop": -370.68,
-     "rr_tp1": 3.32,
+     "debit": 0.85,
+     "debit_mid": 0.735,
+     "cost": 85.0,
+     "max_loss": 85.0,
+     "max_gain": 115.0,
+     "breakeven": 20.85,
+     "profit_tp1": 32.96,
+     "profit_tp2": 58.41,
+     "loss_at_stop": -9.54,
+     "rr_tp1": 3.45,
      "rr_tp2": 6.12,
-     "theta_day": -8.94
+     "theta_day": -0.1
     }
    },
    "assumptions": [
@@ -1404,105 +775,7 @@
     "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
     "exit by 21 days to expiry; stop = underlying closes below the swing stop"
    ],
-   "stock_grade": "opportunity"
-  },
-  {
-   "ticker": "DAR",
-   "id": "SEC916540",
-   "name": "DARLING INGREDIENTS INC.",
-   "sector": "Consumer Staples",
-   "as_of": "2026-11-17 21:22:56",
-   "spot": 52.82,
-   "score": 66.0,
-   "confidence": 100,
-   "tier": "C",
-   "points": 5.0,
-   "why": [
-    "stock score 66",
-    "evidence 100",
-    "option reward/risk 10.7 at TP1",
-    "options cheap: IV 40% vs realised 44%",
-    "insider buying / fund additions"
-   ],
-   "against": [
-    "not in an uptrend",
-    "TP1 needs more than the options-implied move (\u00b116.1%)",
-    "plain call only because no debit spread could be built (call rules not all met)",
-    "59-day expiry is outside the preferred 35\u201355 days (none available this week)"
-   ],
-   "expiry": "2027-01-15",
-   "dte": 59,
-   "exit_by": "2026-12-25",
-   "earnings": null,
-   "earnings_in_window": false,
-   "atm_iv": 0.4,
-   "hv20": 0.4355831801028076,
-   "hv60": 0.37842075528961877,
-   "iv_ratio": 0.9183091043726501,
-   "iv30": 39.626,
-   "expected_move": 8.494502760004616,
-   "underlying": {
-    "entry": [
-     55.83,
-     55.99
-    ],
-    "stop": 53.7257,
-    "tp1": 61.83,
-    "tp2": 64.9,
-    "zones_at": 1794763279286
-   },
-   "timing": {
-    "ma50": 59.575999908447265,
-    "ma200": 59.03224983215332,
-    "rsi": 41.93640816628982,
-    "uptrend": false,
-    "above_ma50": false,
-    "in_zone": false,
-    "extended": false,
-    "rsi_ok": false,
-    "ret_1m": -0.1391786265548186
-   },
-   "recommended": "call",
-   "structures": {
-    "call": {
-     "kind": "call",
-     "legs": [
-      {
-       "side": "buy",
-       "symbol": "DAR270115C00050000",
-       "strike": 50.0,
-       "expiry": "2027-01-15",
-       "bid": 5.1,
-       "ask": 5.4,
-       "mid": 5.25,
-       "iv": 0.3993,
-       "delta": 0.6861,
-       "theta": -0.025,
-       "oi": 461.0,
-       "volume": 2.0,
-       "spread_pct": 0.0571
-      }
-     ],
-     "debit": 5.4,
-     "debit_mid": 5.25,
-     "cost": 540.0,
-     "max_loss": 540.0,
-     "max_gain": null,
-     "breakeven": 55.4,
-     "profit_tp1": 665.64,
-     "profit_tp2": 967.85,
-     "loss_at_stop": -62.2,
-     "rr_tp1": 10.7,
-     "rr_tp2": 15.56,
-     "theta_day": -2.5
-    }
-   },
-   "assumptions": [
-    "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-    "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-    "exit by 21 days to expiry; stop = underlying closes below the swing stop"
-   ],
-   "stock_grade": null
+   "stock_grade": "high-class"
   }
  ],
  "skipped": [
@@ -1511,198 +784,237 @@
    "why": "no chain / no 30\u201360 day expiry"
   },
   {
-   "ticker": "GAP",
-   "why": "no liquid ~0.60-delta call (best 2026-12-31 19C: bid 1.24, ask 2.41, OI 0, spread 64%)"
-  },
-  {
    "ticker": "LNTH",
-   "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2026-12-18)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 100C: bid 0.85, ask 4.9, OI 147, spread 141%)"
   },
   {
    "ticker": "LRN",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 75C: bid 3.5, ask 4.5, OI 22, spread 25%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 75C: bid 5.1, ask 6.0, OI 111, spread 16%)"
   },
   {
    "ticker": "LCII",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 95C: bid 4.6, ask 8.8, OI 6, spread 63%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 95C: bid 4.5, ask 8.5, OI 21, spread 62%)"
+  },
+  {
+   "ticker": "TGT",
+   "why": "3.0 points (below tier C)",
+   "against": [
+    "price stretched above the entry zone",
+    "option payoff at TP1 doesn't beat the loss at the stop",
+    "earnings 2026-11-18 before expiry (IV crush risk)"
+   ]
   },
   {
    "ticker": "CTSH",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 60C: bid 1.7, ask 4.9, OI 147, spread 97%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 57.5C: bid 2.65, ask 6.2, OI 250, spread 80%)"
   },
   {
-   "ticker": "PYPL",
-   "why": "no liquid ~0.60-delta call (best 2026-12-31 57C: bid 1.7, ask 4.65, OI 0, spread 93%)"
+   "ticker": "THC",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 270C: bid 16.7, ask 19.7, OI 54, spread 16%)"
   },
   {
    "ticker": "GNK",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 25C: bid 0.5, ask 1.55, OI 7, spread 102%)"
-  },
-  {
-   "ticker": "PCRX",
    "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2026-12-18)"
   },
   {
+   "ticker": "PCRX",
+   "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2027-01-15)"
+  },
+  {
    "ticker": "PAYC",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 250C: bid 13.5, ask 15.7, OI 72, spread 15%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 240C: bid 19.5, ask 21.6, OI 125, spread 10%)"
   },
   {
    "ticker": "CHRD",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 140C: bid 6.9, ask 9.4, OI 146, spread 31%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 135C: bid 8.3, ask 11.5, OI 21, spread 32%)"
   },
   {
    "ticker": "CON",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 40C: bid 1.5, ask 4.1, OI 15, spread 93%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 40C: bid 2.9, ask 5.4, OI 41, spread 60%)"
+  },
+  {
+   "ticker": "CVS",
+   "why": "no liquid ~0.60-delta call (best 2026-12-31 80C: bid 4.4, ask 6.05, OI 0, spread 32%)"
   },
   {
    "ticker": "SBH",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 17.5C: bid 1.5, ask 2.4, OI 415, spread 46%)"
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 17.5C: bid 1.3, ask 1.85, OI 434, spread 35%)"
   },
   {
    "ticker": "MHK",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 145C: bid 7.4, ask 9.5, OI 8, spread 25%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 140C: bid 12.2, ask 14.1, OI 1, spread 14%)"
+  },
+  {
+   "ticker": "GME",
+   "why": "3.5 points (below tier C)",
+   "against": [
+    "option payoff at TP1 doesn't beat the loss at the stop",
+    "earnings 2026-12-08 before expiry (IV crush risk)",
+    "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
+   ]
   },
   {
    "ticker": "TDC",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 35C: bid 1.55, ask 1.95, OI 45, spread 23%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 35C: bid 0.95, ask 3.7, OI 109, spread 118%)"
   },
   {
-   "ticker": "LYB",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 60C: bid 2.7, ask 3.2, OI 686, spread 17%)"
+   "ticker": "DAL",
+   "why": "no liquid ~0.60-delta call (best 2026-12-31 83C: bid 5.3, ask 7.55, OI 0, spread 35%)"
   },
   {
    "ticker": "SEZL",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 160C: bid 11.9, ask 15.0, OI 63, spread 23%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 155C: bid 16.9, ask 20.3, OI 96, spread 18%)"
   },
   {
    "ticker": "AMPH",
    "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2026-12-18)"
   },
   {
+   "ticker": "BAH",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 80C: bid 7.1, ask 8.2, OI 161, spread 14%)"
+  },
+  {
    "ticker": "TTMI",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 65C: bid 7.6, ask 9.9, OI 24, spread 26%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 70C: bid 8.4, ask 11.4, OI 113, spread 30%)"
   },
   {
    "ticker": "KALU",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 100C: bid 6.3, ask 10.5, OI 9, spread 50%)"
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 100C: bid 5.0, ask 9.5, OI 9, spread 62%)"
   },
   {
    "ticker": "JLL",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 350C: bid 19.7, ask 22.8, OI 7, spread 15%)"
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 360C: bid 14.5, ask 18.1, OI 50, spread 22%)"
   },
   {
    "ticker": "KSS",
-   "why": "2.5 points (below tier C)",
+   "why": "3.5 points (below tier C)",
    "against": [
     "option payoff at TP1 doesn't beat the loss at the stop",
     "earnings 2026-11-24 before expiry (IV crush risk)",
+    "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
+   ]
+  },
+  {
+   "ticker": "WRB",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 74.5C: bid 4.1, ask 5.4, OI 201, spread 27%)"
+  },
+  {
+   "ticker": "DFIN",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 65C: bid 3.1, ask 7.5, OI 0, spread 83%)"
+  },
+  {
+   "ticker": "KFY",
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 75C: bid 1.35, ask 5.9, OI 4, spread 126%)"
+  },
+  {
+   "ticker": "REYN",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 25C: bid 1.0, ask 1.25, OI 27, spread 22%)"
+  },
+  {
+   "ticker": "BTSG",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 65C: bid 5.4, ask 8.8, OI 46, spread 48%)"
+  },
+  {
+   "ticker": "HZO",
+   "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2027-01-15)"
+  },
+  {
+   "ticker": "BR",
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 180C: bid 8.4, ask 10.7, OI 37, spread 24%)"
+  },
+  {
+   "ticker": "INSW",
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 95C: bid 6.4, ask 8.0, OI 159, spread 22%)"
+  },
+  {
+   "ticker": "OPCH",
+   "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2027-01-15)"
+  },
+  {
+   "ticker": "WST",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 400C: bid 19.3, ask 22.4, OI 310, spread 15%)"
+  },
+  {
+   "ticker": "TPC",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 95C: bid 6.8, ask 8.2, OI 981, spread 19%)"
+  },
+  {
+   "ticker": "ESTC",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 80C: bid 10.2, ask 12.3, OI 249, spread 19%)"
+  },
+  {
+   "ticker": "SWK",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 110C: bid 6.0, ask 7.1, OI 1182, spread 17%)"
+  },
+  {
+   "ticker": "OLLI",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 95C: bid 9.1, ask 11.2, OI 141, spread 21%)"
+  },
+  {
+   "ticker": "DINO",
+   "why": "4.0 points (below tier C)",
+   "against": [
+    "not in an uptrend",
+    "TP1 needs more than the options-implied move (\u00b114.7%)",
     "plain call only because no debit spread could be built (call rules not all met)"
    ]
   },
   {
-   "ticker": "GDDY",
-   "why": "no liquid ~0.60-delta call (best 2026-12-31 105C: bid 5.7, ask 9.6, OI 0, spread 51%)"
-  },
-  {
-   "ticker": "WRB",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 77.5C: bid 1.35, ask 3.5, OI 23, spread 89%)"
-  },
-  {
-   "ticker": "AR",
-   "why": "no liquid ~0.60-delta call (best 2026-12-31 36C: bid 2.2, ask 2.55, OI 0, spread 15%)"
-  },
-  {
-   "ticker": "KFY",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 75C: bid 2.8, ask 5.2, OI 4, spread 60%)"
-  },
-  {
-   "ticker": "REYN",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 25C: bid 0.0, ask 2.3, OI 1, spread 100%)"
-  },
-  {
-   "ticker": "BTSG",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 70C: bid 2.1, ask 4.9, OI 109, spread 80%)"
-  },
-  {
-   "ticker": "HZO",
-   "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2026-12-18)"
-  },
-  {
-   "ticker": "OPCH",
-   "why": "no liquid ~0.60-delta call (no calls with delta 0.45\u20130.75 at 2026-12-18)"
-  },
-  {
-   "ticker": "WST",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 410C: bid 14.0, ask 17.7, OI 33, spread 23%)"
-  },
-  {
-   "ticker": "TPC",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 95C: bid 5.2, ask 6.3, OI 43, spread 19%)"
-  },
-  {
-   "ticker": "ESTC",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 85C: bid 8.3, ask 9.6, OI 252, spread 15%)"
-  },
-  {
-   "ticker": "SWK",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 105C: bid 5.6, ask 6.9, OI 43, spread 21%)"
-  },
-  {
-   "ticker": "OLLI",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 90C: bid 7.5, ask 10.0, OI 272, spread 29%)"
-  },
-  {
-   "ticker": "AMN",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 40C: bid 1.35, ask 2.4, OI 1608, spread 56%)"
-  },
-  {
    "ticker": "ADSK",
-   "why": "no liquid ~0.60-delta call (best 2026-12-31 250C: bid 17.2, ask 24.7, OI 0, spread 36%)"
+   "why": "no liquid ~0.60-delta call (best 2026-12-31 245C: bid 18.4, ask 25.7, OI 0, spread 33%)"
   },
   {
    "ticker": "AIN",
    "why": "no liquid ~0.60-delta call (best 2026-12-18 65C: bid 0.0, ask 0.0, OI 0, spread 100%)"
   },
   {
-   "ticker": "KMB",
-   "why": "no liquid ~0.60-delta call (best 2026-12-31 106C: bid 3.4, ask 6.0, OI 0, spread 55%)"
-  },
-  {
    "ticker": "ADUS",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 120C: bid 4.5, ask 9.4, OI 21, spread 71%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 120C: bid 4.1, ask 9.0, OI 10, spread 75%)"
   },
   {
-   "ticker": "XYL",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 92.5C: bid 3.6, ask 6.4, OI 2, spread 56%)"
+   "ticker": "LYB",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 57.5C: bid 3.5, ask 4.1, OI 62, spread 16%)"
   },
   {
    "ticker": "ADMA",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 13C: bid 0.45, ask 1.2, OI 82, spread 91%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 13C: bid 1.15, ask 1.85, OI 2391, spread 47%)"
   },
   {
    "ticker": "AN",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 175C: bid 8.1, ask 10.3, OI 8, spread 24%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 175C: bid 11.2, ask 13.8, OI 502, spread 21%)"
   },
   {
-   "ticker": "INTU",
-   "why": "2.5 points (below tier C)",
-   "against": [
-    "not in an uptrend",
-    "options expensive: IV 63% vs realised 41%",
-    "earnings 2026-11-19 before expiry (IV crush risk)"
-   ]
+   "ticker": "ACEL",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 12.5C: bid 1.25, ask 1.55, OI 1161, spread 21%)"
+  },
+  {
+   "ticker": "DAR",
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 50C: bid 4.4, ask 4.9, OI 460, spread 11%)"
   },
   {
    "ticker": "GFF",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 100C: bid 4.9, ask 7.5, OI 11, spread 42%)"
+   "why": "no liquid ~0.60-delta call (best 2027-01-15 100C: bid 6.2, ask 9.4, OI 3, spread 41%)"
   },
   {
    "ticker": "UPBD",
-   "why": "no liquid ~0.60-delta call (best 2026-12-18 25C: bid 0.4, ask 1.5, OI 1269, spread 116%)"
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 25C: bid 0.6, ask 1.25, OI 1277, spread 70%)"
   },
   {
    "ticker": "EXPE",
-   "why": "no liquid ~0.60-delta call (best 2026-12-31 240C: bid 16.0, ask 19.5, OI 0, spread 20%)"
+   "why": "no liquid ~0.60-delta call (best 2026-12-31 240C: bid 17.9, ask 21.0, OI 0, spread 16%)"
+  },
+  {
+   "ticker": "HEI-A",
+   "why": "no liquid ~0.60-delta call (best 2026-12-18 250C: bid 11.0, ask 14.5, OI 0, spread 27%)"
+  },
+  {
+   "ticker": "MU",
+   "why": "4.0 points (below tier C)",
+   "against": [
+    "not in an uptrend",
+    "TP1 needs more than the options-implied move (\u00b128.3%)",
+    "earnings 2026-12-16 before expiry (IV crush risk)"
+   ]
   }
  ],
  "checked": 60,
@@ -1728,294 +1040,98 @@
   "setups": [
    {
     "direction": "bear",
-    "ticker": "CRWV",
-    "id": "SEC1769628",
-    "name": "CoreWeave, Inc.",
-    "sector": "Technology",
-    "as_of": "2026-11-17 23:11:35",
-    "spot": 54.1462,
-    "score": 25.8,
-    "confidence": 75,
-    "tier": "C",
-    "points": 5.5,
-    "why": [
-     "stock score 26 (weak)",
-     "downtrend with a falling 50-day average",
-     "RSI 41 (room to fall)",
-     "option reward/risk 1.2 at TP1",
-     "TP1 (-25.1%) inside the options-implied move (\u00b133.7%)",
-     "options cheap: IV 106% vs realised 135%"
-    ],
-    "against": [],
-    "red_flags": [
-     "negative free cash flow",
-     "loss-making over 12 months",
-     "operating margin down 4.4 pts",
-     "review-level 8-K filed"
-    ],
-    "expiry": "2026-12-24",
-    "dte": 37,
-    "exit_by": "2026-12-03",
-    "earnings": null,
-    "earnings_in_window": false,
-    "atm_iv": 1.0578,
-    "hv20": 1.3483123873103062,
-    "hv60": 1.0035319930313151,
-    "iv_ratio": 0.7845362914080782,
-    "iv30": 110.452,
-    "expected_move": 18.235848502787192,
-    "underlying": {
-     "entry": [
-      49.880001068115234,
-      53.09160804748535
-     ],
-     "stop": 56.30321502685547,
-     "tp1": 40.58000183105469,
-     "tp2": 24.187145233154297
-    },
-    "timing": {
-     "ma50": 71.80610015869141,
-     "ma200": 88.7706999206543,
-     "rsi": 41.14216171995743,
-     "downtrend": true,
-     "ma50_falling": true,
-     "in_zone": false,
-     "extended": false,
-     "rsi_ok": true,
-     "ret_1m": -0.18748979371180796,
-     "rs_vs_sector_3m": -0.35225437933336345
-    },
-    "recommended": "spread",
-    "structures": {
-     "put": {
-      "kind": "put",
-      "legs": [
-       {
-        "side": "buy",
-        "symbol": "CRWV261224P00060000",
-        "strike": 60.0,
-        "expiry": "2026-12-24",
-        "bid": 13.0,
-        "ask": 13.45,
-        "mid": 13.225,
-        "iv": 1.0461,
-        "delta": -0.6521,
-        "theta": -0.0815,
-        "oi": 157.0,
-        "volume": 6.0,
-        "spread_pct": 0.034
-       }
-      ],
-      "debit": 13.45,
-      "debit_mid": 13.225,
-      "cost": 1345.0,
-      "max_loss": 1345.0,
-      "max_gain": null,
-      "breakeven": 46.55,
-      "profit_tp1": 608.92,
-      "profit_tp2": 2224.51,
-      "loss_at_stop": -603.06,
-      "rr_tp1": 1.01,
-      "rr_tp2": 3.69,
-      "theta_day": -8.15
-     },
-     "spread": {
-      "kind": "spread",
-      "legs": [
-       {
-        "side": "buy",
-        "symbol": "CRWV261224P00060000",
-        "strike": 60.0,
-        "expiry": "2026-12-24",
-        "bid": 13.0,
-        "ask": 13.45,
-        "mid": 13.225,
-        "iv": 1.0461,
-        "delta": -0.6521,
-        "theta": -0.0815,
-        "oi": 157.0,
-        "volume": 6.0,
-        "spread_pct": 0.034
-       },
-       {
-        "side": "sell",
-        "symbol": "CRWV261224P00035000",
-        "strike": 35.0,
-        "expiry": "2026-12-24",
-        "bid": 1.5,
-        "ask": 1.71,
-        "mid": 1.605,
-        "iv": 1.241,
-        "delta": -0.1356,
-        "theta": -0.0582,
-        "oi": 179.0,
-        "volume": 15.0,
-        "spread_pct": 0.1308
-       }
-      ],
-      "debit": 11.95,
-      "debit_mid": 11.62,
-      "cost": 1195.0,
-      "max_loss": 1195.0,
-      "max_gain": 1305.0,
-      "breakeven": 48.05,
-      "profit_tp1": 563.46,
-      "profit_tp2": 1264.58,
-      "loss_at_stop": -475.08,
-      "rr_tp1": 1.19,
-      "rr_tp2": 2.66,
-      "theta_day": -2.33
-     }
-    },
-    "assumptions": [
-     "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
-     "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
-     "exit by 21 days to expiry; stop = underlying closes above the short stop"
-    ],
-    "stock_grade": null
-   },
-   {
-    "direction": "bear",
-    "ticker": "WULF",
-    "id": "SEC1083301",
-    "name": "TERAWULF INC.",
+    "ticker": "GLXY",
+    "id": "SEC1859392",
+    "name": "Galaxy Digital Inc.",
     "sector": "Financials",
-    "as_of": "2026-11-17 23:11:33",
-    "spot": 12.41,
-    "score": 26.3,
-    "confidence": 93,
-    "tier": "C",
-    "points": 5.5,
+    "as_of": "2026-11-18 22:28:00",
+    "spot": 13.36,
+    "score": 15.4,
+    "confidence": 75,
+    "tier": "B",
+    "points": 8.5,
     "why": [
-     "stock score 26 (weak)",
-     "evidence 93",
+     "stock score 15 (weak)",
      "downtrend with a falling 50-day average",
      "bounced into the short entry zone",
-     "RSI 45 (room to fall)",
-     "TP1 (-23.4%) inside the options-implied move (\u00b131.0%)",
-     "options cheap: IV 106% vs realised 125%"
+     "RSI 37 (room to fall)",
+     "option reward/risk 1.8 at TP1",
+     "TP1 (-29.4%) inside the options-implied move (\u00b138.6%)",
+     "options cheap: IV 97% vs realised 147%"
     ],
     "against": [
-     "option payoff at TP1 doesn't beat the loss at the stop",
-     "31-day expiry is outside the preferred 35\u201355 days (none available this week)"
+     "plain put only because no debit spread could be built (put rules not all met)",
+     "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
     ],
     "red_flags": [
      "loss-making over 12 months",
-     "operating margin down 159.7 pts",
-     "shares up 20% in a year"
+     "revenue shrinking (-51% y/y)"
     ],
-    "expiry": "2026-12-18",
-    "dte": 31,
-    "exit_by": "2026-11-27",
+    "expiry": "2027-01-15",
+    "dte": 58,
+    "exit_by": "2026-12-25",
     "earnings": null,
     "earnings_in_window": false,
-    "atm_iv": 1.0624,
-    "hv20": 1.2537174074497355,
-    "hv60": 0.9674079226356217,
-    "iv_ratio": 0.8473998954525915,
-    "iv30": 104.275,
-    "expected_move": 3.8423264304229017,
+    "atm_iv": 0.9689,
+    "hv20": 1.4681642125474041,
+    "hv60": 1.0498877574098089,
+    "iv_ratio": 0.6599398021825273,
+    "iv30": 100.863,
+    "expected_move": 5.16003893495689,
     "underlying": {
      "entry": [
-      11.880000114440918,
-      12.970000267028809
+      13.029999732971191,
+      13.92971406664167
      ],
-     "stop": 13.64035735811506,
-     "tp1": 9.510000228881836,
-     "tp2": 6.517143385750907
+     "stop": 14.829428400312151,
+     "tp1": 9.431142398289271,
+     "tp2": 5.832285063607352
     },
     "timing": {
-     "ma50": 13.874799976348877,
-     "ma200": 17.981499986648558,
-     "rsi": 44.94810389014329,
+     "ma50": 19.364499969482424,
+     "ma200": 23.21552499771118,
+     "rsi": 37.11573164124432,
      "downtrend": true,
      "ma50_falling": true,
      "in_zone": true,
      "extended": false,
      "rsi_ok": true,
-     "ret_1m": 0.017123270893795395,
-     "rs_vs_sector_3m": -0.24531489436595455
+     "ret_1m": -0.1711196239417142,
+     "rs_vs_sector_3m": -0.3978899196806118
     },
-    "recommended": "spread",
+    "recommended": "put",
     "structures": {
      "put": {
       "kind": "put",
       "legs": [
        {
         "side": "buy",
-        "symbol": "WULF261218P00012000",
-        "strike": 12.0,
-        "expiry": "2026-12-18",
-        "bid": 1.55,
-        "ask": 1.66,
-        "mid": 1.605,
-        "iv": 1.0624,
-        "delta": -0.4722,
-        "theta": -0.0227,
-        "oi": 13081.0,
-        "volume": 123.0,
-        "spread_pct": 0.0685
+        "symbol": "GLXY270115P00017500",
+        "strike": 17.5,
+        "expiry": "2027-01-15",
+        "bid": 4.8,
+        "ask": 5.05,
+        "mid": 4.925,
+        "iv": 0.9849,
+        "delta": -0.702,
+        "theta": -0.015,
+        "oi": 2224.0,
+        "volume": 3.0,
+        "spread_pct": 0.0508
        }
       ],
-      "debit": 1.66,
-      "debit_mid": 1.605,
-      "cost": 166.0,
-      "max_loss": 166.0,
+      "debit": 5.05,
+      "debit_mid": 4.925,
+      "cost": 505.0,
+      "max_loss": 505.0,
       "max_gain": null,
-      "breakeven": 10.34,
-      "profit_tp1": 98.48,
-      "profit_tp2": 380.47,
-      "loss_at_stop": -118.39,
-      "rr_tp1": 0.83,
-      "rr_tp2": 3.21,
-      "theta_day": -2.27
-     },
-     "spread": {
-      "kind": "spread",
-      "legs": [
-       {
-        "side": "buy",
-        "symbol": "WULF261218P00012000",
-        "strike": 12.0,
-        "expiry": "2026-12-18",
-        "bid": 1.55,
-        "ask": 1.66,
-        "mid": 1.605,
-        "iv": 1.0624,
-        "delta": -0.4722,
-        "theta": -0.0227,
-        "oi": 13081.0,
-        "volume": 123.0,
-        "spread_pct": 0.0685
-       },
-       {
-        "side": "sell",
-        "symbol": "WULF261218P00008000",
-        "strike": 8.0,
-        "expiry": "2026-12-18",
-        "bid": 0.2,
-        "ask": 0.23,
-        "mid": 0.215,
-        "iv": 1.1772,
-        "delta": -0.1003,
-        "theta": -0.0112,
-        "oi": 12705.0,
-        "volume": 2043.0,
-        "spread_pct": 0.1395
-       }
-      ],
-      "debit": 1.46,
-      "debit_mid": 1.39,
-      "cost": 146.0,
-      "max_loss": 146.0,
-      "max_gain": 254.0,
-      "breakeven": 10.54,
-      "profit_tp1": 89.38,
-      "profit_tp2": 233.93,
-      "loss_at_stop": -99.6,
-      "rr_tp1": 0.9,
-      "rr_tp2": 2.35,
-      "theta_day": -1.15
+      "breakeven": 12.45,
+      "profit_tp1": 298.15,
+      "profit_tp2": 656.39,
+      "loss_at_stop": -166.6,
+      "rr_tp1": 1.79,
+      "rr_tp2": 3.94,
+      "theta_day": -1.5
      }
     },
     "assumptions": [
@@ -2023,7 +1139,8 @@
      "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
      "exit by 21 days to expiry; stop = underlying closes above the short stop"
     ],
-    "stock_grade": null
+    "stock_grade": null,
+    "not_alerted": "the stock isn't short-grade (score 25 or under, confidence 75+, 3+ red flags)"
    },
    {
     "direction": "bear",
@@ -2031,24 +1148,25 @@
     "id": "SEC1834584",
     "name": "Coupang, Inc.",
     "sector": "Consumer Discretionary",
-    "as_of": "2026-11-17 21:23:25",
-    "spot": 14.0583,
+    "as_of": "2026-11-18 22:35:20",
+    "spot": 14.26,
     "score": 21.2,
     "confidence": 88,
-    "tier": "C",
-    "points": 5.5,
+    "tier": "B",
+    "points": 8.5,
     "why": [
      "stock score 21 (weak)",
      "evidence 88",
      "downtrend with a falling 50-day average",
-     "RSI 43 (room to fall)",
-     "TP1 (-4.4%) inside the options-implied move (\u00b118.3%)",
-     "options cheap: IV 45% vs realised 57%"
+     "bounced into the short entry zone",
+     "RSI 40 (room to fall)",
+     "option reward/risk 1.3 at TP1",
+     "TP1 (-12.8%) inside the options-implied move (\u00b117.1%)",
+     "options cheap: IV 43% vs realised 58%"
     ],
     "against": [
-     "option payoff at TP1 doesn't beat the loss at the stop",
      "plain put only because no debit spread could be built (put rules not all met)",
-     "59-day expiry is outside the preferred 35\u201355 days (none available this week)"
+     "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
     ],
     "red_flags": [
      "negative free cash flow",
@@ -2056,36 +1174,36 @@
      "operating margin down 5.7 pts"
     ],
     "expiry": "2027-01-15",
-    "dte": 59,
+    "dte": 58,
     "exit_by": "2026-12-25",
     "earnings": null,
     "earnings_in_window": false,
-    "atm_iv": 0.4548,
-    "hv20": 0.5714979296668475,
-    "hv60": 0.42714578040216367,
-    "iv_ratio": 0.7958034078358321,
-    "iv30": 44.687,
-    "expected_move": 2.5705901341850845,
+    "atm_iv": 0.4288,
+    "hv20": 0.5782149759370291,
+    "hv60": 0.4295888560587158,
+    "iv_ratio": 0.7415926910317501,
+    "iv30": 44.318,
+    "expected_move": 2.437484522783853,
     "underlying": {
      "entry": [
-      14.350000381469727,
-      14.960000038146973
+      14.0,
+      14.782714094434466
      ],
-     "stop": 15.340107100350517,
-     "tp1": 13.442999839782715,
-     "tp2": 11.30914388384138
+     "stop": 15.351357085364205,
+     "tp1": 12.434571811131068,
+     "tp2": 10.869143622262136
     },
     "timing": {
-     "ma50": 14.710599937438964,
-     "ma200": 17.016150035858153,
-     "rsi": 42.70665952882863,
+     "ma50": 14.69439992904663,
+     "ma200": 16.985950031280517,
+     "rsi": 39.585876354337465,
      "downtrend": true,
      "ma50_falling": true,
-     "in_zone": false,
+     "in_zone": true,
      "extended": false,
      "rsi_ok": true,
-     "ret_1m": 0.005606161257165843,
-     "rs_vs_sector_3m": -0.09433064044143868
+     "ret_1m": -0.023709912759417362,
+     "rs_vs_sector_3m": -0.1470995783169461
     },
     "recommended": "put",
     "structures": {
@@ -2097,29 +1215,29 @@
         "symbol": "CPNG270115P00016000",
         "strike": 16.0,
         "expiry": "2027-01-15",
-        "bid": 2.23,
-        "ask": 2.39,
-        "mid": 2.31,
-        "iv": 0.4644,
-        "delta": -0.7461,
-        "theta": -0.0071,
-        "oi": 888.0,
-        "volume": 2.0,
-        "spread_pct": 0.0693
+        "bid": 1.97,
+        "ask": 2.15,
+        "mid": 2.06,
+        "iv": 0.4302,
+        "delta": -0.7091,
+        "theta": -0.0076,
+        "oi": 890.0,
+        "volume": 5.0,
+        "spread_pct": 0.0874
        }
       ],
-      "debit": 2.39,
-      "debit_mid": 2.31,
-      "cost": 239.0,
-      "max_loss": 239.0,
+      "debit": 2.15,
+      "debit_mid": 2.06,
+      "cost": 215.0,
+      "max_loss": 215.0,
       "max_gain": null,
-      "breakeven": 13.61,
-      "profit_tp1": 20.57,
-      "profit_tp2": 225.33,
-      "loss_at_stop": -122.61,
-      "rr_tp1": 0.17,
-      "rr_tp2": 1.84,
-      "theta_day": -0.71
+      "breakeven": 13.85,
+      "profit_tp1": 137.87,
+      "profit_tp2": 293.19,
+      "loss_at_stop": -105.62,
+      "rr_tp1": 1.31,
+      "rr_tp2": 2.78,
+      "theta_day": -0.76
      }
     },
     "assumptions": [
@@ -2128,13 +1246,114 @@
      "exit by 21 days to expiry; stop = underlying closes above the short stop"
     ],
     "stock_grade": "short-grade"
+   },
+   {
+    "direction": "bear",
+    "ticker": "WULF",
+    "id": "SEC1083301",
+    "name": "TERAWULF INC.",
+    "sector": "Financials",
+    "as_of": "2026-11-18 22:43:52",
+    "spot": 11.9705,
+    "score": 26.3,
+    "confidence": 93,
+    "tier": "C",
+    "points": 7.5,
+    "why": [
+     "stock score 26 (weak)",
+     "evidence 93",
+     "downtrend with a falling 50-day average",
+     "bounced into the short entry zone",
+     "RSI 43 (room to fall)",
+     "option reward/risk 1.1 at TP1",
+     "TP1 (-20.6%) inside the options-implied move (\u00b129.5%)",
+     "options cheap: IV 103% vs realised 126%"
+    ],
+    "against": [
+     "plain put only because no debit spread could be built (put rules not all met)",
+     "30-day expiry is outside the preferred 35\u201355 days (none available this week)"
+    ],
+    "red_flags": [
+     "loss-making over 12 months",
+     "operating margin down 159.7 pts",
+     "shares up 20% in a year"
+    ],
+    "expiry": "2026-12-18",
+    "dte": 30,
+    "exit_by": "2026-11-27",
+    "earnings": null,
+    "earnings_in_window": false,
+    "atm_iv": 1.029,
+    "hv20": 1.2551494832851096,
+    "hv60": 0.9677217259274361,
+    "iv_ratio": 0.819822669493352,
+    "iv30": 102.048,
+    "expected_move": 3.5313589222775215,
+    "underlying": {
+     "entry": [
+      11.670000076293945,
+      12.970000267028809
+     ],
+     "stop": 13.642857347215925,
+     "tp1": 9.510000228881836,
+     "tp2": 6.287143434797015
+    },
+    "timing": {
+     "ma50": 13.750999965667724,
+     "ma200": 17.97264998912811,
+     "rsi": 43.487166446518025,
+     "downtrend": true,
+     "ma50_falling": true,
+     "in_zone": true,
+     "extended": false,
+     "rsi_ok": true,
+     "ret_1m": -0.03233833580041856,
+     "rs_vs_sector_3m": -0.2399638560723797
+    },
+    "recommended": "put",
+    "structures": {
+     "put": {
+      "kind": "put",
+      "legs": [
+       {
+        "side": "buy",
+        "symbol": "WULF261218P00014000",
+        "strike": 14.0,
+        "expiry": "2026-12-18",
+        "bid": 2.59,
+        "ask": 2.86,
+        "mid": 2.725,
+        "iv": 1.0538,
+        "delta": -0.6507,
+        "theta": -0.021,
+        "oi": 6045.0,
+        "volume": 30.0,
+        "spread_pct": 0.0991
+       }
+      ],
+      "debit": 2.86,
+      "debit_mid": 2.725,
+      "cost": 286.0,
+      "max_loss": 286.0,
+      "max_gain": null,
+      "breakeven": 11.14,
+      "profit_tp1": 164.25,
+      "profit_tp2": 483.06,
+      "loss_at_stop": -151.03,
+      "rr_tp1": 1.09,
+      "rr_tp2": 3.2,
+      "theta_day": -2.1
+     }
+    },
+    "assumptions": [
+     "prices are Cboe delayed quotes (~15 min); entry priced at the ask (spread: ask \u2212 bid)",
+     "payoffs use Black-Scholes with each contract's IV, assuming the level is hit halfway to expiry",
+     "exit by 21 days to expiry; stop = underlying closes above the short stop"
+    ],
+    "stock_grade": null
    }
   ],
   "skipped": [
-   {
-    "ticker": "ERAS",
-    "why": "not in a downtrend (price < 50-day < 200-day)"
-   },
    {
     "ticker": "ECHO",
     "why": "not in a downtrend (price < 50-day < 200-day)"
@@ -2169,27 +1388,33 @@
    },
    {
     "ticker": "DYN",
-    "why": "no liquid ~0.60-delta put (best 2026-12-18 17.5P: bid 0.5, ask 2.75, OI 259, spread 138%)"
+    "why": "no liquid ~0.60-delta put (best 2027-01-15 20P: bid 4.0, ask 7.1, OI 34, spread 56%)"
    },
    {
-    "ticker": "GLXY",
-    "why": "no liquid ~0.60-delta put (best 2026-12-31 15P: bid 1.96, ask 3.9, OI 0, spread 66%)"
+    "ticker": "CRWV",
+    "why": "3.5 points (below tier C)",
+    "against": [
+     "option payoff at TP1 doesn't beat the loss at the stop"
+    ]
+   },
+   {
+    "ticker": "ERAS",
+    "why": "no liquid ~0.60-delta put (best 2027-01-15 17.5P: bid 3.0, ask 6.3, OI 209, spread 71%)"
    },
    {
     "ticker": "DKNG",
-    "why": "3.5 points (below tier C)",
+    "why": "4.5 points (below tier C)",
     "against": [
      "option payoff at TP1 doesn't beat the loss at the stop",
-     "plain put only because no debit spread could be built (put rules not all met)",
-     "59-day expiry is outside the preferred 35\u201355 days (none available this week)"
+     "58-day expiry is outside the preferred 35\u201355 days (none available this week)"
     ]
    }
   ],
   "pool": 15,
-  "checked": 6,
+  "checked": 7,
   "spx_above_ma50": false
  },
- "chains": 65,
+ "chains": 66,
  "notes": [
   "Calls on strong stocks, puts on verifiably weak ones.",
   "Cboe delayed quotes; Nasdaq earnings calendar.",
