@@ -1,12 +1,12 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-19 14:23 UTC from 220 coins._
+_Generated 2026-11-19 22:18 UTC from 220 coins._
 
 ## The base rate
-78 times a coin matched our rules — every setup found since research began, 3 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 111 of 220 coins.
+78 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 117 of 220 coins.
 - **3 went 3–10x** within 30 days (our target)
 - 3 went past 10x (outliers — listed, not used to learn)
-- 22 never reached 3x
-- Community check skipped (no wallet data this run).
+- 23 never reached 3x
+- Community check: 23 of 29 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
 
 **Hit rate on real setups: 13%** (7 wins / 53). Any parameter is only worth adding if coins with it beat this.
 
@@ -53,7 +53,7 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - During: volume exploded to 191× normal on day 3
 - Check X (verified accounts): https://x.com/search?q=%24POO%20filter%3Ablue_verified&f=live
 
-### $HMM — 3.2× from $5853k (2026-10-30, 3x in 7 days)
+### $HMM — 3.2× from $5869k (2026-10-30, 3x in 7 days)
 - Before: volume already 1.8× normal on the setup day
 - Before: cat theme
 - During: volume exploded to 16× normal on day 7
@@ -70,26 +70,31 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $PONS — 32× from $15690k (2026-08-04)
 - $COLLECT — 27× from $5k (2026-11-04)
 
+## Thrown out by the community check
+- $AIPE (DUD) — only 6 real buyers
+- $RIBBIT (DUD) — only 5 real buyers
+- $UBTC (DUD) — only 9 real buyers
+- $UBTC (DUD) — only 1 real buyers
+
 ## After a pump: pullback odds (from 173 past pumps)
 - **+50–100% day** (52 examples): 83% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 87–121%) · low came after ~5 day(s) · 29% made a new high within 2 weeks · 37% gave back the whole move
 - **+100–200% day** (23 examples): 87% pulled back 30%+ within a week · typically gave back 100% of the move (middle half: 69–114%) · low came after ~6 day(s) · 30% made a new high within 2 weeks · 48% gave back the whole move
 - **+200+% day** (98 examples): 91% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 88–100%) · low came after ~5 day(s) · 15% made a new high within 2 weeks · 26% gave back the whole move
 
 ## Smart wallets
-Wallet history wasn’t available this run.
+No wallet showed up early in multiple real winners yet — the sample grows every day.
 
 ## Notes
 - $HMM: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
 - $GENESIS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $HOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $HOODIE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $RETAIL: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $HOODCATS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $RIBBIT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $GENESIS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $AD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $PEPONS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $UBTC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HOOD: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $STAG: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $AMC: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $WOOD: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $HOODIE: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $RETAIL: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $HOODCATS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $AD: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
 
-_Wallet history: 0 setup(s) checked · history jump worked 2× / failed 0×._
+_Wallet history: 6 setup(s) checked · history jump worked 26× / failed 0×._
