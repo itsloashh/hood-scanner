@@ -29,18 +29,89 @@
     "tp2": 10.869143622262136
    },
    "status": "open",
-   "value": 2.15,
+   "value": 1.97,
+   "pnl": -18.0,
+   "pnl_pct": -0.0837,
+   "direction": "bear",
+   "spot": 14.33,
+   "marked": "2026-11-19",
+   "peak_pct": 0
+  },
+  {
+   "id": "AEHR-2027-01-15-2026-11-19",
+   "ticker": "AEHR",
+   "sec_id": "SEC1040470",
+   "tier": "B",
+   "kind": "put",
+   "legs": [
+    {
+     "side": "buy",
+     "symbol": "AEHR270115P00060000",
+     "strike": 60.0,
+     "expiry": "2027-01-15"
+    }
+   ],
+   "expiry": "2027-01-15",
+   "debit": 15.9,
+   "max_value": null,
+   "opened": "2026-11-19T04:23:53Z",
+   "spot_open": 50.9214,
+   "underlying": {
+    "entry": [
+     49.47999954223633,
+     53.5378566469465
+    ],
+    "stop": 57.595713751656675,
+    "tp1": 36.52000045776367,
+    "tp2": 29.1299991607666
+   },
+   "status": "open",
+   "value": 15.9,
+   "pnl": 0.0,
+   "pnl_pct": 0.0,
+   "direction": "bear"
+  },
+  {
+   "id": "HYMC-2027-01-15-2026-11-19",
+   "ticker": "HYMC",
+   "sec_id": "SEC1718405",
+   "tier": "B",
+   "kind": "put",
+   "legs": [
+    {
+     "side": "buy",
+     "symbol": "HYMC270115P00020000",
+     "strike": 20.0,
+     "expiry": "2027-01-15"
+    }
+   ],
+   "expiry": "2027-01-15",
+   "debit": 5.6,
+   "max_value": null,
+   "opened": "2026-11-19T04:23:53Z",
+   "spot_open": 15.2183,
+   "underlying": {
+    "entry": [
+     15.25,
+     16.099250112261092
+    ],
+    "stop": 16.948500224522185,
+    "tp1": 11.029999732971191,
+    "tp2": 9.1899995803833
+   },
+   "status": "open",
+   "value": 5.6,
    "pnl": 0.0,
    "pnl_pct": 0.0,
    "direction": "bear"
   }
  ],
  "summary": {
-  "open": 1,
+  "open": 3,
   "closed": 0,
   "win_rate": null,
   "avg_pct": null,
-  "total_pnl": 0,
+  "total_pnl": -18.0,
   "by_tier": {
    "A": {
     "n": 0,
@@ -54,5 +125,5 @@
    }
   }
  },
- "updated": "2026-11-18T22:44:18Z"
+ "updated": "2026-11-19T04:23:53Z"
 }
