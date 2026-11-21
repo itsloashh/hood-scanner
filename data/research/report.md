@@ -1,12 +1,12 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-20 21:53 UTC from 220 coins._
+_Generated 2026-11-21 14:23 UTC from 220 coins._
 
 ## The base rate
-81 times a coin matched our rules — every setup found since research began, 1 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 116 of 220 coins.
+81 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 111 of 220 coins.
 - **3 went 3–10x** within 30 days (our target)
 - 3 went past 10x (outliers — listed, not used to learn)
-- 20 never reached 3x
-- Community check: 26 of 32 wallet-checked setups were thrown out (fewer than 15 real buyers, or wash trading).
+- 19 never reached 3x
+- Community check skipped (no wallet data this run).
 
 **Hit rate on real setups: 13%** (7 wins / 53). Any parameter is only worth adding if coins with it beat this.
 
@@ -70,33 +70,26 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 - $PONS — 32× from $15690k (2026-08-04)
 - $COLLECT — 27× from $5k (2026-11-04)
 
-## Thrown out by the community check
-- $KARDASHEV (DUD) — only 4 real buyers
-- $PONS (DUD) — only 3 real buyers
-- $PONS (DUD) — only 0 real buyers
-- $PEPONS (DUD) — only 8 real buyers
-- $HYPERCAT (DUD) — only 10 real buyers
-- $COLLECT (MOON) — only 8 real buyers
-- $HUMANITY (DUD) — only 9 real buyers
-- $AIPE (DUD) — only 6 real buyers
-
 ## After a pump: pullback odds (from 174 past pumps)
-- **+50–100% day** (53 examples): 81% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 70–117%) · low came after ~5 day(s) · 30% made a new high within 2 weeks · 36% gave back the whole move
+- **+50–100% day** (54 examples): 80% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 64–117%) · low came after ~5 day(s) · 31% made a new high within 2 weeks · 35% gave back the whole move
 - **+100–200% day** (23 examples): 87% pulled back 30%+ within a week · typically gave back 100% of the move (middle half: 69–114%) · low came after ~6 day(s) · 30% made a new high within 2 weeks · 48% gave back the whole move
-- **+200+% day** (98 examples): 91% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 88–100%) · low came after ~5 day(s) · 15% made a new high within 2 weeks · 26% gave back the whole move
+- **+200+% day** (97 examples): 92% pulled back 30%+ within a week · typically gave back 99% of the move (middle half: 92–100%) · low came after ~5 day(s) · 14% made a new high within 2 weeks · 26% gave back the whole move
 
 ## Smart wallets
-No wallet showed up early in multiple real winners yet — the sample grows every day.
+Wallet history wasn’t available this run.
 
 ## Notes
-- $POO: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $DIH: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $🪶: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $STONKBROKER: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $PEPONS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $mShare: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $STAG: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $AMC: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
-- $WOOD: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $HOOD: wallet history unavailable (network error for https://api.blockscout.com/4663/api/v2/tok)
+- $INDEX: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $POO: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $MORT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $UBTC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $RWM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $SCALE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $STONKBROKER: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $KARDASHEV: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $PONS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $PEPONS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
 
-_Wallet history: 8 setup(s) checked · history jump worked 24× / failed 0×._
+_Wallet history: 0 setup(s) checked · history jump worked 0× / failed 0×._
