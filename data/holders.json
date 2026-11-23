@@ -35,7 +35,7 @@
    }
   },
   "0xb9972ca7188e511174947e3936a5315ac7073277": {
-   "at": 1795429899974,
+   "at": 1795455246611,
    "symbol": "PROLOGUE",
    "holdersCount": 6785,
    "conc": {
@@ -310,13 +310,13 @@
    "recentBurns": null
   },
   "0x86923f96303d656e4aa86d9d42d1e57ad2023fdc": {
-   "at": 1795430077584,
+   "at": 1795455490766,
    "symbol": "AMD",
-   "holdersCount": 43844,
+   "holdersCount": 43856,
    "conc": {
-    "top1Pct": 3.2637,
-    "top10Pct": 13.2193,
-    "largestContractPct": 24.7267,
+    "top1Pct": 3.0322,
+    "top10Pct": 12.8054,
+    "largestContractPct": 22.0646,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -418,21 +418,17 @@
    "recentBurns": null
   },
   "0x5d6ef090a1461b11c9427ac319260122d1c61e18": {
-   "at": 1795428737124,
+   "at": 1795455091228,
    "symbol": "ICOIN",
-   "holdersCount": 5279,
+   "holdersCount": 5285,
    "conc": {
     "top1Pct": 2.4301,
-    "top10Pct": 13.2741,
-    "largestContractPct": 45.9434,
+    "top10Pct": 13.3579,
+    "largestContractPct": 43.6591,
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "recentBurns": {
-    "count": 1,
-    "units": 637655.1898,
-    "lastTs": 1795054641000
-   }
+   "recentBurns": null
   },
   "0x7648f37c2314466726a28f7a5edbdb8dc7b3e23f": {
    "at": 1795411880149,
@@ -584,13 +580,13 @@
    }
   },
   "0x5e81213613b6b86eab4c6c50d718d34359459786": {
-   "at": 1795431823695,
+   "at": 1795455410866,
    "symbol": "TTWO",
-   "holdersCount": 14381,
+   "holdersCount": 14378,
    "conc": {
-    "top1Pct": 8.3579,
-    "top10Pct": 22.2871,
-    "largestContractPct": 22.6708,
+    "top1Pct": 8.4649,
+    "top10Pct": 22.9895,
+    "largestContractPct": 22.5113,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -631,13 +627,13 @@
    }
   },
   "0x9c87b4cfa21266d1638f437c96dbe1012cb81111": {
-   "at": 1795429902288,
+   "at": 1795455253137,
    "symbol": "ODDS",
-   "holdersCount": 258,
+   "holdersCount": 257,
    "conc": {
     "top1Pct": 5.5532,
-    "top10Pct": 34.0485,
-    "largestContractPct": 43.1665,
+    "top10Pct": 34.824,
+    "largestContractPct": 42.2797,
     "burnedPct": 1.0248,
     "devPctOnchain": null
    },
@@ -699,20 +695,20 @@
    }
   },
   "0xfde368debe9e80f80785064a65719cec1f809dec": {
-   "at": 1795431037237,
+   "at": 1795455146101,
    "symbol": "PEPONS",
-   "holdersCount": 166932,
+   "holdersCount": 166931,
    "conc": {
     "top1Pct": 2.8599,
     "top10Pct": 17.7088,
-    "largestContractPct": 9.7544,
+    "largestContractPct": 9.5035,
     "burnedPct": 0.9874,
     "devPctOnchain": null
    },
    "recentBurns": {
-    "count": 2,
-    "units": 5378,
-    "lastTs": 1795300958000
+    "count": 3,
+    "units": 5391,
+    "lastTs": 1795448965000
    }
   },
   "0x2d8d6f4a93acd7a916a5a654ec8b690ba3b3eadd": {
@@ -734,15 +730,18 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-23T17:01:13.173Z",
-  "targets": 16,
-  "ok": 8,
-  "failed": 0,
-  "errors": [],
+  "at": "2026-11-23T17:31:11.500Z",
+  "targets": 8,
+  "ok": 6,
+  "failed": 2,
+  "errors": [
+   "META: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0xc0d6457c16cc70d6790dd43521c899c87ce02f3",
+   "AAPL: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0xaf3d76f1834a1d425780943c99ea8a608f8a93f"
+  ],
   "http": {
    "api.blockscout.com": {
-    "calls": 32,
-    "sec": 670
+    "calls": 30,
+    "sec": 399
    }
   }
  }
