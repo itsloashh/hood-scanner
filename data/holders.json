@@ -1,9 +1,9 @@
 {
  "coins": {
   "0xc367486cc27a232218fc91bc93c63ac1ec8abc73": {
-   "at": 1795428204375,
+   "at": 1795451844738,
    "symbol": "GENESIS",
-   "holdersCount": 36146,
+   "holdersCount": 36147,
    "conc": {
     "top1Pct": 4.2016,
     "top10Pct": 14.4575,
@@ -18,13 +18,13 @@
    }
   },
   "0x7fe995a80075df3dc8ae11a9b82c7fe4202cd87f": {
-   "at": 1795428193181,
+   "at": 1795451611712,
    "symbol": "HMM",
-   "holdersCount": 94949,
+   "holdersCount": 94941,
    "conc": {
     "top1Pct": 3.1091,
-    "top10Pct": 15.0711,
-    "largestContractPct": 3.7768,
+    "top10Pct": 15.0616,
+    "largestContractPct": 3.7771,
     "burnedPct": 1.2293,
     "devPctOnchain": null
    },
@@ -340,30 +340,26 @@
    }
   },
   "0x43b07d15ce533bec5476d70c22a78a1b2b662155": {
-   "at": 1795428529195,
+   "at": 1795452091893,
    "symbol": "mrna",
-   "holdersCount": 3139,
+   "holdersCount": 3142,
    "conc": {
-    "top1Pct": 15.346,
-    "top10Pct": 28.5721,
-    "largestContractPct": 13.4443,
+    "top1Pct": 14.7584,
+    "top10Pct": 31.2169,
+    "largestContractPct": 17.3878,
     "burnedPct": 0,
     "devPctOnchain": null
    },
-   "recentBurns": {
-    "count": 0,
-    "units": 0,
-    "lastTs": null
-   }
+   "recentBurns": null
   },
   "0xe93237c50d904957cf27e7b1133b510c669c2e74": {
-   "at": 1795428356978,
+   "at": 1795451765903,
    "symbol": "MSFT",
-   "holdersCount": 67222,
+   "holdersCount": 67196,
    "conc": {
     "top1Pct": 4.3829,
-    "top10Pct": 6.9163,
-    "largestContractPct": 23.3234,
+    "top10Pct": 6.9979,
+    "largestContractPct": 24.3097,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -558,13 +554,13 @@
    }
   },
   "0x822cc93ffd030293e9842c30bbd678f530701867": {
-   "at": 1795428510034,
+   "at": 1795451998250,
    "symbol": "BE",
-   "holdersCount": 20892,
+   "holdersCount": 20914,
    "conc": {
-    "top1Pct": 9.8288,
-    "top10Pct": 18.0246,
-    "largestContractPct": 28.6125,
+    "top1Pct": 7.521,
+    "top10Pct": 15.3866,
+    "largestContractPct": 30.4959,
     "burnedPct": 0,
     "devPctOnchain": null
    },
@@ -738,11 +734,22 @@
   }
  },
  "lastRun": {
-  "at": "2026-11-23T16:01:12.943Z",
-  "targets": 0,
-  "ok": 0,
-  "failed": 0,
-  "errors": [],
-  "http": {}
+  "at": "2026-11-23T16:31:14.393Z",
+  "targets": 10,
+  "ok": 5,
+  "failed": 5,
+  "errors": [
+   "AVGO: HTTP 500 for https://api.blockscout.com/4663/api/v2/tokens/0x156e175dd063a8ce274c50654ef40e0032b3fbc",
+   "COST: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "GME: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "RIPPLES: api.blockscout.com skipped for the rest of this run (kept failing)",
+   "ICOIN: api.blockscout.com skipped for the rest of this run (kept failing)"
+  ],
+  "http": {
+   "api.blockscout.com": {
+    "calls": 22,
+    "sec": 610
+   }
+  }
  }
 }
