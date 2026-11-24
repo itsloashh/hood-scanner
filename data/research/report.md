@@ -1,11 +1,11 @@
 # Robinhood Chain — why coins pumped (3–10x)
-_Generated 2026-11-24 14:23 UTC from 220 coins._
+_Generated 2026-11-24 23:32 UTC from 220 coins._
 
 ## The base rate
-86 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 111 of 220 coins.
+86 times a coin matched our rules — every setup found since research began, 0 new today (21+ days old, $5k–$25M, 50%+ off its high, tight base with lows holding). Charts loaded for 117 of 220 coins.
 - **3 went 3–10x** within 30 days (our target)
 - 3 went past 10x (outliers — listed, not used to learn)
-- 21 never reached 3x
+- 29 never reached 3x
 - Community check skipped (no wallet data this run).
 
 **Hit rate on real setups: 13%** (7 wins / 53). Any parameter is only worth adding if coins with it beat this.
@@ -80,17 +80,17 @@ Ranked by how much more often they appear in 3–10x winners than in duds:
 Wallet history wasn’t available this run.
 
 ## Notes
-- $HOOD: wallet history unavailable (network error for https://api.blockscout.com/4663/api/v2/tok)
-- $INDEX: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $POO: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $AD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $PEPONS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $MORT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HMM: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
+- $GENESIS: couldn't reach far enough back in its trading history (even after jumping) — wallet data skipped
 - $HOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $UBTC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $RWM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $SCALE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $STONKBROKER: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
-- $BabyBull: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $WOOD: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $AIPE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $AMC: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HOODIE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $RETAIL: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $RAREFRIENDS: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $AGE: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $HMM: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
+- $RIBBIT: wallet history unavailable (api.blockscout.com skipped for the rest of this run (kept fa)
 
-_Wallet history: 0 setup(s) checked · history jump worked 0× / failed 0×._
+_Wallet history: 0 setup(s) checked · history jump worked 2× / failed 0×._
