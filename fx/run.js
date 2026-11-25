@@ -363,7 +363,7 @@ export function latestFor(snap) {
     record: snap.record || null,
     priceNotes: snap.priceNotes || [],
     events: (snap.events || []).filter((e) => e.impact === 'High' || e.impact === 'Medium').map((e) => ({ ...e })),
-    headlines: (snap.headlines || []).slice(0, 10).map((h) => ({ title: h.title, source: h.source, at: h.at, pairs: h.pairs })),
+    headlines: (snap.headlines || []).slice(0, 10).map((h) => ({ title: h.title, source: h.source, at: h.at, pairs: h.pairs, link: /^https?:\/\//.test(h.link || '') ? h.link : null, confirmed: h.confirmed || 1 })),
   };
 }
 
