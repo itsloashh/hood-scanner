@@ -1,13 +1,13 @@
 {
- "updated": "2026-11-25T00:09:19Z",
+ "updated": "2026-11-25T23:49:26Z",
  "error": null,
  "stages": {
   "options": {
    "ok": true,
-   "sec": 116
+   "sec": 103
   }
  },
- "minutes": 1.9,
+ "minutes": 1.7,
  "providers": {
   "sec_edgar": {
    "name": "SEC EDGAR (submissions, XBRL company facts, Form 4, 13F, 8-K)",
@@ -19,7 +19,7 @@
    "limits": "10 requests/second, must send an identifying User-Agent",
    "licensing": "public domain US government data",
    "status": "not used this run",
-   "checked": "2026-11-25T00:09:19Z"
+   "checked": "2026-11-25T23:49:26Z"
   },
   "yahoo": {
    "name": "Yahoo Finance chart API",
@@ -31,7 +31,7 @@
    "limits": "unpublished; throttled to ~3/s",
    "licensing": "personal research use only; not licensed real-time data; may change without notice",
    "status": "not used this run",
-   "checked": "2026-11-25T00:09:19Z"
+   "checked": "2026-11-25T23:49:26Z"
   },
   "fred": {
    "name": "FRED (St. Louis Fed)",
@@ -43,7 +43,7 @@
    "limits": "keyless CSV download",
    "licensing": "public, cite source",
    "status": "not used this run",
-   "checked": "2026-11-25T00:09:19Z"
+   "checked": "2026-11-25T23:49:26Z"
   },
   "bank_of_canada": {
    "name": "Bank of Canada Valet API",
@@ -55,7 +55,7 @@
    "limits": "none published",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-25T00:09:19Z"
+   "checked": "2026-11-25T23:49:26Z"
   },
   "openfigi": {
    "name": "OpenFIGI mapping",
@@ -67,7 +67,7 @@
    "limits": "25 requests/min keyless",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-25T00:09:19Z"
+   "checked": "2026-11-25T23:49:26Z"
   },
   "google_news": {
    "name": "Google News RSS (discovery only)",
@@ -79,7 +79,7 @@
    "limits": "throttled",
    "licensing": "headlines and links only; articles are not copied",
    "status": "not used this run",
-   "checked": "2026-11-25T00:09:19Z"
+   "checked": "2026-11-25T23:49:26Z"
   },
   "sedar_plus": {
    "name": "SEDAR+ (Canadian filings)",
@@ -126,7 +126,7 @@
    "errors": 0,
    "retries": 0,
    "r429": 0,
-   "seconds": 103.5,
+   "seconds": 92.6,
    "cache_hits": 0,
    "last_error": null,
    "consecutive_fail": 0
@@ -137,7 +137,7 @@
    "errors": 5,
    "retries": 5,
    "r429": 0,
-   "seconds": 1.6,
+   "seconds": 0.5,
    "cache_hits": 0,
    "last_error": "403 https://cdn.cboe.com/api/global/delayed_quotes/options/UPBD.json <!DOCTYPE html> <!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]--> <!--[if IE 7]> <html class=\"n",
    "consecutive_fail": 5
