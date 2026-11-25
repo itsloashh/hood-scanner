@@ -128,8 +128,50 @@ export async function snapshot(now = Date.now(), { withCot = true, withNews = tr
     snap.calendarOk = false;
     log('calendar failed:', e.message);
   }
-  if (withNews) snap.headlines = await headlines(now);
+  if (withNews) {
+    snap.headlines = await headlines(now);
+    await directLinks(snap.headlines.slice(0, 12));
+  }
   return snap;
+}
+
+// Swap Google News redirect links for the publisher's article address (cached in data/fx/links.json).
+// If Google won't say, fall back to its normal article page, which works better than the RSS link.
+export async function directLinks(list) {
+  const file = path.join(FX_DIR(), 'links.json');
+  let cache = {};
+  try {
+    cache = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {
+    cache = {};
+  }
+  let resolved = 0;
+  let failed = 0;
+  for (const h of list) {
+    const id = src.googleNewsId(h.link);
+    if (!id) continue;
+    if (cache[id]) {
+      h.link = cache[id];
+      continue;
+    }
+    const url = await src.resolveGoogleNews(h.link).catch(() => null);
+    if (url) {
+      cache[id] = h.link = url;
+      resolved += 1;
+    } else {
+      h.link = `https://news.google.com/articles/${id}?hl=en-US&gl=US&ceid=US:en`;
+      failed += 1;
+    }
+  }
+  const keep = Object.entries(cache).slice(-400);
+  try {
+    fs.mkdirSync(FX_DIR(), { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(Object.fromEntries(keep)));
+  } catch {
+    // read-only run (tests)
+  }
+  if (resolved || failed) log(`headline links: ${resolved} resolved to the publisher, ${failed} left on Google News`);
+  return { resolved, failed };
 }
 
 // Headlines from several sites, matched to the pair they affect, newest first, deduped by title

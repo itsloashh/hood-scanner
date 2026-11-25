@@ -83,6 +83,43 @@ export async function feed(name, url) {
   return parseRss(await fetchText(url, { name: `rss:${name}` }), name);
 }
 
+// ── Google News links → the publisher's own article URL ─────
+// Google News RSS links (news.google.com/rss/articles/<id>) only reach the article through Google's scripts,
+// which often leaves a blank page on phones. Google's own "garturlreq" lookup returns the real address.
+const BROWSER_UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36';
+export const googleNewsId = (link) => String(link || '').match(/^https:\/\/news\.google\.com\/(?:rss\/)?articles\/([A-Za-z0-9_-]+)/)?.[1] || null;
+
+export function parseBatchExecute(text) {
+  for (const part of String(text).split('\n\n').slice(1)) {
+    try {
+      const arr = JSON.parse(part);
+      const inner = JSON.parse(arr[0][2]);
+      if (/^https?:\/\//.test(inner?.[1] || '')) return inner[1];
+    } catch {
+      // try the next chunk
+    }
+  }
+  return null;
+}
+
+export async function resolveGoogleNews(link, { timeoutMs = 12_000 } = {}) {
+  const id = googleNewsId(link);
+  if (!id) return link;
+  const page = await globalThis.fetch(`https://news.google.com/articles/${id}?hl=en-US&gl=US&ceid=US:en`, { headers: { 'user-agent': BROWSER_UA, 'accept-language': 'en-US' }, signal: AbortSignal.timeout(timeoutMs) });
+  const html = await page.text();
+  const sig = html.match(/data-n-a-sg="([^"]+)"/)?.[1];
+  const ts = html.match(/data-n-a-ts="([^"]+)"/)?.[1];
+  if (!sig || !ts) return null;
+  const req = [[['Fbv4je', JSON.stringify(['garturlreq', [['X', 'X', ['X', 'X'], null, null, 1, 1, 'US:en', null, 1, null, null, null, null, null, 0, 1], 'X', 'X', 1, [1, 1, 1], 1, 1, null, 0, 0, null, 0], id, Number(ts), sig]), null, 'generic']]];
+  const r = await globalThis.fetch('https://news.google.com/_/DotsSplashUi/data/batchexecute', {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8', 'user-agent': BROWSER_UA },
+    body: `f.req=${encodeURIComponent(JSON.stringify(req))}`,
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  return r.ok ? parseBatchExecute(await r.text()) : null;
+}
+
 // ── positioning (CFTC Commitments of Traders, weekly) ─────
 export function parseCot(rows) {
   return (Array.isArray(rows) ? rows : [])
