@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-28T04:42:08Z",
+ "updated": "2026-11-26T04:52:36Z",
  "error": null,
  "stages": {
   "macro": {
@@ -8,23 +8,23 @@
   },
   "universe": {
    "ok": true,
-   "sec": 184
+   "sec": 282
   },
   "prices": {
    "ok": true,
-   "sec": 1425
+   "sec": 1426
   },
   "fundamentals": {
    "ok": true,
-   "sec": 18
+   "sec": 25
   },
   "insiders": {
    "ok": true,
-   "sec": 35
+   "sec": 78
   },
   "scores": {
    "ok": true,
-   "sec": 128
+   "sec": 127
   },
   "etfs": {
    "ok": true,
@@ -48,10 +48,10 @@
   },
   "options": {
    "ok": true,
-   "sec": 10
+   "sec": 9
   }
  },
- "minutes": 30.2,
+ "minutes": 32.7,
  "providers": {
   "sec_edgar": {
    "name": "SEC EDGAR (submissions, XBRL company facts, Form 4, 13F, 8-K)",
@@ -63,10 +63,10 @@
    "limits": "10 requests/second, must send an identifying User-Agent",
    "licensing": "public domain US government data",
    "status": "degraded",
-   "calls": 1269,
+   "calls": 1890,
    "errors": 63,
-   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261126.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>TR7EZW",
-   "checked": "2026-11-28T04:42:08Z"
+   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261126.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>KH2J84",
+   "checked": "2026-11-26T04:52:36Z"
   },
   "yahoo": {
    "name": "Yahoo Finance chart API",
@@ -78,10 +78,10 @@
    "limits": "unpublished; throttled to ~3/s",
    "licensing": "personal research use only; not licensed real-time data; may change without notice",
    "status": "degraded",
-   "calls": 4355,
+   "calls": 4358,
    "errors": 114,
    "last_error": null,
-   "checked": "2026-11-28T04:42:08Z"
+   "checked": "2026-11-26T04:52:36Z"
   },
   "fred": {
    "name": "FRED (St. Louis Fed)",
@@ -96,7 +96,7 @@
    "calls": 14,
    "errors": 0,
    "last_error": null,
-   "checked": "2026-11-28T04:42:08Z"
+   "checked": "2026-11-26T04:52:36Z"
   },
   "bank_of_canada": {
    "name": "Bank of Canada Valet API",
@@ -111,7 +111,7 @@
    "calls": 1,
    "errors": 0,
    "last_error": null,
-   "checked": "2026-11-28T04:42:08Z"
+   "checked": "2026-11-26T04:52:36Z"
   },
   "openfigi": {
    "name": "OpenFIGI mapping",
@@ -123,7 +123,7 @@
    "limits": "25 requests/min keyless",
    "licensing": "open",
    "status": "not used this run",
-   "checked": "2026-11-28T04:42:08Z"
+   "checked": "2026-11-26T04:52:36Z"
   },
   "google_news": {
    "name": "Google News RSS (discovery only)",
@@ -135,7 +135,7 @@
    "limits": "throttled",
    "licensing": "headlines and links only; articles are not copied",
    "status": "not used this run",
-   "checked": "2026-11-28T04:42:08Z"
+   "checked": "2026-11-26T04:52:36Z"
   },
   "sedar_plus": {
    "name": "SEDAR+ (Canadian filings)",
@@ -182,7 +182,7 @@
    "errors": 0,
    "retries": 0,
    "r429": 0,
-   "seconds": 1.9,
+   "seconds": 1.4,
    "cache_hits": 0,
    "last_error": null,
    "consecutive_fail": 0
@@ -193,18 +193,18 @@
    "errors": 0,
    "retries": 0,
    "r429": 0,
-   "seconds": 0.6,
+   "seconds": 0.8,
    "cache_hits": 0,
    "last_error": null,
    "consecutive_fail": 0
   },
   "query1.finance.yahoo.com": {
-   "calls": 4355,
-   "ok": 4241,
+   "calls": 4358,
+   "ok": 4244,
    "errors": 114,
    "retries": 0,
    "r429": 0,
-   "seconds": 614.1,
+   "seconds": 276.7,
    "cache_hits": 0,
    "last_error": null,
    "consecutive_fail": 0
@@ -215,29 +215,29 @@
    "errors": 0,
    "retries": 0,
    "r429": 0,
-   "seconds": 1.3,
+   "seconds": 2.5,
    "cache_hits": 0,
    "last_error": null,
    "consecutive_fail": 0
   },
   "www.sec.gov": {
-   "calls": 176,
-   "ok": 172,
+   "calls": 423,
+   "ok": 419,
    "errors": 2,
    "retries": 2,
    "r429": 0,
-   "seconds": 28.5,
-   "cache_hits": 5,
-   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261126.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>TR7EZW",
+   "seconds": 34.1,
+   "cache_hits": 6,
+   "last_error": "403 https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261126.idx <?xml version=\"1.0\" encoding=\"UTF-8\"?> <Error><Code>AccessDenied</Code><Message>Access Denied</Message><RequestId>KH2J84",
    "consecutive_fail": 0
   },
   "data.sec.gov": {
-   "calls": 1093,
-   "ok": 1032,
+   "calls": 1467,
+   "ok": 1406,
    "errors": 61,
    "retries": 0,
    "r429": 0,
-   "seconds": 131.8,
+   "seconds": 244.7,
    "cache_hits": 0,
    "last_error": null,
    "consecutive_fail": 0
@@ -248,11 +248,11 @@
    "errors": 5,
    "retries": 5,
    "r429": 0,
-   "seconds": 0.8,
+   "seconds": 0.7,
    "cache_hits": 0,
    "last_error": "403 https://cdn.cboe.com/api/global/delayed_quotes/options/TGT.json <!DOCTYPE html> <!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]--> <!--[if IE 7]> <html class=\"n",
    "consecutive_fail": 5
   }
  },
- "scored": 3166
+ "scored": 3179
 }
